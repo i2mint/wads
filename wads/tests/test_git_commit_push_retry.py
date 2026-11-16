@@ -224,16 +224,70 @@ class TestPushBackRecovery:
     def test_the_note_is_added_once_over_repeated_races(
         self, remote_and_clone, tmp_path
     ):
+        """A merge lands again between the first replay and its push: two rebases, one note."""
         origin, clone = remote_and_clone
         built = _git("rev-parse", "--short", "HEAD", cwd=clone).stdout.strip()
         _commit(clone, "pyproject.toml", 'version = "0.0.3"\n', "**CI** bump [skip ci]")
-        _land_a_concurrent_merge(origin, tmp_path)
-        # a second merge lands while the first replay is in flight
-        _land_a_concurrent_merge(origin, tmp_path, filename="OTHER.md")
+        # A pre-push hook lands a merge on origin before each of the first two attempts.
+        counter = tmp_path / "pushes"
+        counter.write_text("0")
+        hook = clone / ".git" / "hooks" / "pre-push"
+        hook.write_text(
+            "#!/bin/sh\n"
+            f"n=$(cat {counter})\n"
+            f"echo $((n + 1)) > {counter}\n"
+            f'if [ "$n" -lt 2 ]; then\n'
+            f"  d={tmp_path}/racer$n\n"
+            f"  env -u GIT_DIR git clone -q {origin} $d\n"
+            f"  cd $d && git config user.email a@b.c && git config user.name x\n"
+            f"  echo $n > racer$n.txt && git add . && git commit -q -m \"merge $n\"\n"
+            f"  git push -q origin {DEFAULT_BRANCH}\n"
+            "fi\n"
+        )
+        hook.chmod(0o755)
 
-        assert run_push_step(clone, built_from=built).returncode == 0
-        subject = _subjects(origin, DEFAULT_BRANCH)[0]
-        assert subject == f"**CI** bump (built from {built}) [skip ci]"
+        result = run_push_step(clone, built_from=built)
+
+        assert result.returncode == 0, result.stdout + result.stderr
+        assert "Rebasing onto it and retrying (2/3)" in result.stdout
+        assert _subjects(origin, DEFAULT_BRANCH)[:3] == [
+            f"**CI** bump (built from {built}) [skip ci]",
+            "merge 1",
+            "merge 0",
+        ]
+
+    def test_only_the_subject_line_of_a_multiline_message_is_annotated(
+        self, remote_and_clone, tmp_path
+    ):
+        origin, clone = remote_and_clone
+        _commit(
+            clone, "pyproject.toml", 'version = "0.0.3"\n', "**CI** bump [skip ci]\n\nbody line"
+        )
+        _land_a_concurrent_merge(origin, tmp_path)
+        assert run_push_step(clone, built_from="abc1234").returncode == 0
+        full = _git("log", "-1", "--format=%B", DEFAULT_BRANCH, cwd=origin).stdout
+        assert full.strip() == "**CI** bump (built from abc1234) [skip ci]\n\nbody line"
+
+    def test_an_empty_replayed_commit_can_be_annotated(self, remote_and_clone, tmp_path):
+        origin, clone = remote_and_clone
+        _git("commit", "--allow-empty", "-q", "-m", "**CI** nothing [skip ci]", cwd=clone)
+        _land_a_concurrent_merge(origin, tmp_path)
+        result = run_push_step(clone, built_from="abc1234")
+        assert result.returncode == 0, result.stdout + result.stderr
+        assert _subjects(origin, DEFAULT_BRANCH)[0] == "**CI** nothing (built from abc1234) [skip ci]"
+
+    def test_a_commit_upstream_already_holds_is_not_renamed(self, remote_and_clone, tmp_path):
+        """The rebase drops our (identical) commit; HEAD is upstream's, which stays as is."""
+        origin, clone = remote_and_clone
+        _commit(clone, "same.txt", "x\n", "ours [skip ci]")
+        other = tmp_path / "twin"
+        _git("clone", str(origin), str(other), cwd=tmp_path)
+        _configure(other)
+        _commit(other, "same.txt", "x\n", "theirs: the very same patch")
+        _git("push", "origin", DEFAULT_BRANCH, cwd=other)
+        result = run_push_step(clone, built_from="abc1234")
+        assert result.returncode == 0, result.stdout + result.stderr
+        assert _subjects(origin, DEFAULT_BRANCH)[0] == "theirs: the very same patch"
 
     def test_a_subject_without_the_skip_marker_gets_the_note_appended(
         self, remote_and_clone, tmp_path
@@ -241,7 +295,7 @@ class TestPushBackRecovery:
         origin, clone = remote_and_clone
         _commit(clone, "pyproject.toml", 'version = "0.0.3"\n', "release 0.0.3")
         _land_a_concurrent_merge(origin, tmp_path)
-        run_push_step(clone, built_from="abc1234")
+        assert run_push_step(clone, built_from="abc1234").returncode == 0
         assert _subjects(origin, DEFAULT_BRANCH)[0] == "release 0.0.3 (built from abc1234)"
 
     def test_an_unmoved_branch_keeps_the_subject_untouched(

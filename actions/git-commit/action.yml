@@ -87,20 +87,25 @@ runs:
         git add $ADD_PATTERN
 
         # Check if there are changes to commit
+        # Short sha of the commit just made's parent (empty for a root commit).
+        parent_of_head() {
+          parent=$(git log -1 --format=%P HEAD | cut -d' ' -f1)
+          if [ -n "$parent" ]; then git rev-parse --short=12 "$parent"; fi
+        }
         built_from=""
         if git diff --staged --quiet; then
           echo "No changes to commit"
           if [ "$ALLOW_EMPTY" = "true" ]; then
             echo "Creating empty commit (allow-empty=true)"
             git commit --allow-empty -m "$COMMIT_MESSAGE"
-            built_from=$(git rev-parse --short HEAD~1)
+            built_from=$(parent_of_head)
           else
             echo "Skipping commit (no changes and allow-empty=false)"
           fi
         else
           echo "Committing changes"
           git commit -m "$COMMIT_MESSAGE"
-          built_from=$(git rev-parse --short HEAD~1)
+          built_from=$(parent_of_head)
         fi
         echo "commit-sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
         echo "built-from=$built_from" >> "$GITHUB_OUTPUT"
@@ -320,17 +325,21 @@ runs:
 
           # The commit now sits after merges its tree does not contain (what the
           # run built is BUILT_FROM, not the new tip), so its subject says so, or
-          # `git log` reads as if the release held them (i2mint/wads#208). Once:
-          # a later rebase keeps the amended message.
-          if [ -n "$BUILT_FROM" ] && [ -z "$annotated" ]; then
+          # `git log` reads as if the release held them (i2mint/wads#208). Once (a
+          # later rebase keeps the amended message), and only while HEAD is still
+          # our replayed commit: when upstream already held the same patch the
+          # rebase drops ours and HEAD is somebody else's commit, not to rename.
+          if [ -n "$BUILT_FROM" ] && [ -z "$annotated" ] \
+              && [ "$(git rev-parse HEAD)" != "$(git rev-parse FETCH_HEAD)" ]; then
             msg=$(git log -1 --format=%B)
-            msg=${msg%$'\n'}
+            subject=${msg%%$'\n'*}
+            rest=${msg#"$subject"}
             note="(built from $BUILT_FROM)"
-            case "$msg" in
-              *" [skip ci]") msg="${msg% \[skip ci\]} $note [skip ci]" ;;
-              *) msg="$msg $note" ;;
+            case "$subject" in
+              *" [skip ci]") subject="${subject% \[skip ci\]} $note [skip ci]" ;;
+              *) subject="$subject $note" ;;
             esac
-            git commit --amend -q -m "$msg"
+            git commit --amend --allow-empty -q -m "$subject$rest"
             annotated=1
           fi
         done
