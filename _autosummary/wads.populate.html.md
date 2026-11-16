@@ -125,7 +125,8 @@ Populate project directory root with useful packaging files, if they’re missin
   * **frontend** ([`str`](https://docs.python.org/3/builtins/stdtypes.html#str)) – Comma-separated list of frontend profiles to add (issue
     #39), e.g. `"ts"` or `"js,ts"`. Available profiles: `js` (the
     original npm overlay), `ts` (single-package TypeScript), and
-    `ts-monorepo` (pnpm workspaces + turbo). Each component lands in its
+    `ts-monorepo` (pnpm workspaces + turbo); `ts-package` makes the repo
+    itself a TypeScript package, with no Python project. Each component lands in its
     own subdir with its own path-filtered workflow, so multiple profiles
     never collide. Empty by default. The single-component overrides below
     (`npm_subdir` / `npm_package_name` / `npm_package_manager`) apply

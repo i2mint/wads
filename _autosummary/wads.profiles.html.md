@@ -29,6 +29,9 @@ Nothing here runs by default; the Python `populate` path and the
 | [`DFLT_SHARED_FIXTURES_DIR`](#wads.profiles.DFLT_SHARED_FIXTURES_DIR)   | Where a Python package and its npm twin keep the golden cases both test suites run (i2mint/wads#209).                                   |
 |-----------------------------------------------------------------------------|-----------------------------------------------------------------------------------------------------------------------------------------|
 | [`DFLT_RUST_DIR`](#wads.profiles.DFLT_RUST_DIR)              | Where a Rust core lives in the native (maturin) layout; when present, a change there runs the npm CI too (a wasm build may compile it). |
+| [`ROOT_SUBDIR`](#wads.profiles.ROOT_SUBDIR)                | `subdir` of a component that is the repo root (a TypeScript-only package).                                                              |
+| [`DFLT_VITEST_RANGE`](#wads.profiles.DFLT_VITEST_RANGE)          | vitest's semver range in the `ts` template.                                                                                             |
+| [`DFLT_NODE_VERSIONS`](#wads.profiles.DFLT_NODE_VERSIONS)         | Node versions a component's CI matrix runs, unless its profile says otherwise.                                                          |
 | [`LICENSE_FILENAMES`](#wads.profiles.LICENSE_FILENAMES)          | Root licence file names a frontend component copies, in order of preference.                                                            |
 | [`FRONTEND_PROFILES`](#wads.profiles.FRONTEND_PROFILES)          | The frontend profile registry.                                                                                                          |
 | [`NATIVE_PROFILES`](#wads.profiles.NATIVE_PROFILES)            | The native-backend registry.                                                                                                            |
@@ -65,6 +68,10 @@ Nothing here runs by default; the Python `populate` path and the
 |------------------------------------------------------------------------------------------------------|------------------------------------------------------------------------------|
 | [`NativeProfile`](#wads.profiles.NativeProfile)(name, template_dir, ...[, ...])       | A native (compiled-extension) backend that `populate --native` can scaffold. |
 
+### wads.profiles.DFLT_NODE_VERSIONS *= ('20', '22', '24')*
+
+Node versions a component’s CI matrix runs, unless its profile says otherwise.
+
 ### wads.profiles.DFLT_RUST_DIR *= 'rust'*
 
 Where a Rust core lives in the native (maturin) layout; when present, a change
@@ -75,11 +82,17 @@ there runs the npm CI too (a wasm build may compile it).
 Where a Python package and its npm twin keep the golden cases both test suites
 run (i2mint/wads#209). A change there runs the npm CI as well as the Python CI.
 
-### wads.profiles.FRONTEND_PROFILES *: [dict](https://docs.python.org/3/builtins/stdtypes.html#dict)* *= {'js': FrontendProfile(name='js', default_subdir='js', default_package_manager='npm', artifacts=<function \_js_artifacts>, description='JavaScript single package (the original #32 overlay).'), 'ts': FrontendProfile(name='ts', default_subdir='ts', default_package_manager='npm', artifacts=<function \_ts_artifacts>, description='TypeScript single package (tsconfig + tsup build + vitest).'), 'ts-monorepo': FrontendProfile(name='ts-monorepo', default_subdir='ts', default_package_manager='pnpm', artifacts=<function \_ts_monorepo_artifacts>, description='TypeScript monorepo (pnpm workspaces + turbo).')}*
+### wads.profiles.DFLT_VITEST_RANGE *= '^3'*
+
+vitest’s semver range in the `ts` template. 3.x still installs on Node 20; 2.x has a
+critical advisory (tinypool) and 4.x a moderate one (`@vitest/mocker`); 5.x needs
+Node >= 22.12, so only a profile that sets a Node floor of 22 uses it.
+
+### wads.profiles.FRONTEND_PROFILES *: [dict](https://docs.python.org/3/builtins/stdtypes.html#dict)* *= {'js': FrontendProfile(name='js', default_subdir='js', default_package_manager='npm', artifacts=<function \_js_artifacts>, description='JavaScript single package (the original #32 overlay).', python=True, context_defaults={}), 'ts': FrontendProfile(name='ts', default_subdir='ts', default_package_manager='npm', artifacts=<function \_ts_artifacts>, description='TypeScript single package (tsconfig + tsup build + vitest).', python=True, context_defaults={}), 'ts-monorepo': FrontendProfile(name='ts-monorepo', default_subdir='ts', default_package_manager='pnpm', artifacts=<function \_ts_monorepo_artifacts>, description='TypeScript monorepo (pnpm workspaces + turbo).', python=True, context_defaults={}), 'ts-package': FrontendProfile(name='ts-package', default_subdir='.', default_package_manager='npm', artifacts=<function \_ts_artifacts>, description='A repo that is only a TypeScript package, at its root (no Python project; Node >= 22, CI on 22 and 24).', python=False, context_defaults={'node_versions': ('22', '24'), 'engines_node': '>=22.12', 'vitest_range': '^5'})}*
 
 The frontend profile registry. Extend it via [`register_frontend_profile()`](#wads.profiles.register_frontend_profile).
 
-### *class* wads.profiles.FrontendProfile(name, default_subdir, default_package_manager, artifacts, description='')
+### *class* wads.profiles.FrontendProfile(name, default_subdir, default_package_manager, artifacts, description='', python=True, context_defaults=dict())
 
 Bases: [`object`](https://docs.python.org/3/builtins/functions.html#object)
 
@@ -91,6 +104,10 @@ A declarative frontend language/toolchain profile.
   * **default_package_manager** ([`str`](https://docs.python.org/3/builtins/stdtypes.html#str)) – `"npm"` or `"pnpm"`.
   * **artifacts** ([`Callable`](https://docs.python.org/3/library/typing.html#typing.Callable)[[[`Mapping`](https://docs.python.org/3/library/typing.html#typing.Mapping)], [`list`](https://docs.python.org/3/builtins/stdtypes.html#list)]) – `context -> list[Artifact]` builder for this profile.
   * **description** ([`str`](https://docs.python.org/3/builtins/stdtypes.html#str)) – one-line human summary.
+  * **python** ([`bool`](https://docs.python.org/3/builtins/functions.html#bool)) – `False` for a profile that is the whole repo (no Python project):
+    `populate` then writes no `pyproject.toml`, Python package or Python CI.
+  * **context_defaults** ([`Mapping`](https://docs.python.org/3/library/typing.html#typing.Mapping)) – [`frontend_context()`](#wads.profiles.frontend_context) keyword defaults this profile
+    sets (`node_versions`, `engines_node`, `vitest_range`).
 
 ### wads.profiles.LICENSE_FILENAMES *= ('LICENSE', 'LICENSE.md', 'LICENSE.txt', 'LICENCE', 'COPYING')*
 
@@ -132,6 +149,10 @@ Paths are template paths (with the tokens); pyproject tables are dotted
   * **unlicensed** ([`tuple`](https://docs.python.org/3/builtins/stdtypes.html#tuple)) – `(text, replacement)` pairs applied to the templates when the
     package’s licence cannot be determined (the crates then declare none).
   * **description** ([`str`](https://docs.python.org/3/builtins/stdtypes.html#str)) – one-line human summary.
+
+### wads.profiles.ROOT_SUBDIR *= '.'*
+
+`subdir` of a component that is the repo root (a TypeScript-only package).
 
 ### wads.profiles.apply_frontend(pkg_dir, , profile='js', project_name, description='', license=None, subdir=None, package_name=None, version='0.0.1', package_manager=None, workspace_glob='packages/\*', example_package_name=None, watch_paths=None, overwrite=(), on_add=None, on_skip=None)
 
@@ -223,7 +244,7 @@ True
 * **Return type:**
   [`Optional`](https://docs.python.org/3/library/typing.html#typing.Optional)[[`tuple`](https://docs.python.org/3/builtins/stdtypes.html#tuple)]
 
-### wads.profiles.frontend_context(, profile_name, project_name, description='', license=None, subdir, package_name=None, version='0.0.1', package_manager='npm', workspace_glob='packages/\*', example_package_name=None, license_file=None, watch_paths=None)
+### wads.profiles.frontend_context(, profile_name, project_name, description='', license=None, subdir, package_name=None, version='0.0.1', package_manager='npm', workspace_glob='packages/\*', example_package_name=None, license_file=None, watch_paths=None, node_versions=('20', '22', '24'), engines_node=None, vitest_range='^3')
 
 Build the render context shared by all frontend-profile templates.
 
@@ -440,6 +461,9 @@ Deprecated: render context for the `js` overlay. Use [`apply_frontend()`](#wads.
 ### wads.profiles.register_frontend_profile(profile)
 
 Register (or override) a frontend profile by name. Returns the profile.
+
+Its `context_defaults` keys must be [`frontend_context()`](#wads.profiles.frontend_context) keywords, so a typo
+fails here and not at the first `apply_frontend`.
 
 * **Return type:**
   [`FrontendProfile`](#wads.profiles.FrontendProfile)

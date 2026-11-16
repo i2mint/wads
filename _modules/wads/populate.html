@@ -667,7 +667,8 @@
 <span class="sd">    :param frontend: Comma-separated list of frontend profiles to add (issue</span>
 <span class="sd">        #39), e.g. ``"ts"`` or ``"js,ts"``. Available profiles: ``js`` (the</span>
 <span class="sd">        original npm overlay), ``ts`` (single-package TypeScript), and</span>
-<span class="sd">        ``ts-monorepo`` (pnpm workspaces + turbo). Each component lands in its</span>
+<span class="sd">        ``ts-monorepo`` (pnpm workspaces + turbo); ``ts-package`` makes the repo</span>
+<span class="sd">    itself a TypeScript package, with no Python project. Each component lands in its</span>
 <span class="sd">        own subdir with its own path-filtered workflow, so multiple profiles</span>
 <span class="sd">        never collide. Empty by default. The single-component overrides below</span>
 <span class="sd">        (``npm_subdir`` / ``npm_package_name`` / ``npm_package_manager``) apply</span>
@@ -732,6 +733,33 @@
     <span class="n">pkg_dir</span> <span class="o">=</span> <span class="n">ensure_no_slash_suffix</span><span class="p">(</span><span class="n">pkg_dir</span><span class="p">)</span>
     <span class="n">name</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">basename</span><span class="p">(</span><span class="n">pkg_dir</span><span class="p">)</span>
     <span class="n">pjoin</span> <span class="o">=</span> <span class="k">lambda</span> <span class="o">*</span><span class="n">p</span><span class="p">:</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">pkg_dir</span><span class="p">,</span> <span class="o">*</span><span class="n">p</span><span class="p">)</span>
+
+    <span class="n">selected</span> <span class="o">=</span> <span class="n">_selected_frontends</span><span class="p">(</span><span class="n">frontend</span><span class="p">,</span> <span class="n">with_npm</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">selected</span> <span class="ow">and</span> <span class="n">_is_frontend_only</span><span class="p">(</span><span class="n">selected</span><span class="p">):</span>
+        <span class="c1"># A repo that is only a frontend package (e.g. ``-f ts-package``): none of the</span>
+        <span class="c1"># Python project below applies.</span>
+        <span class="k">if</span> <span class="n">native</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">"--native needs a Python project; this one has none"</span><span class="p">)</span>
+        <span class="n">_populate_frontend_only</span><span class="p">(</span>
+            <span class="n">pkg_dir</span><span class="p">,</span>
+            <span class="n">profiles</span><span class="o">=</span><span class="n">selected</span><span class="p">,</span>
+            <span class="n">name</span><span class="o">=</span><span class="n">name</span><span class="p">,</span>
+            <span class="n">description</span><span class="o">=</span><span class="n">description</span><span class="p">,</span>
+            <span class="n">license_name</span><span class="o">=</span><span class="n">license</span><span class="p">,</span>
+            <span class="n">author</span><span class="o">=</span><span class="n">author</span><span class="p">,</span>
+            <span class="n">root_url</span><span class="o">=</span><span class="n">root_url</span><span class="p">,</span>
+            <span class="n">version</span><span class="o">=</span><span class="n">npm_version</span> <span class="ow">or</span> <span class="n">version</span><span class="p">,</span>
+            <span class="n">npm_package_name</span><span class="o">=</span><span class="n">npm_package_name</span><span class="p">,</span>
+            <span class="n">npm_subdir</span><span class="o">=</span><span class="n">npm_subdir</span><span class="p">,</span>
+            <span class="n">npm_package_manager</span><span class="o">=</span><span class="n">npm_package_manager</span><span class="p">,</span>
+            <span class="n">overwrite</span><span class="o">=</span><span class="n">overwrite</span><span class="p">,</span>
+            <span class="n">tracker</span><span class="o">=</span><span class="n">tracker</span><span class="p">,</span>
+            <span class="n">clog</span><span class="o">=</span><span class="n">_clog</span><span class="p">,</span>
+            <span class="n">verbose</span><span class="o">=</span><span class="n">verbose</span><span class="p">,</span>
+            <span class="n">create_gitattributes</span><span class="o">=</span><span class="n">create_gitattributes</span><span class="p">,</span>
+            <span class="n">create_community_files</span><span class="o">=</span><span class="n">create_community_files</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="k">return</span> <span class="n">name</span>
 
     <span class="k">if</span> <span class="n">native</span><span class="p">:</span>  <span class="c1"># fail before writing anything</span>
         <span class="kn">from</span><span class="w"> </span><span class="nn">wads.profiles</span><span class="w"> </span><span class="kn">import</span> <span class="n">get_native_profile</span><span class="p">,</span> <span class="n">native_names</span>
@@ -881,28 +909,21 @@
             <span class="n">tracker</span><span class="o">.</span><span class="n">skip</span><span class="p">(</span><span class="s2">"setup.py"</span><span class="p">)</span>
 
     <span class="k">if</span> <span class="n">should_update</span><span class="p">(</span><span class="s2">"LICENSE"</span><span class="p">):</span>
-        <span class="n">_license_body</span> <span class="o">=</span> <span class="n">license_body</span><span class="p">(</span><span class="n">configs</span><span class="p">[</span><span class="s2">"license"</span><span class="p">])</span>
-
-        <span class="c1"># Resolve author for license placeholder substitution</span>
-        <span class="c1"># Try to get authors from existing pyproject.toml if it exists</span>
+        <span class="c1"># Authors of an existing pyproject.toml are the fallback copyright holder.</span>
         <span class="n">pyproject_authors</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isfile</span><span class="p">(</span><span class="n">pjoin</span><span class="p">(</span><span class="s2">"pyproject.toml"</span><span class="p">)):</span>
             <span class="k">try</span><span class="p">:</span>
-                <span class="n">pyproject_data</span> <span class="o">=</span> <span class="n">read_pyproject_toml</span><span class="p">(</span><span class="n">pjoin</span><span class="p">(</span><span class="s2">""</span><span class="p">))</span>
-                <span class="n">pyproject_authors</span> <span class="o">=</span> <span class="n">pyproject_data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"project"</span><span class="p">,</span> <span class="p">{})</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"authors"</span><span class="p">)</span>
+                <span class="n">pyproject_authors</span> <span class="o">=</span> <span class="p">(</span>
+                    <span class="n">read_pyproject_toml</span><span class="p">(</span><span class="n">pjoin</span><span class="p">(</span><span class="s2">""</span><span class="p">))</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"project"</span><span class="p">,</span> <span class="p">{})</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"authors"</span><span class="p">)</span>
+                <span class="p">)</span>
             <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
                 <span class="k">pass</span>  <span class="c1"># If reading fails, continue without pyproject authors</span>
 
-        <span class="n">resolved_author</span> <span class="o">=</span> <span class="n">resolve_author</span><span class="p">(</span>
+        <span class="n">_license_body</span> <span class="o">=</span> <span class="n">_license_text</span><span class="p">(</span>
+            <span class="n">configs</span><span class="p">[</span><span class="s2">"license"</span><span class="p">],</span>
             <span class="n">author</span><span class="o">=</span><span class="n">configs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"author"</span><span class="p">),</span>
-            <span class="n">pyproject_authors</span><span class="o">=</span><span class="n">pyproject_authors</span><span class="p">,</span>
             <span class="n">url</span><span class="o">=</span><span class="n">configs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"url"</span><span class="p">),</span>
-        <span class="p">)</span>
-
-        <span class="c1"># Substitute placeholders in license</span>
-        <span class="n">_license_body</span> <span class="o">=</span> <span class="n">substitute_license_placeholders</span><span class="p">(</span>
-            <span class="n">_license_body</span><span class="p">,</span>
-            <span class="n">author</span><span class="o">=</span><span class="n">resolved_author</span><span class="p">,</span>
+            <span class="n">pyproject_authors</span><span class="o">=</span><span class="n">pyproject_authors</span><span class="p">,</span>
         <span class="p">)</span>
 
         <span class="n">save_txt_to_pkg</span><span class="p">(</span><span class="s2">"LICENSE"</span><span class="p">,</span> <span class="n">_license_body</span><span class="p">)</span>
@@ -1249,14 +1270,7 @@
 
     <span class="c1"># Frontend profiles (opt-in, issue #39): add a JS/TS component per selected</span>
     <span class="c1"># profile. ``--with-npm`` is the back-compat alias for ``--frontend js``.</span>
-    <span class="n">selected_frontends</span> <span class="o">=</span> <span class="p">[</span><span class="n">p</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">frontend</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">","</span><span class="p">)</span> <span class="k">if</span> <span class="n">p</span><span class="o">.</span><span class="n">strip</span><span class="p">()]</span>
-    <span class="k">if</span> <span class="n">with_npm</span> <span class="ow">and</span> <span class="s2">"js"</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">selected_frontends</span><span class="p">:</span>
-        <span class="n">selected_frontends</span> <span class="o">=</span> <span class="p">[</span><span class="s2">"js"</span><span class="p">]</span> <span class="o">+</span> <span class="n">selected_frontends</span>
-    <span class="c1"># De-duplicate while preserving selection order.</span>
-    <span class="n">_seen</span><span class="p">:</span> <span class="nb">set</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
-    <span class="n">selected_frontends</span> <span class="o">=</span> <span class="p">[</span>
-        <span class="n">p</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">selected_frontends</span> <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="n">p</span> <span class="ow">in</span> <span class="n">_seen</span> <span class="ow">or</span> <span class="n">_seen</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">p</span><span class="p">))</span>
-    <span class="p">]</span>
+    <span class="n">selected_frontends</span> <span class="o">=</span> <span class="n">_selected_frontends</span><span class="p">(</span><span class="n">frontend</span><span class="p">,</span> <span class="n">with_npm</span><span class="p">)</span>
     <span class="k">if</span> <span class="n">selected_frontends</span><span class="p">:</span>
         <span class="kn">from</span><span class="w"> </span><span class="nn">wads.profiles</span><span class="w"> </span><span class="kn">import</span> <span class="n">apply_frontend</span>
 
@@ -1308,6 +1322,130 @@
 
 
 <span class="n">_DFLT_NPM_VERSION</span> <span class="o">=</span> <span class="s2">"0.0.1"</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_license_text</span><span class="p">(</span>
+    <span class="n">license_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">author</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">url</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">pyproject_authors</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">list</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""The text of the ``license_name`` licence, its copyright holder filled in</span>
+<span class="sd">    (:func:`~wads.licensing.resolve_author`: ``author``, else the pyproject authors,</span>
+<span class="sd">    else the repository ``url``'s owner).</span>
+
+<span class="sd">    &gt;&gt;&gt; "Jane Doe" in _license_text("mit", author="Jane Doe")</span>
+<span class="sd">    True</span>
+<span class="sd">    """</span>
+    <span class="k">return</span> <span class="n">substitute_license_placeholders</span><span class="p">(</span>
+        <span class="n">license_body</span><span class="p">(</span><span class="n">license_name</span><span class="p">),</span>
+        <span class="n">author</span><span class="o">=</span><span class="n">resolve_author</span><span class="p">(</span>
+            <span class="n">author</span><span class="o">=</span><span class="n">author</span><span class="p">,</span> <span class="n">pyproject_authors</span><span class="o">=</span><span class="n">pyproject_authors</span><span class="p">,</span> <span class="n">url</span><span class="o">=</span><span class="n">url</span>
+        <span class="p">),</span>
+    <span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_selected_frontends</span><span class="p">(</span><span class="n">frontend</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">with_npm</span><span class="p">:</span> <span class="nb">bool</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""The frontend profile names selected by ``frontend`` (comma-separated) and</span>
+<span class="sd">    ``with_npm`` (alias for ``js``), de-duplicated, in selection order.</span>
+
+<span class="sd">    &gt;&gt;&gt; _selected_frontends("ts, js,ts", with_npm=False)</span>
+<span class="sd">    ['ts', 'js']</span>
+<span class="sd">    &gt;&gt;&gt; _selected_frontends("ts", with_npm=True)</span>
+<span class="sd">    ['js', 'ts']</span>
+<span class="sd">    """</span>
+    <span class="n">names</span> <span class="o">=</span> <span class="p">[</span><span class="n">p</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">frontend</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">","</span><span class="p">)</span> <span class="k">if</span> <span class="n">p</span><span class="o">.</span><span class="n">strip</span><span class="p">()]</span>
+    <span class="k">if</span> <span class="n">with_npm</span> <span class="ow">and</span> <span class="s2">"js"</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">names</span><span class="p">:</span>
+        <span class="n">names</span> <span class="o">=</span> <span class="p">[</span><span class="s2">"js"</span><span class="p">]</span> <span class="o">+</span> <span class="n">names</span>
+    <span class="k">return</span> <span class="nb">list</span><span class="p">(</span><span class="nb">dict</span><span class="o">.</span><span class="n">fromkeys</span><span class="p">(</span><span class="n">names</span><span class="p">))</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_is_frontend_only</span><span class="p">(</span><span class="n">profile_names</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Whether every selected profile is a whole repo with no Python project.</span>
+
+<span class="sd">    &gt;&gt;&gt; _is_frontend_only(["ts-package"]), _is_frontend_only(["ts"]), _is_frontend_only([])</span>
+<span class="sd">    (True, False, False)</span>
+<span class="sd">    &gt;&gt;&gt; _is_frontend_only(["ts-package", "js"])</span>
+<span class="sd">    Traceback (most recent call last):</span>
+<span class="sd">      ...</span>
+<span class="sd">    ValueError: ts-package is a whole repo with no Python project; it cannot be combined with other frontend profiles: ts-package, js</span>
+<span class="sd">    """</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">wads.profiles</span><span class="w"> </span><span class="kn">import</span> <span class="n">get_frontend_profile</span>
+
+    <span class="n">python_less</span> <span class="o">=</span> <span class="p">[</span><span class="n">n</span> <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">profile_names</span> <span class="k">if</span> <span class="ow">not</span> <span class="n">get_frontend_profile</span><span class="p">(</span><span class="n">n</span><span class="p">)</span><span class="o">.</span><span class="n">python</span><span class="p">]</span>
+    <span class="k">if</span> <span class="n">python_less</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">python_less</span><span class="p">)</span> <span class="o">!=</span> <span class="nb">len</span><span class="p">(</span><span class="n">profile_names</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="s1">', '</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">python_less</span><span class="p">)</span><span class="si">}</span><span class="s2"> is a whole repo with no Python project; it "</span>
+            <span class="sa">f</span><span class="s2">"cannot be combined with other frontend profiles: </span><span class="si">{</span><span class="s1">', '</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">profile_names</span><span class="p">)</span><span class="si">}</span><span class="s2">"</span>
+        <span class="p">)</span>
+    <span class="k">return</span> <span class="nb">bool</span><span class="p">(</span><span class="n">python_less</span><span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_populate_frontend_only</span><span class="p">(</span>
+    <span class="n">pkg_dir</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">profiles</span><span class="p">,</span>
+    <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="n">description</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="n">license_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="n">author</span><span class="p">,</span>
+    <span class="n">root_url</span><span class="p">,</span>
+    <span class="n">version</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="n">npm_package_name</span><span class="p">,</span>
+    <span class="n">npm_subdir</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="n">npm_package_manager</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="n">overwrite</span><span class="p">,</span>
+    <span class="n">tracker</span><span class="p">,</span>
+    <span class="n">clog</span><span class="p">,</span>
+    <span class="n">verbose</span><span class="p">:</span> <span class="nb">bool</span><span class="p">,</span>
+    <span class="n">create_gitattributes</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+    <span class="n">create_community_files</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Populate a repo that is only a frontend package: licence, ``.gitignore``, and the</span>
+<span class="sd">    profile's files at its default subdir (the repo root for ``ts-package``)."""</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">wads.profiles</span><span class="w"> </span><span class="kn">import</span> <span class="n">apply_frontend</span><span class="p">,</span> <span class="n">get_frontend_profile</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">wads.templating</span><span class="w"> </span><span class="kn">import</span> <span class="n">Artifact</span><span class="p">,</span> <span class="n">generate</span>
+
+    <span class="n">url</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">root_url</span><span class="o">.</span><span class="n">rstrip</span><span class="p">(</span><span class="s1">'/'</span><span class="p">)</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2">"</span> <span class="k">if</span> <span class="n">root_url</span> <span class="k">else</span> <span class="kc">None</span>
+    <span class="n">body</span> <span class="o">=</span> <span class="n">_license_text</span><span class="p">(</span><span class="n">license_name</span><span class="p">,</span> <span class="n">author</span><span class="o">=</span><span class="n">author</span><span class="p">,</span> <span class="n">url</span><span class="o">=</span><span class="n">url</span><span class="p">)</span>
+    <span class="n">readme</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="n">gen_readme_text</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">description</span><span class="p">)</span>
+        <span class="o">+</span> <span class="sa">f</span><span class="s2">"</span><span class="se">\n</span><span class="s2">```</span><span class="se">\n</span><span class="s2">npm install </span><span class="si">{</span><span class="n">npm_package_name</span><span class="w"> </span><span class="ow">or</span><span class="w"> </span><span class="n">name</span><span class="si">}</span><span class="se">\n</span><span class="s2">```</span><span class="se">\n</span><span class="s2">"</span>
+    <span class="p">)</span>
+    <span class="n">generate</span><span class="p">(</span>
+        <span class="n">pkg_dir</span><span class="p">,</span>
+        <span class="p">[</span>
+            <span class="n">Artifact</span><span class="p">(</span><span class="s2">"LICENSE"</span><span class="p">,</span> <span class="k">lambda</span> <span class="n">_ctx</span><span class="p">:</span> <span class="n">body</span><span class="p">),</span>
+            <span class="n">Artifact</span><span class="p">(</span><span class="s2">"README.md"</span><span class="p">,</span> <span class="k">lambda</span> <span class="n">_ctx</span><span class="p">:</span> <span class="n">readme</span><span class="p">),</span>
+            <span class="o">*</span><span class="n">_static_file_artifacts</span><span class="p">(</span><span class="n">create_gitattributes</span><span class="p">,</span> <span class="n">create_community_files</span><span class="p">),</span>
+        <span class="p">],</span>
+        <span class="p">{},</span>
+        <span class="n">overwrite</span><span class="o">=</span><span class="n">overwrite</span><span class="p">,</span>
+        <span class="n">on_add</span><span class="o">=</span><span class="n">tracker</span><span class="o">.</span><span class="n">add</span><span class="p">,</span>
+        <span class="n">on_skip</span><span class="o">=</span><span class="n">tracker</span><span class="o">.</span><span class="n">skip</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">single</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">profiles</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span>
+    <span class="k">for</span> <span class="n">profile_name</span> <span class="ow">in</span> <span class="n">profiles</span><span class="p">:</span>
+        <span class="n">clog</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="se">\n</span><span class="s2">... adding frontend profile '</span><span class="si">{</span><span class="n">profile_name</span><span class="si">}</span><span class="s2">'"</span><span class="p">)</span>
+        <span class="n">default_subdir</span> <span class="o">=</span> <span class="n">get_frontend_profile</span><span class="p">(</span><span class="n">profile_name</span><span class="p">)</span><span class="o">.</span><span class="n">default_subdir</span>
+        <span class="n">apply_frontend</span><span class="p">(</span>
+            <span class="n">pkg_dir</span><span class="p">,</span>
+            <span class="n">profile</span><span class="o">=</span><span class="n">profile_name</span><span class="p">,</span>
+            <span class="n">project_name</span><span class="o">=</span><span class="n">name</span><span class="p">,</span>
+            <span class="n">description</span><span class="o">=</span><span class="n">description</span><span class="p">,</span>
+            <span class="n">license</span><span class="o">=</span><span class="n">license_name</span><span class="p">,</span>
+            <span class="n">subdir</span><span class="o">=</span><span class="n">npm_subdir</span> <span class="k">if</span> <span class="n">single</span> <span class="ow">and</span> <span class="n">npm_subdir</span> <span class="o">!=</span> <span class="s2">"js"</span> <span class="k">else</span> <span class="n">default_subdir</span><span class="p">,</span>
+            <span class="n">package_name</span><span class="o">=</span><span class="n">npm_package_name</span> <span class="k">if</span> <span class="n">single</span> <span class="k">else</span> <span class="kc">None</span><span class="p">,</span>
+            <span class="n">version</span><span class="o">=</span><span class="n">version</span><span class="p">,</span>
+            <span class="n">package_manager</span><span class="o">=</span><span class="n">npm_package_manager</span>
+            <span class="k">if</span> <span class="n">npm_package_manager</span> <span class="o">!=</span> <span class="s2">"npm"</span>
+            <span class="k">else</span> <span class="kc">None</span><span class="p">,</span>
+            <span class="n">overwrite</span><span class="o">=</span><span class="n">overwrite</span><span class="p">,</span>
+            <span class="n">on_add</span><span class="o">=</span><span class="n">tracker</span><span class="o">.</span><span class="n">add</span><span class="p">,</span>
+            <span class="n">on_skip</span><span class="o">=</span><span class="n">tracker</span><span class="o">.</span><span class="n">skip</span><span class="p">,</span>
+        <span class="p">)</span>
+    <span class="n">tracker</span><span class="o">.</span><span class="n">print_summary</span><span class="p">(</span><span class="n">verbose</span><span class="o">=</span><span class="n">verbose</span><span class="p">)</span>
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">_python_metadata_seed</span><span class="p">(</span><span class="n">pkg_dir</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
@@ -1964,7 +2102,7 @@
       
     </aside>
   </div>
-</div><script src="../../_static/documentation_options.js?v=c7da5180"></script>
+</div><script src="../../_static/documentation_options.js?v=65ada0c7"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/scripts/furo.js?v=46bd48cc"></script>

@@ -467,7 +467,8 @@ Will fail if old CI has unmappable content.</p></li>
 <li><p><strong>frontend</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a></span>) – Comma-separated list of frontend profiles to add (issue
 #39), e.g. <code class="docutils literal notranslate"><span class="pre">&quot;ts&quot;</span></code> or <code class="docutils literal notranslate"><span class="pre">&quot;js,ts&quot;</span></code>. Available profiles: <code class="docutils literal notranslate"><span class="pre">js</span></code> (the
 original npm overlay), <code class="docutils literal notranslate"><span class="pre">ts</span></code> (single-package TypeScript), and
-<code class="docutils literal notranslate"><span class="pre">ts-monorepo</span></code> (pnpm workspaces + turbo). Each component lands in its
+<code class="docutils literal notranslate"><span class="pre">ts-monorepo</span></code> (pnpm workspaces + turbo); <code class="docutils literal notranslate"><span class="pre">ts-package</span></code> makes the repo
+itself a TypeScript package, with no Python project. Each component lands in its
 own subdir with its own path-filtered workflow, so multiple profiles
 never collide. Empty by default. The single-component overrides below
 (<code class="docutils literal notranslate"><span class="pre">npm_subdir</span></code> / <code class="docutils literal notranslate"><span class="pre">npm_package_name</span></code> / <code class="docutils literal notranslate"><span class="pre">npm_package_manager</span></code>) apply
@@ -613,7 +614,7 @@ hatchling build system (<code class="docutils literal notranslate"><span class="
       
     </aside>
   </div>
-</div><script src="../_static/documentation_options.js?v=c7da5180"></script>
+</div><script src="../_static/documentation_options.js?v=65ada0c7"></script>
     <script src="../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../_static/scripts/furo.js?v=46bd48cc"></script>

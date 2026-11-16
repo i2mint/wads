@@ -1,4 +1,4 @@
-> built 2026-11-16 07:19 UTC from fb83dd2 (master) · wads 0.2.87. Details: build_info.json
+> built 2026-11-16 07:37 UTC from 6abd1fd (master) · wads 0.2.88. Details: build_info.json
 
 # index.html.md
 
@@ -104,11 +104,12 @@ TypeScript library). `populate --frontend <profile>` adds a parametrized
 **NPM CI** alongside the Python one, following the same
 “config-file-driven, fixed-workflow” model. Pick one or more **profiles**:
 
-| Profile       | Adds                                                                   | Subdir   | CI                             |
-|---------------|------------------------------------------------------------------------|----------|--------------------------------|
-| `js`          | `package.json` (npm)                                                   | `js/`    | single-package `npm-ci.yml`    |
-| `ts`          | `package.json` + `tsconfig.json` + `src/index.ts` (tsup build, vitest) | `ts/`    | single-package `npm-ci.yml`    |
-| `ts-monorepo` | pnpm workspace root + `turbo.json` + an example `packages/core`        | `ts/`    | matrixed `npm-ci-monorepo.yml` |
+| Profile       | Adds                                                                                        | Subdir   | CI                                          |
+|---------------|---------------------------------------------------------------------------------------------|----------|---------------------------------------------|
+| `js`          | `package.json` (npm)                                                                        | `js/`    | single-package `npm-ci.yml`                 |
+| `ts`          | `package.json` + `tsconfig.json` + `src/index.ts` (tsup build, vitest)                      | `ts/`    | single-package `npm-ci.yml`                 |
+| `ts-package`  | the `ts` files at the repo root, no Python project (`populate . -f ts-package`; Node >= 22) | `.`      | single-package `npm-ci.yml`, no path filter |
+| `ts-monorepo` | pnpm workspace root + `turbo.json` + an example `packages/core`                             | `ts/`    | matrixed `npm-ci-monorepo.yml`              |
 
 The package each profile scaffolds (`js/`, `ts/`, or the example `ts/packages/core/`) gets a copy of the repo’s root `LICENSE` (npm packs the one beside `package.json`), refreshed whenever the root one changes; a package you add to a monorepo later needs its own. The `ts` packages resolve types per condition (`.d.ts` for `import`, `.d.cts` for `require`) and type-check their tests separately (`tsconfig.test.json`, with Node types), so `src/` builds without Node globals.
 
@@ -6640,7 +6641,8 @@ Populate project directory root with useful packaging files, if they’re missin
   * **frontend** ([`str`](https://docs.python.org/3/builtins/stdtypes.html#str)) – Comma-separated list of frontend profiles to add (issue
     #39), e.g. `"ts"` or `"js,ts"`. Available profiles: `js` (the
     original npm overlay), `ts` (single-package TypeScript), and
-    `ts-monorepo` (pnpm workspaces + turbo). Each component lands in its
+    `ts-monorepo` (pnpm workspaces + turbo); `ts-package` makes the repo
+    itself a TypeScript package, with no Python project. Each component lands in its
     own subdir with its own path-filtered workflow, so multiple profiles
     never collide. Empty by default. The single-component overrides below
     (`npm_subdir` / `npm_package_name` / `npm_package_manager`) apply
@@ -6724,6 +6726,9 @@ Nothing here runs by default; the Python `populate` path and the
 | [`DFLT_SHARED_FIXTURES_DIR`](_autosummary/wads.profiles.html.md#wads.profiles.DFLT_SHARED_FIXTURES_DIR)   | Where a Python package and its npm twin keep the golden cases both test suites run (i2mint/wads#209).                                   |
 |-----------------------------------------------------------------------------|-----------------------------------------------------------------------------------------------------------------------------------------|
 | [`DFLT_RUST_DIR`](_autosummary/wads.profiles.html.md#wads.profiles.DFLT_RUST_DIR)              | Where a Rust core lives in the native (maturin) layout; when present, a change there runs the npm CI too (a wasm build may compile it). |
+| [`ROOT_SUBDIR`](_autosummary/wads.profiles.html.md#wads.profiles.ROOT_SUBDIR)                | `subdir` of a component that is the repo root (a TypeScript-only package).                                                              |
+| [`DFLT_VITEST_RANGE`](_autosummary/wads.profiles.html.md#wads.profiles.DFLT_VITEST_RANGE)          | vitest's semver range in the `ts` template.                                                                                             |
+| [`DFLT_NODE_VERSIONS`](_autosummary/wads.profiles.html.md#wads.profiles.DFLT_NODE_VERSIONS)         | Node versions a component's CI matrix runs, unless its profile says otherwise.                                                          |
 | [`LICENSE_FILENAMES`](_autosummary/wads.profiles.html.md#wads.profiles.LICENSE_FILENAMES)          | Root licence file names a frontend component copies, in order of preference.                                                            |
 | [`FRONTEND_PROFILES`](_autosummary/wads.profiles.html.md#wads.profiles.FRONTEND_PROFILES)          | The frontend profile registry.                                                                                                          |
 | [`NATIVE_PROFILES`](_autosummary/wads.profiles.html.md#wads.profiles.NATIVE_PROFILES)            | The native-backend registry.                                                                                                            |
@@ -6760,6 +6765,10 @@ Nothing here runs by default; the Python `populate` path and the
 |------------------------------------------------------------------------------------------------------|------------------------------------------------------------------------------|
 | [`NativeProfile`](_autosummary/wads.profiles.html.md#wads.profiles.NativeProfile)(name, template_dir, ...[, ...])       | A native (compiled-extension) backend that `populate --native` can scaffold. |
 
+### wads.profiles.DFLT_NODE_VERSIONS *= ('20', '22', '24')*
+
+Node versions a component’s CI matrix runs, unless its profile says otherwise.
+
 ### wads.profiles.DFLT_RUST_DIR *= 'rust'*
 
 Where a Rust core lives in the native (maturin) layout; when present, a change
@@ -6770,11 +6779,17 @@ there runs the npm CI too (a wasm build may compile it).
 Where a Python package and its npm twin keep the golden cases both test suites
 run (i2mint/wads#209). A change there runs the npm CI as well as the Python CI.
 
-### wads.profiles.FRONTEND_PROFILES *: [dict](https://docs.python.org/3/builtins/stdtypes.html#dict)* *= {'js': FrontendProfile(name='js', default_subdir='js', default_package_manager='npm', artifacts=<function \_js_artifacts>, description='JavaScript single package (the original #32 overlay).'), 'ts': FrontendProfile(name='ts', default_subdir='ts', default_package_manager='npm', artifacts=<function \_ts_artifacts>, description='TypeScript single package (tsconfig + tsup build + vitest).'), 'ts-monorepo': FrontendProfile(name='ts-monorepo', default_subdir='ts', default_package_manager='pnpm', artifacts=<function \_ts_monorepo_artifacts>, description='TypeScript monorepo (pnpm workspaces + turbo).')}*
+### wads.profiles.DFLT_VITEST_RANGE *= '^3'*
+
+vitest’s semver range in the `ts` template. 3.x still installs on Node 20; 2.x has a
+critical advisory (tinypool) and 4.x a moderate one (`@vitest/mocker`); 5.x needs
+Node >= 22.12, so only a profile that sets a Node floor of 22 uses it.
+
+### wads.profiles.FRONTEND_PROFILES *: [dict](https://docs.python.org/3/builtins/stdtypes.html#dict)* *= {'js': FrontendProfile(name='js', default_subdir='js', default_package_manager='npm', artifacts=<function \_js_artifacts>, description='JavaScript single package (the original #32 overlay).', python=True, context_defaults={}), 'ts': FrontendProfile(name='ts', default_subdir='ts', default_package_manager='npm', artifacts=<function \_ts_artifacts>, description='TypeScript single package (tsconfig + tsup build + vitest).', python=True, context_defaults={}), 'ts-monorepo': FrontendProfile(name='ts-monorepo', default_subdir='ts', default_package_manager='pnpm', artifacts=<function \_ts_monorepo_artifacts>, description='TypeScript monorepo (pnpm workspaces + turbo).', python=True, context_defaults={}), 'ts-package': FrontendProfile(name='ts-package', default_subdir='.', default_package_manager='npm', artifacts=<function \_ts_artifacts>, description='A repo that is only a TypeScript package, at its root (no Python project; Node >= 22, CI on 22 and 24).', python=False, context_defaults={'node_versions': ('22', '24'), 'engines_node': '>=22.12', 'vitest_range': '^5'})}*
 
 The frontend profile registry. Extend it via [`register_frontend_profile()`](_autosummary/wads.profiles.html.md#wads.profiles.register_frontend_profile).
 
-### *class* wads.profiles.FrontendProfile(name, default_subdir, default_package_manager, artifacts, description='')
+### *class* wads.profiles.FrontendProfile(name, default_subdir, default_package_manager, artifacts, description='', python=True, context_defaults=dict())
 
 Bases: [`object`](https://docs.python.org/3/builtins/functions.html#object)
 
@@ -6786,6 +6801,10 @@ A declarative frontend language/toolchain profile.
   * **default_package_manager** ([`str`](https://docs.python.org/3/builtins/stdtypes.html#str)) – `"npm"` or `"pnpm"`.
   * **artifacts** ([`Callable`](https://docs.python.org/3/library/typing.html#typing.Callable)[[[`Mapping`](https://docs.python.org/3/library/typing.html#typing.Mapping)], [`list`](https://docs.python.org/3/builtins/stdtypes.html#list)]) – `context -> list[Artifact]` builder for this profile.
   * **description** ([`str`](https://docs.python.org/3/builtins/stdtypes.html#str)) – one-line human summary.
+  * **python** ([`bool`](https://docs.python.org/3/builtins/functions.html#bool)) – `False` for a profile that is the whole repo (no Python project):
+    `populate` then writes no `pyproject.toml`, Python package or Python CI.
+  * **context_defaults** ([`Mapping`](https://docs.python.org/3/library/typing.html#typing.Mapping)) – [`frontend_context()`](_autosummary/wads.profiles.html.md#wads.profiles.frontend_context) keyword defaults this profile
+    sets (`node_versions`, `engines_node`, `vitest_range`).
 
 ### wads.profiles.LICENSE_FILENAMES *= ('LICENSE', 'LICENSE.md', 'LICENSE.txt', 'LICENCE', 'COPYING')*
 
@@ -6827,6 +6846,10 @@ Paths are template paths (with the tokens); pyproject tables are dotted
   * **unlicensed** ([`tuple`](https://docs.python.org/3/builtins/stdtypes.html#tuple)) – `(text, replacement)` pairs applied to the templates when the
     package’s licence cannot be determined (the crates then declare none).
   * **description** ([`str`](https://docs.python.org/3/builtins/stdtypes.html#str)) – one-line human summary.
+
+### wads.profiles.ROOT_SUBDIR *= '.'*
+
+`subdir` of a component that is the repo root (a TypeScript-only package).
 
 ### wads.profiles.apply_frontend(pkg_dir, , profile='js', project_name, description='', license=None, subdir=None, package_name=None, version='0.0.1', package_manager=None, workspace_glob='packages/\*', example_package_name=None, watch_paths=None, overwrite=(), on_add=None, on_skip=None)
 
@@ -6918,7 +6941,7 @@ True
 * **Return type:**
   [`Optional`](https://docs.python.org/3/library/typing.html#typing.Optional)[[`tuple`](https://docs.python.org/3/builtins/stdtypes.html#tuple)]
 
-### wads.profiles.frontend_context(, profile_name, project_name, description='', license=None, subdir, package_name=None, version='0.0.1', package_manager='npm', workspace_glob='packages/\*', example_package_name=None, license_file=None, watch_paths=None)
+### wads.profiles.frontend_context(, profile_name, project_name, description='', license=None, subdir, package_name=None, version='0.0.1', package_manager='npm', workspace_glob='packages/\*', example_package_name=None, license_file=None, watch_paths=None, node_versions=('20', '22', '24'), engines_node=None, vitest_range='^3')
 
 Build the render context shared by all frontend-profile templates.
 
@@ -7135,6 +7158,9 @@ Deprecated: render context for the `js` overlay. Use [`apply_frontend()`](_autos
 ### wads.profiles.register_frontend_profile(profile)
 
 Register (or override) a frontend profile by name. Returns the profile.
+
+Its `context_defaults` keys must be [`frontend_context()`](_autosummary/wads.profiles.html.md#wads.profiles.frontend_context) keywords, so a typo
+fails here and not at the first `apply_frontend`.
 
 * **Return type:**
   [`FrontendProfile`](_autosummary/wads.profiles.html.md#wads.profiles.FrontendProfile)
@@ -9476,18 +9502,16 @@ cannot be removed is not reported.
 
 # About this build
 
-This documentation was built on **2026-11-16 07:19 UTC** from commit <a href="https://github.com/i2mint/wads/commit/fb83dd2fae6ec85469cb37adc53de8407b89d940"><code>fb83dd2</code></a> on branch <code>master</code>, for **wads 0.2.87** (from <code>pyproject.toml</code>).
+This documentation was built on **2026-11-16 07:37 UTC** from commit <a href="https://github.com/i2mint/wads/commit/6abd1fd8ad7e7cb793b382736a82e07a0456d5ae"><code>6abd1fd</code></a> on branch <code>master</code>, for **wads 0.2.88** (from <code>pyproject.toml</code>).
 
-#### WARNING
-The documentation and the package may be misaligned:
-
-- The documented version (0.2.87) is behind the latest release on PyPI (0.2.88): `pip install wads` gives newer code than these docs describe.
+#### NOTE
+Nothing suggests a mismatch: the tree was clean at the commit above, and the documented version is the one on PyPI.
 
 ## Source
 
 |                     |                                                                                                                                                    |
 |---------------------|----------------------------------------------------------------------------------------------------------------------------------------------------|
-| Commit              | <a href="https://github.com/i2mint/wads/commit/fb83dd2fae6ec85469cb37adc53de8407b89d940"><code>fb83dd2fae6ec85469cb37adc53de8407b89d940</code></a> |
+| Commit              | <a href="https://github.com/i2mint/wads/commit/6abd1fd8ad7e7cb793b382736a82e07a0456d5ae"><code>6abd1fd8ad7e7cb793b382736a82e07a0456d5ae</code></a> |
 | Branch              | <code>master</code>                                                                                                                                |
 | Tags at this commit | none                                                                                                                                               |
 | Working tree        | clean                                                                                                                                              |
@@ -9498,9 +9522,9 @@ The documentation and the package may be misaligned:
 |              |                                                                                            |
 |--------------|--------------------------------------------------------------------------------------------|
 | Repository   | <code>i2mint/wads</code>                                                                   |
-| Run          | <a href="https://github.com/i2mint/wads/actions/runs/43822535434">43822535434</a>          |
+| Run          | <a href="https://github.com/i2mint/wads/actions/runs/43824761637">43824761637</a>          |
 | Ref          | <code>refs/heads/master</code>                                                             |
-| Event commit | <code>fb83dd2fae6ec85469cb37adc53de8407b89d940</code> (in the history of the built commit) |
+| Event commit | <code>6abd1fd8ad7e7cb793b382736a82e07a0456d5ae</code> (in the history of the built commit) |
 
 ## Tools
 
@@ -9525,13 +9549,13 @@ The documentation and the package may be misaligned:
 
 ## Package on PyPI
 
-Latest release: <a href="https://pypi.org/project/wads/0.2.88/">0.2.88</a>, newer than the documented version (0.2.87).
+Latest release: <a href="https://pypi.org/project/wads/0.2.88/">0.2.88</a>, the same as the documented version.
 
 ## Reproduce
 
 ```bash
 git clone https://github.com/i2mint/wads && cd wads
-git checkout fb83dd2fae6ec85469cb37adc53de8407b89d940
+git checkout 6abd1fd8ad7e7cb793b382736a82e07a0456d5ae
 pip install "epythet==0.2.22"
 epythet quickstart . --ignore tests/ scrap/ examples/
 ```
