@@ -467,6 +467,20 @@ def test_ts_package_does_not_copy_the_licence_onto_itself(tmp_path):
     assert (tmp_path / "LICENSE").read_text() == "MIT"
 
 
+def test_project_type_ts_package_is_the_same_repo_as_the_ts_package_profile(tmp_path):
+    a, b = tmp_path / "a", tmp_path / "b"
+    for d, kwargs in ((a, {"project_type": "ts-package"}), (b, {"frontend": "ts-package"})):
+        d.mkdir()
+        populate_pkg_dir(str(d), root_url="https://github.com/o", verbose=False, **kwargs)
+    files = lambda d: sorted(p.relative_to(d).as_posix() for p in d.rglob("*") if p.is_file())
+    assert files(a) == files(b) and "pyproject.toml" not in files(a)
+
+
+def test_a_kind_cannot_be_combined_with_a_frontend_profile(tmp_path):
+    with pytest.raises(ValueError, match="cannot be combined"):
+        populate_pkg_dir(str(tmp_path), verbose=False, project_type="ts-package", frontend="js")
+
+
 def test_populate_refuses_native_without_a_python_project(tmp_path):
     with pytest.raises(ValueError, match="native"):
         populate_pkg_dir(
