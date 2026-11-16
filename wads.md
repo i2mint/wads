@@ -1,4 +1,4 @@
-> built 2026-11-10 11:15 UTC from 595640e (master) · wads 0.2.84. Details: build_info.json
+> built 2026-11-16 07:00 UTC from f715e6d (master) · wads 0.2.85. Details: build_info.json
 
 # index.html.md
 
@@ -476,6 +476,8 @@ post_test = [
     "python scripts/cleanup.py",
 ]
 ```
+
+Each command runs under `bash -c` in the job’s activated venv: `pre_test` just before pytest, `post_test` right after it (also when the tests fail; a failing `post_test` fails the validation job, which blocks publish). They run once per test run, pinned-dependency legs included. `wads ci-local` does the same, except that it skips `post_test` when the tests fail.
 
 ### Build and Publish
 
@@ -2127,7 +2129,8 @@ and hosted CI does not: install pins such as `UV_CONSTRAINT`, and `PYTHONSAFEPAT
 activated, as CI’s are), where CI exports only the
 variables `[tool.wads.ci.env]` declares; `[tool.wads.ops.*]` system packages are not
 installed; lint runs on the tree as it is, where CI formats first; and an npm component
-runs once, on the local node, where CI runs once per `nodeVersions` entry.
+runs once, on the local node, where CI runs once per `nodeVersions` entry; and a
+`post_test` command is skipped when the tests fail, where CI runs it regardless.
 
 Each run works in a fresh `wads-ci-local-*` temporary directory that records its owner’s
 PID ([`wads.workdirs`](_autosummary/wads.workdirs.html.md#module-wads.workdirs)), and gives pytest a private `--basetemp` inside it, so
@@ -7797,6 +7800,7 @@ Available scripts:
 | [`export_ci_env`](_autosummary/wads.scripts.export_ci_env.html.md#module-wads.scripts.export_ci_env)               | Export the pyproject-declared CI environment to `$GITHUB_ENV`.                               |
 | [`npm_publish_guard`](_autosummary/wads.scripts.npm_publish_guard.html.md#module-wads.scripts.npm_publish_guard)       | Refuse an npm publish that would reuse the previous PyPI release's number (i2mint/wads#210). |
 | [`pytest_doctest_flags`](_autosummary/wads.scripts.pytest_doctest_flags.html.md#module-wads.scripts.pytest_doctest_flags) | Print the `-o doctest_optionflags=...` pytest argument CI should add, if any.                |
+| [`run_ci_commands`](_autosummary/wads.scripts.run_ci_commands.html.md#module-wads.scripts.run_ci_commands)           | Run the `[tool.wads.ci.commands]` `pre_test` / `post_test` lists in CI.                      |
 | [`sync_version`](_autosummary/wads.scripts.sync_version.html.md#module-wads.scripts.sync_version)                 | Write the release version into the manifests `[tool.wads.ci.version].sync` lists.            |
 
 
@@ -8033,6 +8037,59 @@ Read CI configuration and export to GitHub Actions.
   [`int`](https://docs.python.org/3/builtins/functions.html#int)
 * **Returns:**
   Exit code (0 for success, 1 for failure)
+
+
+# _autosummary/wads.scripts.run_ci_commands.html.md
+
+# wads.scripts.run_ci_commands
+
+Run the `[tool.wads.ci.commands]` `pre_test` / `post_test` lists in CI.
+
+`read_ci_config` hands each list over as a JSON array (a GitHub Actions output); the
+`run-tests-uv` action puts it in an environment variable and calls this script with
+the variable’s name. Each command runs under `bash -c` (as `wads ci-local` runs it; Git Bash on Windows runners), in order, in the current
+directory and environment (the venv is already activated), and the first failure stops
+the run with its exit status. An empty or unset list does nothing. Stdlib only.
+
+```pycon
+>>> run_commands(["echo hi"], run=lambda cmd, **kw: 0)
++ echo hi
+0
+>>> run_commands('["false", "echo unreachable"]', run=lambda cmd, **kw: 1 if cmd == "false" else 0)
++ false
+1
+```
+
+### Module Attributes
+
+| [`BASH_ENV_VAR`](_autosummary/wads.scripts.run_ci_commands.html.md#wads.scripts.run_ci_commands.BASH_ENV_VAR)   | The environment variable naming the bash to use.   |
+|-----------------------------------------------------------------|----------------------------------------------------|
+
+### Functions
+
+| [`main`](_autosummary/wads.scripts.run_ci_commands.html.md#wads.scripts.run_ci_commands.main)([argv])                      | `run_ci_commands.py ENV_VAR`: run the JSON list held in that variable.                             |
+|------------------------------------------------------------------------------------|----------------------------------------------------------------------------------------------------|
+| [`run_commands`](_autosummary/wads.scripts.run_ci_commands.html.md#wads.scripts.run_ci_commands.run_commands)(commands, \*[, run]) | Run `commands` (a list, or its JSON text) in order; return the first non-zero exit status, else 0. |
+
+### wads.scripts.run_ci_commands.BASH_ENV_VAR *= 'WADS_BASH'*
+
+The environment variable naming the bash to use. The action sets it from `$BASH`:
+on Windows runners a bare `bash` resolves to System32’s WSL launcher, not Git Bash.
+
+### wads.scripts.run_ci_commands.main(argv=None)
+
+`run_ci_commands.py ENV_VAR`: run the JSON list held in that variable.
+
+* **Return type:**
+  [`int`](https://docs.python.org/3/builtins/functions.html#int)
+
+### wads.scripts.run_ci_commands.run_commands(commands, \*, run=<function \_default_run>)
+
+Run `commands` (a list, or its JSON text) in order; return the first non-zero
+exit status, else 0.
+
+* **Return type:**
+  [`int`](https://docs.python.org/3/builtins/functions.html#int)
 
 
 # _autosummary/wads.scripts.set_env_vars.html.md
@@ -9408,16 +9465,18 @@ cannot be removed is not reported.
 
 # About this build
 
-This documentation was built on **2026-11-10 11:15 UTC** from commit <a href="https://github.com/i2mint/wads/commit/595640ef53b4a3b1c8c8382c452ff79093c4ecc2"><code>595640e</code></a> on branch <code>master</code>, for **wads 0.2.84** (from <code>pyproject.toml</code>).
+This documentation was built on **2026-11-16 07:00 UTC** from commit <a href="https://github.com/i2mint/wads/commit/f715e6dc2ea2ffa761c4f953a201a38e60ec92ca"><code>f715e6d</code></a> on branch <code>master</code>, for **wads 0.2.85** (from <code>pyproject.toml</code>).
 
-#### NOTE
-Nothing suggests a mismatch: the tree was clean at the commit above, and the documented version is the one on PyPI.
+#### WARNING
+The documentation and the package may be misaligned:
+
+- The documented version (0.2.85) is behind the latest release on PyPI (0.2.86): `pip install wads` gives newer code than these docs describe.
 
 ## Source
 
 |                     |                                                                                                                                                    |
 |---------------------|----------------------------------------------------------------------------------------------------------------------------------------------------|
-| Commit              | <a href="https://github.com/i2mint/wads/commit/595640ef53b4a3b1c8c8382c452ff79093c4ecc2"><code>595640ef53b4a3b1c8c8382c452ff79093c4ecc2</code></a> |
+| Commit              | <a href="https://github.com/i2mint/wads/commit/f715e6dc2ea2ffa761c4f953a201a38e60ec92ca"><code>f715e6dc2ea2ffa761c4f953a201a38e60ec92ca</code></a> |
 | Branch              | <code>master</code>                                                                                                                                |
 | Tags at this commit | none                                                                                                                                               |
 | Working tree        | clean                                                                                                                                              |
@@ -9428,9 +9487,9 @@ Nothing suggests a mismatch: the tree was clean at the commit above, and the doc
 |              |                                                                                            |
 |--------------|--------------------------------------------------------------------------------------------|
 | Repository   | <code>i2mint/wads</code>                                                                   |
-| Run          | <a href="https://github.com/i2mint/wads/actions/runs/42805380038">42805380038</a>          |
+| Run          | <a href="https://github.com/i2mint/wads/actions/runs/43820273130">43820273130</a>          |
 | Ref          | <code>refs/heads/master</code>                                                             |
-| Event commit | <code>595640ef53b4a3b1c8c8382c452ff79093c4ecc2</code> (in the history of the built commit) |
+| Event commit | <code>f715e6dc2ea2ffa761c4f953a201a38e60ec92ca</code> (in the history of the built commit) |
 
 ## Tools
 
@@ -9455,13 +9514,13 @@ Nothing suggests a mismatch: the tree was clean at the commit above, and the doc
 
 ## Package on PyPI
 
-Latest release: <a href="https://pypi.org/project/wads/0.2.84/">0.2.84</a>, the same as the documented version.
+Latest release: <a href="https://pypi.org/project/wads/0.2.86/">0.2.86</a>, newer than the documented version (0.2.85).
 
 ## Reproduce
 
 ```bash
 git clone https://github.com/i2mint/wads && cd wads
-git checkout 595640ef53b4a3b1c8c8382c452ff79093c4ecc2
+git checkout f715e6dc2ea2ffa761c4f953a201a38e60ec92ca
 pip install "epythet==0.2.22"
 epythet quickstart . --ignore tests/ scrap/ examples/
 ```

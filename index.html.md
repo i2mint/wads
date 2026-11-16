@@ -473,6 +473,8 @@ post_test = [
 ]
 ```
 
+Each command runs under `bash -c` in the job’s activated venv: `pre_test` just before pytest, `post_test` right after it (also when the tests fail; a failing `post_test` fails the validation job, which blocks publish). They run once per test run, pinned-dependency legs included. `wads ci-local` does the same, except that it skips `post_test` when the tests fail.
+
 ### Build and Publish
 
 ```toml

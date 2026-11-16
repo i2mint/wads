@@ -42,7 +42,8 @@ and hosted CI does not: install pins such as `UV_CONSTRAINT`, and `PYTHONSAFEPAT
 activated, as CI’s are), where CI exports only the
 variables `[tool.wads.ci.env]` declares; `[tool.wads.ops.*]` system packages are not
 installed; lint runs on the tree as it is, where CI formats first; and an npm component
-runs once, on the local node, where CI runs once per `nodeVersions` entry.
+runs once, on the local node, where CI runs once per `nodeVersions` entry; and a
+`post_test` command is skipped when the tests fail, where CI runs it regardless.
 
 Each run works in a fresh `wads-ci-local-*` temporary directory that records its owner’s
 PID ([`wads.workdirs`](wads.workdirs.html.md#module-wads.workdirs)), and gives pytest a private `--basetemp` inside it, so

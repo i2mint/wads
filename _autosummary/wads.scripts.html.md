@@ -25,4 +25,5 @@ Available scripts:
 | [`export_ci_env`](wads.scripts.export_ci_env.html.md#module-wads.scripts.export_ci_env)               | Export the pyproject-declared CI environment to `$GITHUB_ENV`.                               |
 | [`npm_publish_guard`](wads.scripts.npm_publish_guard.html.md#module-wads.scripts.npm_publish_guard)       | Refuse an npm publish that would reuse the previous PyPI release's number (i2mint/wads#210). |
 | [`pytest_doctest_flags`](wads.scripts.pytest_doctest_flags.html.md#module-wads.scripts.pytest_doctest_flags) | Print the `-o doctest_optionflags=...` pytest argument CI should add, if any.                |
+| [`run_ci_commands`](wads.scripts.run_ci_commands.html.md#module-wads.scripts.run_ci_commands)           | Run the `[tool.wads.ci.commands]` `pre_test` / `post_test` lists in CI.                      |
 | [`sync_version`](wads.scripts.sync_version.html.md#module-wads.scripts.sync_version)                 | Write the release version into the manifests `[tool.wads.ci.version].sync` lists.            |
