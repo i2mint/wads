@@ -582,5 +582,39 @@ def test_populate_passes_the_repository_url_to_the_component(tmp_path):
     assert pkg["repository"]["url"] == "git+https://github.com/myorg/widget.git"
 
 
+def test_the_repository_comes_from_the_git_remote_when_no_root_url_is_given(tmp_path):
+    for frontend in ("ts", "ts-package"):
+        pkg_dir = tmp_path / frontend / "byok"
+        pkg_dir.mkdir(parents=True)
+        _git_init(pkg_dir, "git@github.com:myorg/byok.git")
+        populate_pkg_dir(str(pkg_dir), verbose=False, frontend=frontend)
+        manifest = pkg_dir / ("ts" if frontend == "ts" else ".") / "package.json"
+        url = json.loads(manifest.read_text())["repository"]["url"]
+        assert url == "git+https://github.com/myorg/byok.git"
+
+
+def test_a_monorepo_at_the_repo_root_names_its_package_directory(tmp_path):
+    apply_frontend(
+        str(tmp_path),
+        profile="ts-monorepo",
+        project_name="mono",
+        subdir=".",
+        repository_url="https://github.com/myorg/mono",
+    )
+    pkg = json.loads((tmp_path / "packages" / "core" / "package.json").read_text())
+    assert pkg["repository"]["directory"] == "packages/core"
+
+
+def test_a_url_with_a_quote_cannot_break_package_json(tmp_path):
+    apply_frontend(
+        str(tmp_path),
+        profile="ts",
+        project_name="w",
+        repository_url='https://github.com/o/r"x',
+    )
+    pkg = json.loads((tmp_path / "ts" / "package.json").read_text())
+    assert pkg["repository"]["url"].endswith('r"x.git')
+
+
 if __name__ == "__main__":
     pytest.main([__file__, "-v"])

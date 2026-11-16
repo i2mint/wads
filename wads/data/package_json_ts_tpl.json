@@ -4,11 +4,7 @@
   "description": "<< description >>",
   "type": "module",
 <%- if npm_repository %>
-  "repository": {
-    "type": "git",
-    "url": "<< npm_repository >>"<% if npm_repository_directory %>,
-    "directory": "<< npm_repository_directory >>"<% endif %>
-  },
+  "repository": << npm_repository | tojson >>,
 <%- endif %>
   "main": "./dist/index.cjs",
   "module": "./dist/index.js",
