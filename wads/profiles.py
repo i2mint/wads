@@ -25,6 +25,7 @@ Nothing here runs by default; the Python ``populate`` path and the
 
 from __future__ import annotations
 
+import json
 import os
 from dataclasses import dataclass
 from typing import Callable, Mapping, Optional
@@ -167,7 +168,9 @@ def frontend_context(
     return {
         "npm_package_name": package_name or project_name,
         "npm_version": version,
-        "description": description,
+        # Inserted raw into JSON templates: escape quotes and backslashes (a Python
+        # project's own description can hold them).
+        "description": json.dumps(description, ensure_ascii=False)[1:-1],
         "npm_license": _to_spdx(license),
         "npm_subdir": subdir,
         "npm_package_manager": package_manager,

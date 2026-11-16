@@ -37,7 +37,11 @@ from wads import (
 )
 from wads.util import mk_conditional_logger, git, ensure_no_slash_suffix
 from wads.pack import write_configs
-from wads.toml_util import write_pyproject_toml, read_pyproject_toml
+from wads.toml_util import (
+    write_pyproject_toml,
+    read_pyproject_toml,
+    get_project_metadata,
+)
 from wads.licensing import (
     license_body,
     resolve_author,
@@ -304,7 +308,7 @@ def populate_pkg_dir(
     with_npm: bool = False,
     npm_subdir: str = "js",
     npm_package_name: str | None = None,
-    npm_version: str = "0.0.1",
+    npm_version: str | None = None,
     npm_package_manager: str = "npm",
     create_tests: bool = False,
     native: str = "",
@@ -363,7 +367,8 @@ def populate_pkg_dir(
         calling wads's reusable NPM workflow. Off by default.
     :param npm_subdir: Subdirectory holding the JS/TS package (default ``js``).
     :param npm_package_name: npm package name (defaults to the project name).
-    :param npm_version: initial npm package version (default ``0.0.1``).
+    :param npm_version: initial npm package version (default: the ``[project].version``
+        of the Python project's ``pyproject.toml``, else ``0.0.1``).
     :param npm_package_manager: package manager for the JS/TS package —
         ``"npm"`` (default) or ``"pnpm"``. pnpm consumers should also declare a
         ``"packageManager": "pnpm@x.y.z"`` field in package.json.
@@ -952,13 +957,18 @@ def populate_pkg_dir(
             npm_package_manager if (single and npm_package_manager != "npm") else None
         )
         name_override = npm_package_name if single else None
+        seed = _python_metadata_seed(pkg_dir)
+        npm_description = configs.get("description", "")
+        if npm_description in ("", populate_dflts["description"]):
+            npm_description = seed.get("description") or npm_description
+        npm_version = npm_version or seed.get("version") or _DFLT_NPM_VERSION
         for profile_name in selected_frontends:
             _clog(f"\n... adding frontend profile '{profile_name}'")
             apply_frontend(
                 pkg_dir,
                 profile=profile_name,
                 project_name=name,
-                description=configs.get("description", ""),
+                description=npm_description,
                 license=configs.get("license"),
                 subdir=subdir_override,
                 package_name=name_override,
@@ -982,6 +992,35 @@ def populate_pkg_dir(
         raise ci_error
 
     return name
+
+
+_DFLT_NPM_VERSION = "0.0.1"
+
+
+def _python_metadata_seed(pkg_dir: str) -> dict:
+    """The ``version`` and ``description`` of the Python project at ``pkg_dir``.
+
+    Seeds a frontend component's ``package.json`` so a twin of a Python package starts
+    at the PyPI version (``[tool.wads.ci.version] sync`` refuses versions that disagree)
+    and does not carry the placeholder description. Only string values count (a dynamic
+    version is not one); empty when there is no ``pyproject.toml``.
+
+    >>> import tempfile
+    >>> d = tempfile.mkdtemp()
+    >>> _python_metadata_seed(d)
+    {}
+    >>> _ = open(os.path.join(d, "pyproject.toml"), "w").write(
+    ...     '[project]\\nname = "x"\\nversion = "0.3.12"\\ndescription = "Does x"\\n'
+    ... )
+    >>> _python_metadata_seed(d)
+    {'version': '0.3.12', 'description': 'Does x'}
+    """
+    project = get_project_metadata(pkg_dir)
+    return {
+        key: project[key]
+        for key in ("version", "description")
+        if isinstance(project.get(key), str) and project[key].strip()
+    }
 
 
 def _keep_npm_components_out_of_python_ci(pkg_dir, tracker, clog):
