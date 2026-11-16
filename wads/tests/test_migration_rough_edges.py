@@ -165,3 +165,12 @@ def test_the_ambiguous_bsd_classifier_gives_no_spdx_id():
     assert pep639_license("BSD License") == {"text": "BSD License"}
     assert _spdx_expression("BSD License") is None
     assert _spdx_expression("BSD-2-Clause") == "BSD-2-Clause"
+
+
+def test_native_licence_of_a_bsd_classifier_is_none(tmp_path):
+    from wads.profiles import native_licence
+
+    (tmp_path / "pyproject.toml").write_text(
+        '[project]\nclassifiers = ["License :: OSI Approved :: BSD License"]\n'
+    )
+    assert native_licence(str(tmp_path)) is None
