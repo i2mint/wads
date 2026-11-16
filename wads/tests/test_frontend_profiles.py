@@ -651,5 +651,23 @@ def test_a_url_with_a_quote_cannot_break_package_json(tmp_path):
     assert pkg["repository"]["url"].endswith('r"x.git')
 
 
+def test_js_package_json_carries_the_repository_when_the_url_is_known(tmp_path):
+    """#239: same ``npm_repository`` key as the ts templates; no url, no field (the
+    golden, rendered without one, is unchanged)."""
+    apply_frontend(
+        str(tmp_path),
+        profile="js",
+        project_name="widget",
+        repository_url="git@github.com:myorg/widget.git",
+    )
+    pkg = json.loads((tmp_path / "js" / "package.json").read_text())
+    assert pkg["repository"] == {
+        "type": "git",
+        "url": "git+https://github.com/myorg/widget.git",
+        "directory": "js",
+    }
+    assert pkg["main"] == "dist/index.js", "the rest of the manifest is as before"
+
+
 if __name__ == "__main__":
     pytest.main([__file__, "-v"])
