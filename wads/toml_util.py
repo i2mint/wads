@@ -35,6 +35,14 @@ def pep639_license(license_name: str):
     'Apache-2.0'
     >>> pep639_license("Proprietary")
     {'text': 'Proprietary'}
+
+    The trove classifier ``BSD License`` names no variant (2-clause, 3-clause, 0BSD,
+    ...), so it gives no SPDX id rather than a guess; set ``[project].license``:
+
+    >>> pep639_license("BSD License")
+    {'text': 'BSD License'}
+    >>> pep639_license("BSD-2-Clause")
+    'BSD-2-Clause'
     """
     if isinstance(license_name, dict):
         return license_name  # already a table
@@ -52,7 +60,6 @@ def pep639_license(license_name: str):
         "apache license 2.0": "Apache-2.0",
         "apache 2.0": "Apache-2.0",
         "mit license": "MIT",
-        "bsd license": "BSD-3-Clause",
     }
     candidate = aliases.get(str(license_name).strip().lower(), license_name)
     try:
