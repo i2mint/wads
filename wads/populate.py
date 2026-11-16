@@ -358,7 +358,8 @@ def populate_pkg_dir(
     :param frontend: Comma-separated list of frontend profiles to add (issue
         #39), e.g. ``"ts"`` or ``"js,ts"``. Available profiles: ``js`` (the
         original npm overlay), ``ts`` (single-package TypeScript), and
-        ``ts-monorepo`` (pnpm workspaces + turbo); ``ts-package`` makes the repo
+        ``ts-monorepo`` (pnpm workspaces + turbo); ``ts-package`` (alias of
+    ``project_type='ts-package'``) makes the repo
     itself a TypeScript package, with no Python project. Each component lands in its
         own subdir with its own path-filtered workflow, so multiple profiles
         never collide. Empty by default. The single-component overrides below
@@ -1070,6 +1071,9 @@ def _selected_frontends(frontend: str, with_npm: bool) -> list:
 #: project; add a kind here to add a repo type that has none.
 FRONTEND_ONLY_KINDS: dict = {"ts-package": ("ts-package",)}
 
+#: The ``project_type`` values of a Python project.
+PYTHON_PROJECT_TYPES = ("lib", "app")
+
 
 def _frontend_only_profiles(project_type, selected) -> Optional[list]:
     """The frontend profiles of a repo with no Python project, or ``None`` for one that
@@ -1078,6 +1082,10 @@ def _frontend_only_profiles(project_type, selected) -> Optional[list]:
 
     >>> _frontend_only_profiles("lib", ["ts"]) is None
     True
+    >>> _frontend_only_profiles("ts_package", [])
+    Traceback (most recent call last):
+      ...
+    ValueError: unknown project_type 'ts_package'; use one of ('lib', 'app', 'ts-package')
     >>> _frontend_only_profiles("ts-package", [])
     ['ts-package']
     >>> _frontend_only_profiles("lib", ["ts-package"])
@@ -1087,7 +1095,12 @@ def _frontend_only_profiles(project_type, selected) -> Optional[list]:
       ...
     ValueError: ts-package is a whole repo with no Python project; it cannot be combined with other frontend profiles: js
     """
+    known = (*PYTHON_PROJECT_TYPES, *FRONTEND_ONLY_KINDS)
+    if project_type is not None and project_type not in known:
+        raise ValueError(f"unknown project_type {project_type!r}; use one of {known}")
     kind = project_type if project_type in FRONTEND_ONLY_KINDS else None
+    # Legacy alias: ``-f ts-package`` (released before ``-p``) names the kind by its
+    # profile. New kinds get no such alias.
     kind = kind or next((n for n in selected if n in FRONTEND_ONLY_KINDS), None)
     if kind is None:
         return None

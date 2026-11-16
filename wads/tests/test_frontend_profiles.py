@@ -468,12 +468,33 @@ def test_ts_package_does_not_copy_the_licence_onto_itself(tmp_path):
 
 
 def test_project_type_ts_package_is_the_same_repo_as_the_ts_package_profile(tmp_path):
-    a, b = tmp_path / "a", tmp_path / "b"
-    for d, kwargs in ((a, {"project_type": "ts-package"}), (b, {"frontend": "ts-package"})):
-        d.mkdir()
+    out = {}
+    for label, kwargs in (("p", {"project_type": "ts-package"}), ("f", {"frontend": "ts-package"})):
+        d = tmp_path / label / "byok"
+        d.mkdir(parents=True)
         populate_pkg_dir(str(d), root_url="https://github.com/o", verbose=False, **kwargs)
-    files = lambda d: sorted(p.relative_to(d).as_posix() for p in d.rglob("*") if p.is_file())
-    assert files(a) == files(b) and "pyproject.toml" not in files(a)
+        out[label] = {
+            p.relative_to(d).as_posix(): p.read_text()
+            for p in sorted(d.rglob("*"))
+            if p.is_file()
+        }
+    assert out["p"] == out["f"]
+    assert "pyproject.toml" not in out["p"]
+    assert json.loads(out["p"]["package.json"])["engines"] == {"node": ">=22.12"}
+
+
+@pytest.mark.parametrize("bad", ["ts_package", "tspackage", "ts", ""])
+def test_an_unknown_project_type_is_refused_before_anything_is_written(tmp_path, bad):
+    with pytest.raises(ValueError, match="unknown project_type"):
+        populate_pkg_dir(str(tmp_path), verbose=False, project_type=bad)
+    assert list(tmp_path.iterdir()) == []
+
+
+@pytest.mark.parametrize("ok", [None, "lib", "app"])
+def test_the_python_project_types_are_still_accepted(ok):
+    from wads.populate import _frontend_only_profiles
+
+    assert _frontend_only_profiles(ok, []) is None
 
 
 def test_a_kind_cannot_be_combined_with_a_frontend_profile(tmp_path):
