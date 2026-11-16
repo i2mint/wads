@@ -520,6 +520,29 @@
 
 
 
+<span class="c1">#: ``[tool.wads.ci.commands]`` keys the reusable workflow never runs (issue #228):</span>
+<span class="c1">#: ``pre_test`` / ``post_test`` run (#203); these do not.</span>
+<span class="n">IGNORED_COMMAND_KEYS</span> <span class="o">=</span> <span class="p">(</span><span class="s2">"test"</span><span class="p">,</span> <span class="s2">"lint"</span><span class="p">,</span> <span class="s2">"format"</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="ignored_commands_message">
+<a class="viewcode-back" href="../../_autosummary/wads.ci_config.html#wads.ci_config.ignored_commands_message">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">ignored_commands_message</span><span class="p">(</span><span class="n">key</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">commands</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""The one sentence both ``read_ci_config`` and ``wads ci-local`` say about an</span>
+<span class="sd">    ignored ``[tool.wads.ci.commands]`` key (single line: it goes in a workflow command).</span>
+
+<span class="sd">    &gt;&gt;&gt; ignored_commands_message("lint", ["ruff check ."])</span>
+<span class="sd">    '[tool.wads.ci.commands].lint (ruff check .) is not run by CI: only pre_test and post_test are. CI runs pytest, ruff and the formatter from [tool.wads.ci.testing] and [tool.wads.ci.quality].'</span>
+<span class="sd">    """</span>
+    <span class="n">shown</span> <span class="o">=</span> <span class="s2">"; "</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="s2">" "</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">c</span><span class="p">)</span><span class="o">.</span><span class="n">split</span><span class="p">())</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">commands</span><span class="p">)</span>
+    <span class="k">return</span> <span class="p">(</span>
+        <span class="sa">f</span><span class="s2">"[tool.wads.ci.commands].</span><span class="si">{</span><span class="n">key</span><span class="si">}</span><span class="s2"> (</span><span class="si">{</span><span class="n">shown</span><span class="si">}</span><span class="s2">) is not run by CI: only pre_test "</span>
+        <span class="sa">f</span><span class="s2">"and post_test are. CI runs pytest, ruff and the formatter from "</span>
+        <span class="sa">f</span><span class="s2">"[tool.wads.ci.testing] and [tool.wads.ci.quality]."</span>
+    <span class="p">)</span></div>
+
+
+
 <div class="viewcode-block" id="CIConfig">
 <a class="viewcode-back" href="../../_autosummary/wads.ci_config.html#wads.ci_config.CIConfig">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">CIConfig</span><span class="p">:</span>
@@ -675,7 +698,7 @@
 
     <span class="nd">@property</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">commands_test</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
-<span class="w">        </span><span class="sd">"""Get test commands (defaults to ['pytest'])."""</span>
+<span class="w">        </span><span class="sd">"""Get test commands (defaults to ['pytest']). CI does not run them (#228)."""</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">ci_config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"commands"</span><span class="p">,</span> <span class="p">{})</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"test"</span><span class="p">,</span> <span class="p">[</span><span class="s2">"pytest"</span><span class="p">])</span>
 
     <span class="nd">@property</span>
@@ -685,12 +708,38 @@
 
     <span class="nd">@property</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">commands_lint</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
-<span class="w">        </span><span class="sd">"""Get lint commands."""</span>
+<span class="w">        </span><span class="sd">"""Get lint commands. CI does not run them (#228)."""</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">ci_config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"commands"</span><span class="p">,</span> <span class="p">{})</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"lint"</span><span class="p">,</span> <span class="p">[])</span>
 
     <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">ignored_commands</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]]:</span>
+<span class="w">        </span><span class="sd">"""The ``[tool.wads.ci.commands]`` entries CI ignores, by key.</span>
+
+<span class="sd">        ``test`` counts only when it is not plain ``["pytest"]``, which is what CI runs</span>
+<span class="sd">        anyway. A malformed value is reported as its ``repr`` rather than raising: this</span>
+<span class="sd">        is a diagnostic, and the keys are not read by anything that would fail on it.</span>
+
+<span class="sd">        &gt;&gt;&gt; cfg = lambda cmds: CIConfig({"tool": {"wads": {"ci": {"commands": cmds}}}})</span>
+<span class="sd">        &gt;&gt;&gt; cfg({"test": ["pytest"], "lint": []}).ignored_commands</span>
+<span class="sd">        {}</span>
+<span class="sd">        &gt;&gt;&gt; cfg({"test": ["tox"], "lint": ["ruff check ."]}).ignored_commands</span>
+<span class="sd">        {'test': ['tox'], 'lint': ['ruff check .']}</span>
+<span class="sd">        &gt;&gt;&gt; cfg({"lint": 3}).ignored_commands</span>
+<span class="sd">        {'lint': ['3']}</span>
+<span class="sd">        """</span>
+        <span class="n">ignored</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">IGNORED_COMMAND_KEYS</span><span class="p">:</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">value</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_command_list</span><span class="p">(</span><span class="n">key</span><span class="p">)</span>
+            <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+                <span class="n">value</span> <span class="o">=</span> <span class="p">[</span><span class="nb">repr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ci_config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"commands"</span><span class="p">,</span> <span class="p">{})</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">key</span><span class="p">))]</span>
+            <span class="k">if</span> <span class="n">value</span> <span class="ow">and</span> <span class="ow">not</span> <span class="p">(</span><span class="n">key</span> <span class="o">==</span> <span class="s2">"test"</span> <span class="ow">and</span> <span class="n">value</span> <span class="o">==</span> <span class="p">[</span><span class="s2">"pytest"</span><span class="p">]):</span>
+                <span class="n">ignored</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">value</span>
+        <span class="k">return</span> <span class="n">ignored</span>
+
+    <span class="nd">@property</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">commands_format</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
-<span class="w">        </span><span class="sd">"""Get format commands."""</span>
+<span class="w">        </span><span class="sd">"""Get format commands. CI does not run them (#228)."""</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">ci_config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"commands"</span><span class="p">,</span> <span class="p">{})</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"format"</span><span class="p">,</span> <span class="p">[])</span>
 
     <span class="c1"># 🌍 ENVIRONMENT VARIABLES</span>
@@ -1790,7 +1839,7 @@
       
     </aside>
   </div>
-</div><script src="../../_static/documentation_options.js?v=ccedd4a1"></script>
+</div><script src="../../_static/documentation_options.js?v=8b819429"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/scripts/furo.js?v=46bd48cc"></script>

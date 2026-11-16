@@ -1,4 +1,4 @@
-> built 2026-11-16 07:55 UTC from 465e128 (master) · wads 0.2.89. Details: build_info.json
+> built 2026-11-16 08:49 UTC from 56c23ed (master) · wads 0.2.90. Details: build_info.json
 
 # index.html.md
 
@@ -1291,12 +1291,14 @@ settings in CI workflow files.
 | [`DFLT_DEPLOY_MARKER`](_autosummary/wads.ci_config.html.md#wads.ci_config.DFLT_DEPLOY_MARKER)         | validation, then the publish / Pages jobs.                                                                                                         |
 | [`TRIGGER_LEVELS`](_autosummary/wads.ci_config.html.md#wads.ci_config.TRIGGER_LEVELS)             | The levels a manual run (or `wads ci-local --level`) can ask for.                                                                                  |
 | [`DFLT_SKIP_PUBLISH_MARKER`](_autosummary/wads.ci_config.html.md#wads.ci_config.DFLT_SKIP_PUBLISH_MARKER)   | each suppresses one side-effecting job and nothing else.                                                                                           |
+| [`IGNORED_COMMAND_KEYS`](_autosummary/wads.ci_config.html.md#wads.ci_config.IGNORED_COMMAND_KEYS)       | `[tool.wads.ci.commands]` keys the reusable workflow never runs (issue #228): `pre_test` / `post_test` run (#203); these do not.                   |
 
 ### Functions
 
 | [`doctests_hidden_by_testpaths`](_autosummary/wads.ci_config.html.md#wads.ci_config.doctests_hidden_by_testpaths)(data[, repo_dir])   | Package dirs holding doctests that `[tool.pytest.ini_options].testpaths` leaves uncollected.                                                                                                                     |
 |---------------------------------------------------------------------------------------------------|------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
 | [`get_ci_config_or_defaults`](_autosummary/wads.ci_config.html.md#wads.ci_config.get_ci_config_or_defaults)(pyproject_path[, ...]) | Read CI configuration from pyproject.toml, using defaults if file doesn't exist.                                                                                                                                 |
+| [`ignored_commands_message`](_autosummary/wads.ci_config.html.md#wads.ci_config.ignored_commands_message)(key, commands)          | The one sentence both `read_ci_config` and `wads ci-local` say about an ignored `[tool.wads.ci.commands]` key (single line: it goes in a workflow command).                                                      |
 | [`read_ci_config`](_autosummary/wads.ci_config.html.md#wads.ci_config.read_ci_config)(pyproject_path)                   | Read CI configuration from pyproject.toml.                                                                                                                                                                       |
 | [`render_minimal_env_placeholders`](_autosummary/wads.ci_config.html.md#wads.ci_config.render_minimal_env_placeholders)(...)             | Render the inline template's env placeholders without a [tool.wads.ci] config: workflow-level env gets PROJECT_NAME only, and the test-job placeholders render empty (there are no declared secret-backed vars). |
 
@@ -1338,11 +1340,11 @@ Check if wheel should be built.
 
 #### *property* commands_format *: [list](https://docs.python.org/3/builtins/stdtypes.html#list)[[str](https://docs.python.org/3/builtins/stdtypes.html#str)]*
 
-Get format commands.
+Get format commands. CI does not run them (#228).
 
 #### *property* commands_lint *: [list](https://docs.python.org/3/builtins/stdtypes.html#list)[[str](https://docs.python.org/3/builtins/stdtypes.html#str)]*
 
-Get lint commands.
+Get lint commands. CI does not run them (#228).
 
 #### *property* commands_post_test *: [list](https://docs.python.org/3/builtins/stdtypes.html#list)[[str](https://docs.python.org/3/builtins/stdtypes.html#str)]*
 
@@ -1354,7 +1356,7 @@ Get pre-test setup commands.
 
 #### *property* commands_test *: [list](https://docs.python.org/3/builtins/stdtypes.html#list)[[str](https://docs.python.org/3/builtins/stdtypes.html#str)]*
 
-Get test commands (defaults to [‘pytest’]).
+Get test commands (defaults to [‘pytest’]). CI does not run them (#228).
 
 #### *property* coverage_enabled *: [bool](https://docs.python.org/3/builtins/functions.html#bool)*
 
@@ -1579,6 +1581,24 @@ Check if any CI configuration is present.
 
 * **Return type:**
   [`bool`](https://docs.python.org/3/builtins/functions.html#bool)
+
+#### *property* ignored_commands *: [dict](https://docs.python.org/3/builtins/stdtypes.html#dict)[[str](https://docs.python.org/3/builtins/stdtypes.html#str), [list](https://docs.python.org/3/builtins/stdtypes.html#list)[[str](https://docs.python.org/3/builtins/stdtypes.html#str)]]*
+
+The `[tool.wads.ci.commands]` entries CI ignores, by key.
+
+`test` counts only when it is not plain `["pytest"]`, which is what CI runs
+anyway. A malformed value is reported as its `repr` rather than raising: this
+is a diagnostic, and the keys are not read by anything that would fail on it.
+
+```pycon
+>>> cfg = lambda cmds: CIConfig({"tool": {"wads": {"ci": {"commands": cmds}}}})
+>>> cfg({"test": ["pytest"], "lint": []}).ignored_commands
+{}
+>>> cfg({"test": ["tox"], "lint": ["ruff check ."]}).ignored_commands
+{'test': ['tox'], 'lint': ['ruff check .']}
+>>> cfg({"lint": 3}).ignored_commands
+{'lint': ['3']}
+```
 
 #### *property* install_extras *: [str](https://docs.python.org/3/builtins/stdtypes.html#str)*
 
@@ -1971,6 +1991,11 @@ read-ci-config’s wads is too old to emit them.
 * **Type:**
   Narrow skip markers (i2mint/wads#62)
 
+### wads.ci_config.IGNORED_COMMAND_KEYS *= ('test', 'lint', 'format')*
+
+`[tool.wads.ci.commands]` keys the reusable workflow never runs (issue #228):
+`pre_test` / `post_test` run (#203); these do not.
+
 ### wads.ci_config.PINNED_PYTHON_VERSION_RE *= re.compile('[A-Za-z0-9][A-Za-z0-9.+-]\*')*
 
 What a pinned run’s `python_version` may contain (`3.11`, `3.13t`, `pypy3.10`):
@@ -2053,6 +2078,19 @@ Read CI configuration from pyproject.toml, using defaults if file doesn’t exis
   [`CIConfig`](_autosummary/wads.ci_config.html.md#wads.ci_config.CIConfig)
 * **Returns:**
   CIConfig instance with defaults if file doesn’t exist
+
+### wads.ci_config.ignored_commands_message(key, commands)
+
+The one sentence both `read_ci_config` and `wads ci-local` say about an
+ignored `[tool.wads.ci.commands]` key (single line: it goes in a workflow command).
+
+```pycon
+>>> ignored_commands_message("lint", ["ruff check ."])
+'[tool.wads.ci.commands].lint (ruff check .) is not run by CI: only pre_test and post_test are. CI runs pytest, ruff and the formatter from [tool.wads.ci.testing] and [tool.wads.ci.quality].'
+```
+
+* **Return type:**
+  [`str`](https://docs.python.org/3/builtins/stdtypes.html#str)
 
 ### wads.ci_config.read_ci_config(pyproject_path)
 
@@ -9504,16 +9542,18 @@ cannot be removed is not reported.
 
 # About this build
 
-This documentation was built on **2026-11-16 07:55 UTC** from commit <a href="https://github.com/i2mint/wads/commit/465e12823cb4dbaee72086c4143d67582938f9c9"><code>465e128</code></a> on branch <code>master</code>, for **wads 0.2.89** (from <code>pyproject.toml</code>).
+This documentation was built on **2026-11-16 08:49 UTC** from commit <a href="https://github.com/i2mint/wads/commit/56c23ed97a61de28288bac5f875e09f53a6d55bd"><code>56c23ed</code></a> on branch <code>master</code>, for **wads 0.2.90** (from <code>pyproject.toml</code>).
 
-#### NOTE
-Nothing suggests a mismatch: the tree was clean at the commit above, and the documented version is the one on PyPI.
+#### WARNING
+The documentation and the package may be misaligned:
+
+- The documented version (0.2.90) is behind the latest release on PyPI (0.2.91): `pip install wads` gives newer code than these docs describe.
 
 ## Source
 
 |                     |                                                                                                                                                    |
 |---------------------|----------------------------------------------------------------------------------------------------------------------------------------------------|
-| Commit              | <a href="https://github.com/i2mint/wads/commit/465e12823cb4dbaee72086c4143d67582938f9c9"><code>465e12823cb4dbaee72086c4143d67582938f9c9</code></a> |
+| Commit              | <a href="https://github.com/i2mint/wads/commit/56c23ed97a61de28288bac5f875e09f53a6d55bd"><code>56c23ed97a61de28288bac5f875e09f53a6d55bd</code></a> |
 | Branch              | <code>master</code>                                                                                                                                |
 | Tags at this commit | none                                                                                                                                               |
 | Working tree        | clean                                                                                                                                              |
@@ -9524,9 +9564,9 @@ Nothing suggests a mismatch: the tree was clean at the commit above, and the doc
 |              |                                                                                            |
 |--------------|--------------------------------------------------------------------------------------------|
 | Repository   | <code>i2mint/wads</code>                                                                   |
-| Run          | <a href="https://github.com/i2mint/wads/actions/runs/43826774041">43826774041</a>          |
+| Run          | <a href="https://github.com/i2mint/wads/actions/runs/43833808599">43833808599</a>          |
 | Ref          | <code>refs/heads/master</code>                                                             |
-| Event commit | <code>465e12823cb4dbaee72086c4143d67582938f9c9</code> (in the history of the built commit) |
+| Event commit | <code>56c23ed97a61de28288bac5f875e09f53a6d55bd</code> (in the history of the built commit) |
 
 ## Tools
 
@@ -9551,13 +9591,13 @@ Nothing suggests a mismatch: the tree was clean at the commit above, and the doc
 
 ## Package on PyPI
 
-Latest release: <a href="https://pypi.org/project/wads/0.2.89/">0.2.89</a>, the same as the documented version.
+Latest release: <a href="https://pypi.org/project/wads/0.2.91/">0.2.91</a>, newer than the documented version (0.2.90).
 
 ## Reproduce
 
 ```bash
 git clone https://github.com/i2mint/wads && cd wads
-git checkout 465e12823cb4dbaee72086c4143d67582938f9c9
+git checkout 56c23ed97a61de28288bac5f875e09f53a6d55bd
 pip install "epythet==0.2.22"
 epythet quickstart . --ignore tests/ scrap/ examples/
 ```

@@ -323,6 +323,9 @@ settings in CI workflow files.</p>
 <tr class="row-even"><td><p><a class="reference internal" href="#wads.ci_config.DFLT_SKIP_PUBLISH_MARKER" title="wads.ci_config.DFLT_SKIP_PUBLISH_MARKER"><code class="xref py py-obj docutils literal notranslate"><span class="pre">DFLT_SKIP_PUBLISH_MARKER</span></code></a></p></td>
 <td><p>each suppresses one side-effecting job and nothing else.</p></td>
 </tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#wads.ci_config.IGNORED_COMMAND_KEYS" title="wads.ci_config.IGNORED_COMMAND_KEYS"><code class="xref py py-obj docutils literal notranslate"><span class="pre">IGNORED_COMMAND_KEYS</span></code></a></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">[tool.wads.ci.commands]</span></code> keys the reusable workflow never runs (issue #228): <code class="docutils literal notranslate"><span class="pre">pre_test</span></code> / <code class="docutils literal notranslate"><span class="pre">post_test</span></code> run (#203); these do not.</p></td>
+</tr>
 </tbody>
 </table>
 </div>
@@ -336,10 +339,13 @@ settings in CI workflow files.</p>
 <tr class="row-even"><td><p><a class="reference internal" href="#wads.ci_config.get_ci_config_or_defaults" title="wads.ci_config.get_ci_config_or_defaults"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_ci_config_or_defaults</span></code></a>(pyproject_path[, ...])</p></td>
 <td><p>Read CI configuration from pyproject.toml, using defaults if file doesn't exist.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#wads.ci_config.read_ci_config" title="wads.ci_config.read_ci_config"><code class="xref py py-obj docutils literal notranslate"><span class="pre">read_ci_config</span></code></a>(pyproject_path)</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#wads.ci_config.ignored_commands_message" title="wads.ci_config.ignored_commands_message"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ignored_commands_message</span></code></a>(key, commands)</p></td>
+<td><p>The one sentence both <code class="docutils literal notranslate"><span class="pre">read_ci_config</span></code> and <code class="docutils literal notranslate"><span class="pre">wads</span> <span class="pre">ci-local</span></code> say about an ignored <code class="docutils literal notranslate"><span class="pre">[tool.wads.ci.commands]</span></code> key (single line: it goes in a workflow command).</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#wads.ci_config.read_ci_config" title="wads.ci_config.read_ci_config"><code class="xref py py-obj docutils literal notranslate"><span class="pre">read_ci_config</span></code></a>(pyproject_path)</p></td>
 <td><p>Read CI configuration from pyproject.toml.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#wads.ci_config.render_minimal_env_placeholders" title="wads.ci_config.render_minimal_env_placeholders"><code class="xref py py-obj docutils literal notranslate"><span class="pre">render_minimal_env_placeholders</span></code></a>(...)</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#wads.ci_config.render_minimal_env_placeholders" title="wads.ci_config.render_minimal_env_placeholders"><code class="xref py py-obj docutils literal notranslate"><span class="pre">render_minimal_env_placeholders</span></code></a>(...)</p></td>
 <td><p>Render the inline template's env placeholders without a [tool.wads.ci] config: workflow-level env gets PROJECT_NAME only, and the test-job placeholders render empty (there are no declared secret-backed vars).</p></td>
 </tr>
 </tbody>
@@ -404,13 +410,13 @@ pytest-cov (which pulls coverage); ruff comes from the ruff actions.</p>
 <dl class="py property">
 <dt class="sig sig-object py" id="wads.ci_config.CIConfig.commands_format">
 <span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">commands_format</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#list" title="(in Python v3.15)"><span class="pre">list</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><span class="pre">str</span></a><span class="p"><span class="pre">]</span></span></span><a class="headerlink" href="#wads.ci_config.CIConfig.commands_format" title="Link to this definition">¶</a></dt>
-<dd><p>Get format commands.</p>
+<dd><p>Get format commands. CI does not run them (#228).</p>
 </dd></dl>
 
 <dl class="py property">
 <dt class="sig sig-object py" id="wads.ci_config.CIConfig.commands_lint">
 <span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">commands_lint</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#list" title="(in Python v3.15)"><span class="pre">list</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><span class="pre">str</span></a><span class="p"><span class="pre">]</span></span></span><a class="headerlink" href="#wads.ci_config.CIConfig.commands_lint" title="Link to this definition">¶</a></dt>
-<dd><p>Get lint commands.</p>
+<dd><p>Get lint commands. CI does not run them (#228).</p>
 </dd></dl>
 
 <dl class="py property">
@@ -428,7 +434,7 @@ pytest-cov (which pulls coverage); ruff comes from the ruff actions.</p>
 <dl class="py property">
 <dt class="sig sig-object py" id="wads.ci_config.CIConfig.commands_test">
 <span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">commands_test</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#list" title="(in Python v3.15)"><span class="pre">list</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><span class="pre">str</span></a><span class="p"><span class="pre">]</span></span></span><a class="headerlink" href="#wads.ci_config.CIConfig.commands_test" title="Link to this definition">¶</a></dt>
-<dd><p>Get test commands (defaults to [‘pytest’]).</p>
+<dd><p>Get test commands (defaults to [‘pytest’]). CI does not run them (#228).</p>
 </dd></dl>
 
 <dl class="py property">
@@ -722,6 +728,24 @@ already sets literally)</p></li>
 <dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#bool" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></a></span></p>
 </dd>
 </dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="wads.ci_config.CIConfig.ignored_commands">
+<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">ignored_commands</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#dict" title="(in Python v3.15)"><span class="pre">dict</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><span class="pre">str</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#list" title="(in Python v3.15)"><span class="pre">list</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><span class="pre">str</span></a><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span><a class="headerlink" href="#wads.ci_config.CIConfig.ignored_commands" title="Link to this definition">¶</a></dt>
+<dd><p>The <code class="docutils literal notranslate"><span class="pre">[tool.wads.ci.commands]</span></code> entries CI ignores, by key.</p>
+<p><code class="docutils literal notranslate"><span class="pre">test</span></code> counts only when it is not plain <code class="docutils literal notranslate"><span class="pre">[&quot;pytest&quot;]</span></code>, which is what CI runs
+anyway. A malformed value is reported as its <code class="docutils literal notranslate"><span class="pre">repr</span></code> rather than raising: this
+is a diagnostic, and the keys are not read by anything that would fail on it.</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">cfg</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">cmds</span><span class="p">:</span> <span class="n">CIConfig</span><span class="p">({</span><span class="s2">"tool"</span><span class="p">:</span> <span class="p">{</span><span class="s2">"wads"</span><span class="p">:</span> <span class="p">{</span><span class="s2">"ci"</span><span class="p">:</span> <span class="p">{</span><span class="s2">"commands"</span><span class="p">:</span> <span class="n">cmds</span><span class="p">}}}})</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">cfg</span><span class="p">({</span><span class="s2">"test"</span><span class="p">:</span> <span class="p">[</span><span class="s2">"pytest"</span><span class="p">],</span> <span class="s2">"lint"</span><span class="p">:</span> <span class="p">[]})</span><span class="o">.</span><span class="n">ignored_commands</span>
+<span class="go">{}</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">cfg</span><span class="p">({</span><span class="s2">"test"</span><span class="p">:</span> <span class="p">[</span><span class="s2">"tox"</span><span class="p">],</span> <span class="s2">"lint"</span><span class="p">:</span> <span class="p">[</span><span class="s2">"ruff check ."</span><span class="p">]})</span><span class="o">.</span><span class="n">ignored_commands</span>
+<span class="go">{'test': ['tox'], 'lint': ['ruff check .']}</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">cfg</span><span class="p">({</span><span class="s2">"lint"</span><span class="p">:</span> <span class="mi">3</span><span class="p">})</span><span class="o">.</span><span class="n">ignored_commands</span>
+<span class="go">{'lint': ['3']}</span>
+</pre></div>
+</div>
 </dd></dl>
 
 <dl class="py property">
@@ -1199,6 +1223,13 @@ read-ci-config’s wads is too old to emit them.</p>
 </dd></dl>
 
 <dl class="py data">
+<dt class="sig sig-object py" id="wads.ci_config.IGNORED_COMMAND_KEYS">
+<span class="sig-prename descclassname"><span class="pre">wads.ci_config.</span></span><span class="sig-name descname"><span class="pre">IGNORED_COMMAND_KEYS</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">('test',</span> <span class="pre">'lint',</span> <span class="pre">'format')</span></span><a class="headerlink" href="#wads.ci_config.IGNORED_COMMAND_KEYS" title="Link to this definition">¶</a></dt>
+<dd><p><code class="docutils literal notranslate"><span class="pre">[tool.wads.ci.commands]</span></code> keys the reusable workflow never runs (issue #228):
+<code class="docutils literal notranslate"><span class="pre">pre_test</span></code> / <code class="docutils literal notranslate"><span class="pre">post_test</span></code> run (#203); these do not.</p>
+</dd></dl>
+
+<dl class="py data">
 <dt class="sig sig-object py" id="wads.ci_config.PINNED_PYTHON_VERSION_RE">
 <span class="sig-prename descclassname"><span class="pre">wads.ci_config.</span></span><span class="sig-name descname"><span class="pre">PINNED_PYTHON_VERSION_RE</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">re.compile('[A-Za-z0-9][A-Za-z0-9.+-]*')</span></span><a class="headerlink" href="#wads.ci_config.PINNED_PYTHON_VERSION_RE" title="Link to this definition">¶</a></dt>
 <dd><p>What a pinned run’s <code class="docutils literal notranslate"><span class="pre">python_version</span></code> may contain (<code class="docutils literal notranslate"><span class="pre">3.11</span></code>, <code class="docutils literal notranslate"><span class="pre">3.13t</span></code>, <code class="docutils literal notranslate"><span class="pre">pypy3.10</span></code>):
@@ -1300,6 +1331,22 @@ rootdir) or the package dir cannot be found.</p>
 </dd>
 <dt class="field-odd">Returns<span class="colon">:</span></dt>
 <dd class="field-odd"><p>CIConfig instance with defaults if file doesn’t exist</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="wads.ci_config.ignored_commands_message">
+<span class="sig-prename descclassname"><span class="pre">wads.ci_config.</span></span><span class="sig-name descname"><span class="pre">ignored_commands_message</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">key</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">commands</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/wads/ci_config.html#ignored_commands_message"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#wads.ci_config.ignored_commands_message" title="Link to this definition">¶</a></dt>
+<dd><p>The one sentence both <code class="docutils literal notranslate"><span class="pre">read_ci_config</span></code> and <code class="docutils literal notranslate"><span class="pre">wads</span> <span class="pre">ci-local</span></code> say about an
+ignored <code class="docutils literal notranslate"><span class="pre">[tool.wads.ci.commands]</span></code> key (single line: it goes in a workflow command).</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">ignored_commands_message</span><span class="p">(</span><span class="s2">"lint"</span><span class="p">,</span> <span class="p">[</span><span class="s2">"ruff check ."</span><span class="p">])</span>
+<span class="go">'[tool.wads.ci.commands].lint (ruff check .) is not run by CI: only pre_test and post_test are. CI runs pytest, ruff and the formatter from [tool.wads.ci.testing] and [tool.wads.ci.quality].'</span>
+</pre></div>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a></span></p>
 </dd>
 </dl>
 </dd></dl>
@@ -1433,6 +1480,7 @@ workflow never carries literal placeholder lines.</p>
 <li><a class="reference internal" href="#wads.ci_config.CIConfig.generate_test_env_vars"><code class="docutils literal notranslate"><span class="pre">CIConfig.generate_test_env_vars()</span></code></a></li>
 <li><a class="reference internal" href="#wads.ci_config.CIConfig.generate_windows_validation_job"><code class="docutils literal notranslate"><span class="pre">CIConfig.generate_windows_validation_job()</span></code></a></li>
 <li><a class="reference internal" href="#wads.ci_config.CIConfig.has_ci_config"><code class="docutils literal notranslate"><span class="pre">CIConfig.has_ci_config()</span></code></a></li>
+<li><a class="reference internal" href="#wads.ci_config.CIConfig.ignored_commands"><code class="docutils literal notranslate"><span class="pre">CIConfig.ignored_commands</span></code></a></li>
 <li><a class="reference internal" href="#wads.ci_config.CIConfig.install_extras"><code class="docutils literal notranslate"><span class="pre">CIConfig.install_extras</span></code></a></li>
 <li><a class="reference internal" href="#wads.ci_config.CIConfig.installer"><code class="docutils literal notranslate"><span class="pre">CIConfig.installer</span></code></a></li>
 <li><a class="reference internal" href="#wads.ci_config.CIConfig.is_black_enabled"><code class="docutils literal notranslate"><span class="pre">CIConfig.is_black_enabled()</span></code></a></li>
@@ -1478,6 +1526,7 @@ workflow never carries literal placeholder lines.</p>
 <li><a class="reference internal" href="#wads.ci_config.DFLT_DEPLOY_MARKER"><code class="docutils literal notranslate"><span class="pre">DFLT_DEPLOY_MARKER</span></code></a></li>
 <li><a class="reference internal" href="#wads.ci_config.DFLT_JOB_TIMEOUT_MINUTES"><code class="docutils literal notranslate"><span class="pre">DFLT_JOB_TIMEOUT_MINUTES</span></code></a></li>
 <li><a class="reference internal" href="#wads.ci_config.DFLT_SKIP_PUBLISH_MARKER"><code class="docutils literal notranslate"><span class="pre">DFLT_SKIP_PUBLISH_MARKER</span></code></a></li>
+<li><a class="reference internal" href="#wads.ci_config.IGNORED_COMMAND_KEYS"><code class="docutils literal notranslate"><span class="pre">IGNORED_COMMAND_KEYS</span></code></a></li>
 <li><a class="reference internal" href="#wads.ci_config.PINNED_PYTHON_VERSION_RE"><code class="docutils literal notranslate"><span class="pre">PINNED_PYTHON_VERSION_RE</span></code></a></li>
 <li><a class="reference internal" href="#wads.ci_config.PINNED_RUN_NAME_RE"><code class="docutils literal notranslate"><span class="pre">PINNED_RUN_NAME_RE</span></code></a></li>
 <li><a class="reference internal" href="#wads.ci_config.PinnedTestRun"><code class="docutils literal notranslate"><span class="pre">PinnedTestRun</span></code></a><ul>
@@ -1487,6 +1536,7 @@ workflow never carries literal placeholder lines.</p>
 <li><a class="reference internal" href="#wads.ci_config.TRIGGER_LEVELS"><code class="docutils literal notranslate"><span class="pre">TRIGGER_LEVELS</span></code></a></li>
 <li><a class="reference internal" href="#wads.ci_config.doctests_hidden_by_testpaths"><code class="docutils literal notranslate"><span class="pre">doctests_hidden_by_testpaths()</span></code></a></li>
 <li><a class="reference internal" href="#wads.ci_config.get_ci_config_or_defaults"><code class="docutils literal notranslate"><span class="pre">get_ci_config_or_defaults()</span></code></a></li>
+<li><a class="reference internal" href="#wads.ci_config.ignored_commands_message"><code class="docutils literal notranslate"><span class="pre">ignored_commands_message()</span></code></a></li>
 <li><a class="reference internal" href="#wads.ci_config.read_ci_config"><code class="docutils literal notranslate"><span class="pre">read_ci_config()</span></code></a></li>
 <li><a class="reference internal" href="#wads.ci_config.render_minimal_env_placeholders"><code class="docutils literal notranslate"><span class="pre">render_minimal_env_placeholders()</span></code></a></li>
 </ul>
@@ -1500,7 +1550,7 @@ workflow never carries literal placeholder lines.</p>
       
     </aside>
   </div>
-</div><script src="../_static/documentation_options.js?v=ccedd4a1"></script>
+</div><script src="../_static/documentation_options.js?v=8b819429"></script>
     <script src="../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../_static/scripts/furo.js?v=46bd48cc"></script>
