@@ -346,23 +346,20 @@
     <span class="n">generate</span><span class="p">,</span>
 <span class="p">)</span>
 
-<span class="c1"># Map common license identifiers to SPDX identifiers npm expects.</span>
-<span class="n">_SPDX_BY_NAME</span> <span class="o">=</span> <span class="p">{</span>
-    <span class="s2">"mit"</span><span class="p">:</span> <span class="s2">"MIT"</span><span class="p">,</span>
-    <span class="s2">"apache"</span><span class="p">:</span> <span class="s2">"Apache-2.0"</span><span class="p">,</span>
-    <span class="s2">"apache-2.0"</span><span class="p">:</span> <span class="s2">"Apache-2.0"</span><span class="p">,</span>
-    <span class="s2">"apache software license"</span><span class="p">:</span> <span class="s2">"Apache-2.0"</span><span class="p">,</span>
-    <span class="s2">"bsd"</span><span class="p">:</span> <span class="s2">"BSD-3-Clause"</span><span class="p">,</span>
-    <span class="s2">"bsd-3-clause"</span><span class="p">:</span> <span class="s2">"BSD-3-Clause"</span><span class="p">,</span>
-    <span class="s2">"gpl"</span><span class="p">:</span> <span class="s2">"GPL-3.0-or-later"</span><span class="p">,</span>
-    <span class="s2">"gpl-3.0"</span><span class="p">:</span> <span class="s2">"GPL-3.0-or-later"</span><span class="p">,</span>
-<span class="p">}</span>
-
 
 <span class="k">def</span><span class="w"> </span><span class="nf">_to_spdx</span><span class="p">(</span><span class="n">license_name</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""The licence as npm's ``license`` field: an SPDX expression when wads' one alias</span>
+<span class="sd">    map (:func:`wads.toml_util.pep639_license`) can make one, else the name unchanged</span>
+<span class="sd">    (never a guess at a variant), and ``MIT`` when none is given.</span>
+
+<span class="sd">    &gt;&gt;&gt; _to_spdx(None), _to_spdx("mit"), _to_spdx("BSD-2-Clause")</span>
+<span class="sd">    ('MIT', 'MIT', 'BSD-2-Clause')</span>
+<span class="sd">    &gt;&gt;&gt; _to_spdx("bsd")  # which BSD? no guess</span>
+<span class="sd">    'bsd'</span>
+<span class="sd">    """</span>
     <span class="k">if</span> <span class="ow">not</span> <span class="n">license_name</span><span class="p">:</span>
         <span class="k">return</span> <span class="s2">"MIT"</span>
-    <span class="k">return</span> <span class="n">_SPDX_BY_NAME</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">license_name</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span><span class="o">.</span><span class="n">lower</span><span class="p">(),</span> <span class="n">license_name</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">_spdx_expression</span><span class="p">(</span><span class="n">license_name</span><span class="p">)</span> <span class="ow">or</span> <span class="n">license_name</span>
 
 
 <span class="c1"># --------------------------------------------------------------------------------------</span>
@@ -1727,7 +1724,7 @@
       
     </aside>
   </div>
-</div><script src="../../_static/documentation_options.js?v=8b819429"></script>
+</div><script src="../../_static/documentation_options.js?v=22c1e04f"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/scripts/furo.js?v=46bd48cc"></script>
