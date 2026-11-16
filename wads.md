@@ -1,4 +1,4 @@
-> built 2026-11-16 07:10 UTC from eb440e5 (master) · wads 0.2.86. Details: build_info.json
+> built 2026-11-16 07:19 UTC from fb83dd2 (master) · wads 0.2.87. Details: build_info.json
 
 # index.html.md
 
@@ -6590,7 +6590,7 @@ subsequent `git clone`).
 
 Entry point of the `populate` console script.
 
-### wads.populate.populate_pkg_dir(pkg_dir, version='0.0.1', description='There is a bit of an air of mystery around this project...', , root_url=None, author=None, license='mit', description_file='README.md', keywords=[], install_requires=[], long_description='file:README.md', long_description_content_type='text/markdown', include_pip_install_instruction_in_readme=True, verbose=True, overwrite=(), defaults_from=None, create_docsrc=False, skip_docsrc_gen=False, skip_ci_def_gen=False, migrate=False, create_gitattributes=True, create_setup_py=False, create_community_files=False, version_control_system=None, ci_def_path=None, ci_tpl_path=None, project_type='lib', frontend='', with_npm=False, npm_subdir='js', npm_package_name=None, npm_version='0.0.1', npm_package_manager='npm', create_tests=False, native='', \*\*configs)
+### wads.populate.populate_pkg_dir(pkg_dir, version='0.0.1', description='There is a bit of an air of mystery around this project...', , root_url=None, author=None, license='mit', description_file='README.md', keywords=[], install_requires=[], long_description='file:README.md', long_description_content_type='text/markdown', include_pip_install_instruction_in_readme=True, verbose=True, overwrite=(), defaults_from=None, create_docsrc=False, skip_docsrc_gen=False, skip_ci_def_gen=False, migrate=False, create_gitattributes=True, create_setup_py=False, create_community_files=False, version_control_system=None, ci_def_path=None, ci_tpl_path=None, project_type='lib', frontend='', with_npm=False, npm_subdir='js', npm_package_name=None, npm_version=None, npm_package_manager='npm', create_tests=False, native='', \*\*configs)
 
 Populate project directory root with useful packaging files, if they’re missing.
 
@@ -6652,7 +6652,8 @@ Populate project directory root with useful packaging files, if they’re missin
     calling wads’s reusable NPM workflow. Off by default.
   * **npm_subdir** ([`str`](https://docs.python.org/3/builtins/stdtypes.html#str)) – Subdirectory holding the JS/TS package (default `js`).
   * **npm_package_name** ([`str`](https://docs.python.org/3/builtins/stdtypes.html#str) | [`None`](https://docs.python.org/3/builtins/constants.html#None)) – npm package name (defaults to the project name).
-  * **npm_version** ([`str`](https://docs.python.org/3/builtins/stdtypes.html#str)) – initial npm package version (default `0.0.1`).
+  * **npm_version** ([`str`](https://docs.python.org/3/builtins/stdtypes.html#str) | [`None`](https://docs.python.org/3/builtins/constants.html#None)) – initial npm package version (default: the `[project].version`
+    of the Python project’s `pyproject.toml`, else `0.0.1`).
   * **npm_package_manager** ([`str`](https://docs.python.org/3/builtins/stdtypes.html#str)) – package manager for the JS/TS package —
     `"npm"` (default) or `"pnpm"`. pnpm consumers should also declare a
     `"packageManager": "pnpm@x.y.z"` field in package.json.
@@ -9475,18 +9476,18 @@ cannot be removed is not reported.
 
 # About this build
 
-This documentation was built on **2026-11-16 07:10 UTC** from commit <a href="https://github.com/i2mint/wads/commit/eb440e5fbf6bc6bb08b7a603e096bda954e460b8"><code>eb440e5</code></a> on branch <code>master</code>, for **wads 0.2.86** (from <code>pyproject.toml</code>).
+This documentation was built on **2026-11-16 07:19 UTC** from commit <a href="https://github.com/i2mint/wads/commit/fb83dd2fae6ec85469cb37adc53de8407b89d940"><code>fb83dd2</code></a> on branch <code>master</code>, for **wads 0.2.87** (from <code>pyproject.toml</code>).
 
 #### WARNING
 The documentation and the package may be misaligned:
 
-- The documented version (0.2.86) is behind the latest release on PyPI (0.2.87): `pip install wads` gives newer code than these docs describe.
+- The documented version (0.2.87) is behind the latest release on PyPI (0.2.88): `pip install wads` gives newer code than these docs describe.
 
 ## Source
 
 |                     |                                                                                                                                                    |
 |---------------------|----------------------------------------------------------------------------------------------------------------------------------------------------|
-| Commit              | <a href="https://github.com/i2mint/wads/commit/eb440e5fbf6bc6bb08b7a603e096bda954e460b8"><code>eb440e5fbf6bc6bb08b7a603e096bda954e460b8</code></a> |
+| Commit              | <a href="https://github.com/i2mint/wads/commit/fb83dd2fae6ec85469cb37adc53de8407b89d940"><code>fb83dd2fae6ec85469cb37adc53de8407b89d940</code></a> |
 | Branch              | <code>master</code>                                                                                                                                |
 | Tags at this commit | none                                                                                                                                               |
 | Working tree        | clean                                                                                                                                              |
@@ -9497,9 +9498,9 @@ The documentation and the package may be misaligned:
 |              |                                                                                            |
 |--------------|--------------------------------------------------------------------------------------------|
 | Repository   | <code>i2mint/wads</code>                                                                   |
-| Run          | <a href="https://github.com/i2mint/wads/actions/runs/43821364657">43821364657</a>          |
+| Run          | <a href="https://github.com/i2mint/wads/actions/runs/43822535434">43822535434</a>          |
 | Ref          | <code>refs/heads/master</code>                                                             |
-| Event commit | <code>eb440e5fbf6bc6bb08b7a603e096bda954e460b8</code> (in the history of the built commit) |
+| Event commit | <code>fb83dd2fae6ec85469cb37adc53de8407b89d940</code> (in the history of the built commit) |
 
 ## Tools
 
@@ -9524,13 +9525,13 @@ The documentation and the package may be misaligned:
 
 ## Package on PyPI
 
-Latest release: <a href="https://pypi.org/project/wads/0.2.87/">0.2.87</a>, newer than the documented version (0.2.86).
+Latest release: <a href="https://pypi.org/project/wads/0.2.88/">0.2.88</a>, newer than the documented version (0.2.87).
 
 ## Reproduce
 
 ```bash
 git clone https://github.com/i2mint/wads && cd wads
-git checkout eb440e5fbf6bc6bb08b7a603e096bda954e460b8
+git checkout fb83dd2fae6ec85469cb37adc53de8407b89d940
 pip install "epythet==0.2.22"
 epythet quickstart . --ignore tests/ scrap/ examples/
 ```

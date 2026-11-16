@@ -314,6 +314,7 @@
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">annotations</span>
 
+<span class="kn">import</span><span class="w"> </span><span class="nn">json</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">dataclasses</span><span class="w"> </span><span class="kn">import</span> <span class="n">dataclass</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">Mapping</span><span class="p">,</span> <span class="n">Optional</span>
@@ -461,7 +462,9 @@
     <span class="k">return</span> <span class="p">{</span>
         <span class="s2">"npm_package_name"</span><span class="p">:</span> <span class="n">package_name</span> <span class="ow">or</span> <span class="n">project_name</span><span class="p">,</span>
         <span class="s2">"npm_version"</span><span class="p">:</span> <span class="n">version</span><span class="p">,</span>
-        <span class="s2">"description"</span><span class="p">:</span> <span class="n">description</span><span class="p">,</span>
+        <span class="c1"># Inserted raw into JSON templates: escape quotes and backslashes (a Python</span>
+        <span class="c1"># project's own description can hold them).</span>
+        <span class="s2">"description"</span><span class="p">:</span> <span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">description</span><span class="p">,</span> <span class="n">ensure_ascii</span><span class="o">=</span><span class="kc">False</span><span class="p">)[</span><span class="mi">1</span><span class="p">:</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span>
         <span class="s2">"npm_license"</span><span class="p">:</span> <span class="n">_to_spdx</span><span class="p">(</span><span class="n">license</span><span class="p">),</span>
         <span class="s2">"npm_subdir"</span><span class="p">:</span> <span class="n">subdir</span><span class="p">,</span>
         <span class="s2">"npm_package_manager"</span><span class="p">:</span> <span class="n">package_manager</span><span class="p">,</span>
@@ -1652,7 +1655,7 @@
       
     </aside>
   </div>
-</div><script src="../../_static/documentation_options.js?v=6e9a25e6"></script>
+</div><script src="../../_static/documentation_options.js?v=c7da5180"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/scripts/furo.js?v=46bd48cc"></script>

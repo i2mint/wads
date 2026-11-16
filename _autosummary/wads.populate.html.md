@@ -75,7 +75,7 @@ subsequent `git clone`).
 
 Entry point of the `populate` console script.
 
-### wads.populate.populate_pkg_dir(pkg_dir, version='0.0.1', description='There is a bit of an air of mystery around this project...', , root_url=None, author=None, license='mit', description_file='README.md', keywords=[], install_requires=[], long_description='file:README.md', long_description_content_type='text/markdown', include_pip_install_instruction_in_readme=True, verbose=True, overwrite=(), defaults_from=None, create_docsrc=False, skip_docsrc_gen=False, skip_ci_def_gen=False, migrate=False, create_gitattributes=True, create_setup_py=False, create_community_files=False, version_control_system=None, ci_def_path=None, ci_tpl_path=None, project_type='lib', frontend='', with_npm=False, npm_subdir='js', npm_package_name=None, npm_version='0.0.1', npm_package_manager='npm', create_tests=False, native='', \*\*configs)
+### wads.populate.populate_pkg_dir(pkg_dir, version='0.0.1', description='There is a bit of an air of mystery around this project...', , root_url=None, author=None, license='mit', description_file='README.md', keywords=[], install_requires=[], long_description='file:README.md', long_description_content_type='text/markdown', include_pip_install_instruction_in_readme=True, verbose=True, overwrite=(), defaults_from=None, create_docsrc=False, skip_docsrc_gen=False, skip_ci_def_gen=False, migrate=False, create_gitattributes=True, create_setup_py=False, create_community_files=False, version_control_system=None, ci_def_path=None, ci_tpl_path=None, project_type='lib', frontend='', with_npm=False, npm_subdir='js', npm_package_name=None, npm_version=None, npm_package_manager='npm', create_tests=False, native='', \*\*configs)
 
 Populate project directory root with useful packaging files, if they’re missing.
 
@@ -137,7 +137,8 @@ Populate project directory root with useful packaging files, if they’re missin
     calling wads’s reusable NPM workflow. Off by default.
   * **npm_subdir** ([`str`](https://docs.python.org/3/builtins/stdtypes.html#str)) – Subdirectory holding the JS/TS package (default `js`).
   * **npm_package_name** ([`str`](https://docs.python.org/3/builtins/stdtypes.html#str) | [`None`](https://docs.python.org/3/builtins/constants.html#None)) – npm package name (defaults to the project name).
-  * **npm_version** ([`str`](https://docs.python.org/3/builtins/stdtypes.html#str)) – initial npm package version (default `0.0.1`).
+  * **npm_version** ([`str`](https://docs.python.org/3/builtins/stdtypes.html#str) | [`None`](https://docs.python.org/3/builtins/constants.html#None)) – initial npm package version (default: the `[project].version`
+    of the Python project’s `pyproject.toml`, else `0.0.1`).
   * **npm_package_manager** ([`str`](https://docs.python.org/3/builtins/stdtypes.html#str)) – package manager for the JS/TS package —
     `"npm"` (default) or `"pnpm"`. pnpm consumers should also declare a
     `"packageManager": "pnpm@x.y.z"` field in package.json.
