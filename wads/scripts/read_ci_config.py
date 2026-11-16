@@ -212,6 +212,20 @@ def read_and_export_ci_config(pyproject_path: str | Path = ".") -> int:
                 f'or extras = "" to keep core-only and silence this warning.'
             )
 
+        # [tool.wads.ci.commands] keys CI never runs (i2mint/wads#228): warn instead of
+        # letting a repo believe its `test`/`lint`/`format` commands guard anything.
+        try:
+            ignored = config.ignored_commands
+        except Exception:  # a diagnostic must never fail the setup job
+            ignored = {}
+        for key, commands in ignored.items():
+            print(
+                f"::warning title=CI commands ignored::[tool.wads.ci.commands].{key} "
+                f"({'; '.join(commands)}) is not run by CI: only pre_test and post_test "
+                f"are. CI's own pytest, ruff and format steps come from "
+                f"[tool.wads.ci.testing] and [tool.wads.ci.quality]."
+            )
+
         # testpaths that leave the package's doctests uncollected (i2mint/wads#56).
         # A warning only: it never reddens a run that is green today.
         try:

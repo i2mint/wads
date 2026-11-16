@@ -137,3 +137,28 @@ def test_a_string_command_is_one_command_and_junk_is_an_error():
     for bad in (3, ["ok", 4], {"a": 1}):
         with pytest.raises(ValueError, match="pre_test"):
             cfg(bad).commands_pre_test
+
+
+def test_read_ci_config_warns_about_commands_ci_never_runs(tmp_path, monkeypatch, capsys):
+    """#228: `test` / `lint` / `format` in [tool.wads.ci.commands] are not run."""
+    (tmp_path / "pyproject.toml").write_text(
+        '[project]\nname = "demo"\nversion = "0.1.0"\n\n'
+        '[tool.wads.ci.commands]\ntest = ["pytest"]\nlint = ["ruff check ."]\n'
+    )
+    monkeypatch.setenv("GITHUB_OUTPUT", str(tmp_path / "out"))
+    monkeypatch.setenv("GITHUB_ENV", str(tmp_path / "env"))
+    assert read_and_export_ci_config(str(tmp_path)) == 0
+    out = capsys.readouterr().out
+    assert "::warning title=CI commands ignored::[tool.wads.ci.commands].lint" in out
+    assert "commands].test" not in out, "the scaffolded default test is not a warning"
+
+
+def test_no_warning_when_only_pre_and_post_test_are_set(tmp_path, monkeypatch, capsys):
+    (tmp_path / "pyproject.toml").write_text(
+        '[project]\nname = "demo"\nversion = "0.1.0"\n\n'
+        '[tool.wads.ci.commands]\npre_test = ["echo a"]\n'
+    )
+    monkeypatch.setenv("GITHUB_OUTPUT", str(tmp_path / "out"))
+    monkeypatch.setenv("GITHUB_ENV", str(tmp_path / "env"))
+    assert read_and_export_ci_config(str(tmp_path)) == 0
+    assert "CI commands ignored" not in capsys.readouterr().out

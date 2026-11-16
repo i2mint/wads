@@ -155,8 +155,8 @@ pre_test = [
     # "python -m playwright install",
 ]
 
-# Test commands - primary test suite execution
-# If not specified, defaults to ["pytest"]
+# Test commands - NOT run by CI (it runs pytest from [tool.wads.ci.testing]); CI warns
+# when this is set to anything but ["pytest"]
 test = [
     # "pytest",
     # "pytest --cov=mypackage --cov-report=xml",
@@ -167,13 +167,13 @@ post_test = [
     # "python scripts/generate_coverage_report.py",
 ]
 
-# Lint commands - code quality checks
-# If not specified, uses Ruff configuration from [tool.ruff]
+# Lint commands - NOT run by CI (it runs ruff from [tool.wads.ci.quality]); CI warns
+# when this is set
 lint = [
     # "ruff check .",
 ]
 
-# Format commands - code formatting
+# Format commands - NOT run by CI (it formats with ruff); CI warns when this is set
 # If not specified, uses Ruff formatter
 format = [
     # "ruff format --check .",

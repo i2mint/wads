@@ -1225,6 +1225,10 @@ def run_ci_local(
         },
         source_env=source_env,
     )
+    ctx.notes += [
+        f"[tool.wads.ci.commands].{key} is not run (only pre_test and post_test are)"
+        for key in config.ignored_commands
+    ]
     if dropped_host:
         ctx.notes.append(f"ran without {', '.join(dropped_host)} (hosted CI has none)")
     report = CILocalReport(

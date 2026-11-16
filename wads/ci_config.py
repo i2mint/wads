@@ -385,6 +385,33 @@ class CIConfig:
         """Get lint commands."""
         return self.ci_config.get("commands", {}).get("lint", [])
 
+    #: ``[tool.wads.ci.commands]`` keys the reusable workflow never runs (issue #228):
+    #: ``pre_test`` / ``post_test`` run (#203); these do not.
+    IGNORED_COMMAND_KEYS = ("test", "lint", "format")
+
+    @property
+    def ignored_commands(self) -> dict[str, list[str]]:
+        """The ``[tool.wads.ci.commands]`` entries CI ignores, by key.
+
+        ``test`` counts only when it differs from the default ``["pytest"]`` that the
+        template scaffolds. CI runs pytest, ruff and the formatter from the other
+        ``[tool.wads.ci]`` sections, never these lists.
+
+        >>> cfg = lambda cmds: CIConfig({"tool": {"wads": {"ci": {"commands": cmds}}}})
+        >>> cfg({"test": ["pytest"], "lint": []}).ignored_commands
+        {}
+        >>> cfg({"test": ["tox"], "lint": ["ruff check ."]}).ignored_commands
+        {'test': ['tox'], 'lint': ['ruff check .']}
+        """
+        commands = self.ci_config.get("commands", {})
+        ignored = {}
+        for key in self.IGNORED_COMMAND_KEYS:
+            value = commands.get(key) or []
+            value = [value] if isinstance(value, str) else list(value)
+            if value and not (key == "test" and value == ["pytest"]):
+                ignored[key] = value
+        return ignored
+
     @property
     def commands_format(self) -> list[str]:
         """Get format commands."""
