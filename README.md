@@ -480,6 +480,8 @@ wheel = true
 enabled = true  # Publish to PyPI on main/master
 ```
 
+**Which merges does a release contain?** The publish job builds the commit its run checked out. When other PRs merged while it ran, its `**CI** ... Updated version to X` commit is replayed onto the newer branch tip and its subject says so: `... Updated version to X (built from <sha>) [skip ci]`. The tag is on that bump commit as it was before the replay, whose parent is the built commit; do not read "the first bump commit after a merge in `git log`" as the first release containing it. The authoritative answer is `git tag --contains <commit> --sort=v:refname | head -1`.
+
 Commit-subject markers narrow what a default-branch push does. wads matches them against the commit *subject* (first line) only, case-insensitively, so a marker quoted in a squash-merged PR body does not count. The one exception is `[skip ci]` itself: GitHub skips the whole run when it appears *anywhere* in the pushed commit message, body included. This also means a PR whose title carries a marker skips that job on its own squash-merge, so keep markers out of PR titles unless you mean it.
 
 | Marker (default) | Validation | Publish (PyPI) | GitHub Pages | Rename via |
