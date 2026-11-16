@@ -68,6 +68,16 @@ without it.
 {'text': 'Proprietary'}
 ```
 
+The trove classifier `BSD License` names no variant (2-clause, 3-clause, 0BSD,
+…), so it gives no SPDX id rather than a guess; set `[project].license`:
+
+```pycon
+>>> pep639_license("BSD License")
+{'text': 'BSD License'}
+>>> pep639_license("BSD-2-Clause")
+'BSD-2-Clause'
+```
+
 ### wads.toml_util.read_pyproject_toml(pkg_dir)
 
 Read pyproject.toml from the specified package directory.

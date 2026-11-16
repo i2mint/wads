@@ -1,4 +1,4 @@
-> built 2026-11-16 07:00 UTC from f715e6d (master) · wads 0.2.85. Details: build_info.json
+> built 2026-11-16 07:10 UTC from eb440e5 (master) · wads 0.2.86. Details: build_info.json
 
 # index.html.md
 
@@ -8741,6 +8741,16 @@ without it.
 {'text': 'Proprietary'}
 ```
 
+The trove classifier `BSD License` names no variant (2-clause, 3-clause, 0BSD,
+…), so it gives no SPDX id rather than a guess; set `[project].license`:
+
+```pycon
+>>> pep639_license("BSD License")
+{'text': 'BSD License'}
+>>> pep639_license("BSD-2-Clause")
+'BSD-2-Clause'
+```
+
 ### wads.toml_util.read_pyproject_toml(pkg_dir)
 
 Read pyproject.toml from the specified package directory.
@@ -9465,18 +9475,18 @@ cannot be removed is not reported.
 
 # About this build
 
-This documentation was built on **2026-11-16 07:00 UTC** from commit <a href="https://github.com/i2mint/wads/commit/f715e6dc2ea2ffa761c4f953a201a38e60ec92ca"><code>f715e6d</code></a> on branch <code>master</code>, for **wads 0.2.85** (from <code>pyproject.toml</code>).
+This documentation was built on **2026-11-16 07:10 UTC** from commit <a href="https://github.com/i2mint/wads/commit/eb440e5fbf6bc6bb08b7a603e096bda954e460b8"><code>eb440e5</code></a> on branch <code>master</code>, for **wads 0.2.86** (from <code>pyproject.toml</code>).
 
 #### WARNING
 The documentation and the package may be misaligned:
 
-- The documented version (0.2.85) is behind the latest release on PyPI (0.2.86): `pip install wads` gives newer code than these docs describe.
+- The documented version (0.2.86) is behind the latest release on PyPI (0.2.87): `pip install wads` gives newer code than these docs describe.
 
 ## Source
 
 |                     |                                                                                                                                                    |
 |---------------------|----------------------------------------------------------------------------------------------------------------------------------------------------|
-| Commit              | <a href="https://github.com/i2mint/wads/commit/f715e6dc2ea2ffa761c4f953a201a38e60ec92ca"><code>f715e6dc2ea2ffa761c4f953a201a38e60ec92ca</code></a> |
+| Commit              | <a href="https://github.com/i2mint/wads/commit/eb440e5fbf6bc6bb08b7a603e096bda954e460b8"><code>eb440e5fbf6bc6bb08b7a603e096bda954e460b8</code></a> |
 | Branch              | <code>master</code>                                                                                                                                |
 | Tags at this commit | none                                                                                                                                               |
 | Working tree        | clean                                                                                                                                              |
@@ -9487,9 +9497,9 @@ The documentation and the package may be misaligned:
 |              |                                                                                            |
 |--------------|--------------------------------------------------------------------------------------------|
 | Repository   | <code>i2mint/wads</code>                                                                   |
-| Run          | <a href="https://github.com/i2mint/wads/actions/runs/43820273130">43820273130</a>          |
+| Run          | <a href="https://github.com/i2mint/wads/actions/runs/43821364657">43821364657</a>          |
 | Ref          | <code>refs/heads/master</code>                                                             |
-| Event commit | <code>f715e6dc2ea2ffa761c4f953a201a38e60ec92ca</code> (in the history of the built commit) |
+| Event commit | <code>eb440e5fbf6bc6bb08b7a603e096bda954e460b8</code> (in the history of the built commit) |
 
 ## Tools
 
@@ -9514,13 +9524,13 @@ The documentation and the package may be misaligned:
 
 ## Package on PyPI
 
-Latest release: <a href="https://pypi.org/project/wads/0.2.86/">0.2.86</a>, newer than the documented version (0.2.85).
+Latest release: <a href="https://pypi.org/project/wads/0.2.87/">0.2.87</a>, newer than the documented version (0.2.86).
 
 ## Reproduce
 
 ```bash
 git clone https://github.com/i2mint/wads && cd wads
-git checkout f715e6dc2ea2ffa761c4f953a201a38e60ec92ca
+git checkout eb440e5fbf6bc6bb08b7a603e096bda954e460b8
 pip install "epythet==0.2.22"
 epythet quickstart . --ignore tests/ scrap/ examples/
 ```

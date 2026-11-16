@@ -326,6 +326,14 @@
 <span class="sd">    'Apache-2.0'</span>
 <span class="sd">    &gt;&gt;&gt; pep639_license("Proprietary")</span>
 <span class="sd">    {'text': 'Proprietary'}</span>
+
+<span class="sd">    The trove classifier ``BSD License`` names no variant (2-clause, 3-clause, 0BSD,</span>
+<span class="sd">    ...), so it gives no SPDX id rather than a guess; set ``[project].license``:</span>
+
+<span class="sd">    &gt;&gt;&gt; pep639_license("BSD License")</span>
+<span class="sd">    {'text': 'BSD License'}</span>
+<span class="sd">    &gt;&gt;&gt; pep639_license("BSD-2-Clause")</span>
+<span class="sd">    'BSD-2-Clause'</span>
 <span class="sd">    """</span>
     <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">license_name</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
         <span class="k">return</span> <span class="n">license_name</span>  <span class="c1"># already a table</span>
@@ -343,7 +351,6 @@
         <span class="s2">"apache license 2.0"</span><span class="p">:</span> <span class="s2">"Apache-2.0"</span><span class="p">,</span>
         <span class="s2">"apache 2.0"</span><span class="p">:</span> <span class="s2">"Apache-2.0"</span><span class="p">,</span>
         <span class="s2">"mit license"</span><span class="p">:</span> <span class="s2">"MIT"</span><span class="p">,</span>
-        <span class="s2">"bsd license"</span><span class="p">:</span> <span class="s2">"BSD-3-Clause"</span><span class="p">,</span>
     <span class="p">}</span>
     <span class="n">candidate</span> <span class="o">=</span> <span class="n">aliases</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">license_name</span><span class="p">)</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span><span class="o">.</span><span class="n">lower</span><span class="p">(),</span> <span class="n">license_name</span><span class="p">)</span>
     <span class="k">try</span><span class="p">:</span>
@@ -550,7 +557,7 @@
       
     </aside>
   </div>
-</div><script src="../../_static/documentation_options.js?v=4e2bbf0d"></script>
+</div><script src="../../_static/documentation_options.js?v=6e9a25e6"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/scripts/furo.js?v=46bd48cc"></script>

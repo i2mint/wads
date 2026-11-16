@@ -401,6 +401,14 @@ without it.</p>
 <span class="go">{'text': 'Proprietary'}</span>
 </pre></div>
 </div>
+<p>The trove classifier <code class="docutils literal notranslate"><span class="pre">BSD</span> <span class="pre">License</span></code> names no variant (2-clause, 3-clause, 0BSD,
+…), so it gives no SPDX id rather than a guess; set <code class="docutils literal notranslate"><span class="pre">[project].license</span></code>:</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">pep639_license</span><span class="p">(</span><span class="s2">"BSD License"</span><span class="p">)</span>
+<span class="go">{'text': 'BSD License'}</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">pep639_license</span><span class="p">(</span><span class="s2">"BSD-2-Clause"</span><span class="p">)</span>
+<span class="go">'BSD-2-Clause'</span>
+</pre></div>
+</div>
 <dl class="field-list simple">
 </dl>
 </dd></dl>
@@ -574,7 +582,7 @@ without it.</p>
       
     </aside>
   </div>
-</div><script src="../_static/documentation_options.js?v=4e2bbf0d"></script>
+</div><script src="../_static/documentation_options.js?v=6e9a25e6"></script>
     <script src="../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../_static/scripts/furo.js?v=46bd48cc"></script>
