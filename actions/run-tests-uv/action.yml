@@ -19,6 +19,15 @@ inputs:
     required: false
     default: "false"
 
+  pre-test-commands:
+    description: "JSON list of shell commands to run (in the venv) before pytest"
+    required: false
+    default: "[]"
+  post-test-commands:
+    description: "JSON list of shell commands to run (in the venv) after pytest, even when it fails"
+    required: false
+    default: "[]"
+
 runs:
   using: 'composite'
   steps:
@@ -39,6 +48,19 @@ runs:
         else
           uv pip install pytest
         fi
+
+    - name: Pre-test commands
+      shell: bash
+      env:
+        WADS_CI_COMMANDS: ${{ inputs.pre-test-commands }}
+      run: |
+        if [ -f ".venv/bin/activate" ]; then
+          source .venv/bin/activate
+        elif [ -f ".venv/Scripts/activate" ]; then
+          source .venv/Scripts/activate
+        fi
+        PY=python; command -v python >/dev/null 2>&1 || PY=python3
+        "$PY" -I -S "$GITHUB_ACTION_PATH/../../wads/scripts/run_ci_commands.py" WADS_CI_COMMANDS
 
     - name: Run Tests
       shell: bash
@@ -105,3 +127,17 @@ runs:
 
         echo "Running: $CMD"
         eval $CMD
+
+    - name: Post-test commands
+      if: always()
+      shell: bash
+      env:
+        WADS_CI_COMMANDS: ${{ inputs.post-test-commands }}
+      run: |
+        if [ -f ".venv/bin/activate" ]; then
+          source .venv/bin/activate
+        elif [ -f ".venv/Scripts/activate" ]; then
+          source .venv/Scripts/activate
+        fi
+        PY=python; command -v python >/dev/null 2>&1 || PY=python3
+        "$PY" -I -S "$GITHUB_ACTION_PATH/../../wads/scripts/run_ci_commands.py" WADS_CI_COMMANDS

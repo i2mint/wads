@@ -193,6 +193,8 @@ jobs:
       project-name: ${{ steps.config.outputs.project-name }}
       python-versions: ${{ steps.config.outputs.python-versions }}
       pytest-args: ${{ steps.config.outputs.pytest-args }}
+      pre-test-commands: ${{ steps.config.outputs.pre-test-commands }}
+      post-test-commands: ${{ steps.config.outputs.post-test-commands }}
       coverage-enabled: ${{ steps.config.outputs.coverage-enabled }}
       exclude-paths: ${{ steps.config.outputs.exclude-paths }}
       test-on-windows: ${{ steps.config.outputs.test-on-windows }}
@@ -598,6 +600,8 @@ jobs:
           pytest-args: ${{ matrix.pinned && matrix.pinned.pytest_args || needs.setup.outputs.pytest-args }}
           exclude-paths: ${{ needs.setup.outputs.exclude-paths }}
           coverage: ${{ needs.setup.outputs.coverage-enabled }}
+          pre-test-commands: ${{ needs.setup.outputs.pre-test-commands }}
+          post-test-commands: ${{ needs.setup.outputs.post-test-commands }}
 
       - name: Track Code Metrics
         if: needs.setup.outputs.metrics-enabled == 'true' && !matrix.pinned
@@ -679,6 +683,8 @@ jobs:
           root-dir: ${{ needs.setup.outputs.project-name }}
           pytest-args: ${{ needs.setup.outputs.pytest-args }}
           exclude-paths: ${{ needs.setup.outputs.exclude-paths }}
+          pre-test-commands: ${{ needs.setup.outputs.pre-test-commands }}
+          post-test-commands: ${{ needs.setup.outputs.post-test-commands }}
 
   # ------------------------------------------------------------------
   # NATIVE PATH (issue #166): a maturin (Rust/PyO3) package needs one wheel per
