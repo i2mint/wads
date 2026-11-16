@@ -1,8 +1,9 @@
 """``[tool.wads.ci.commands]`` pre_test / post_test reach the reusable workflow (#203)."""
 
-import re
+import sys
 from pathlib import Path
 
+import pytest
 import yaml
 
 from wads.ci_config import CIConfig
@@ -42,6 +43,9 @@ def test_run_commands_empty_inputs_do_nothing():
         assert run_commands(empty, run=lambda c, **k: 1) == 0
 
 
+@pytest.mark.skipif(
+    sys.platform == "win32", reason="a bare bash is WSL there; CI sets WADS_BASH"
+)
 def test_run_commands_really_runs_the_shell(tmp_path, capsys):
     marker = tmp_path / "m"
     assert run_commands([f"echo x > {marker}"]) == 0
@@ -106,22 +110,20 @@ def test_ci_local_runs_pre_and_post_test_around_pytest():
 
 
 
-def test_commands_run_under_bash(tmp_path):
+def test_commands_run_under_bash(monkeypatch):
+    monkeypatch.delenv("WADS_BASH", raising=False)
     seen = []
     import wads.scripts.run_ci_commands as m
 
     real = m.subprocess.run
-
-    def spy(argv, **kw):
-        seen.append(argv)
-        return real(argv, **kw)
-
-    m.subprocess.run = spy
+    m.subprocess.run = lambda argv, **kw: (seen.append(argv), type("R", (), {"returncode": 0}))[1]
     try:
-        assert m._default_run("[[ a == a ]]") == 0  # a bashism dash rejects
+        assert m._default_run("[[ a == a ]]") == 0
+        monkeypatch.setenv("WADS_BASH", "/x/bash")
+        m._default_run("true")
     finally:
         m.subprocess.run = real
-    assert seen == [["bash", "-c", "[[ a == a ]]"]]
+    assert seen == [["bash", "-c", "[[ a == a ]]"], ["/x/bash", "-c", "true"]]
 
 
 def test_a_string_command_is_one_command_and_junk_is_an_error():

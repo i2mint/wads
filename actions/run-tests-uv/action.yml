@@ -60,7 +60,8 @@ runs:
           source .venv/Scripts/activate
         fi
         PY=python; command -v python >/dev/null 2>&1 || PY=python3
-        "$PY" -I -S "$GITHUB_ACTION_PATH/../../wads/scripts/run_ci_commands.py" WADS_CI_COMMANDS
+        # $BASH is this step's bash (Git Bash on Windows); a bare `bash` there is WSL's.
+        WADS_BASH="$BASH" "$PY" -I -S "$GITHUB_ACTION_PATH/../../wads/scripts/run_ci_commands.py" WADS_CI_COMMANDS
 
     - name: Run Tests
       shell: bash
@@ -140,4 +141,5 @@ runs:
           source .venv/Scripts/activate
         fi
         PY=python; command -v python >/dev/null 2>&1 || PY=python3
-        "$PY" -I -S "$GITHUB_ACTION_PATH/../../wads/scripts/run_ci_commands.py" WADS_CI_COMMANDS
+        # $BASH is this step's bash (Git Bash on Windows); a bare `bash` there is WSL's.
+        WADS_BASH="$BASH" "$PY" -I -S "$GITHUB_ACTION_PATH/../../wads/scripts/run_ci_commands.py" WADS_CI_COMMANDS

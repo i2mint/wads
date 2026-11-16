@@ -22,8 +22,14 @@ import sys
 from typing import Callable, Sequence, Union
 
 
+#: The environment variable naming the bash to use. The action sets it from ``$BASH``:
+#: on Windows runners a bare ``bash`` resolves to System32's WSL launcher, not Git Bash.
+BASH_ENV_VAR = "WADS_BASH"
+
+
 def _default_run(command: str, **kwargs) -> int:
-    return subprocess.run(["bash", "-c", command], **kwargs).returncode
+    bash = os.environ.get(BASH_ENV_VAR) or "bash"
+    return subprocess.run([bash, "-c", command], **kwargs).returncode
 
 
 def run_commands(
