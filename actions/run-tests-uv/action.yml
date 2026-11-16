@@ -129,7 +129,7 @@ runs:
         eval $CMD
 
     - name: Post-test commands
-      if: always()
+      if: ${{ !cancelled() }}
       shell: bash
       env:
         WADS_CI_COMMANDS: ${{ inputs.post-test-commands }}

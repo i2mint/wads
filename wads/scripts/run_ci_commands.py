@@ -3,7 +3,7 @@
 
 ``read_ci_config`` hands each list over as a JSON array (a GitHub Actions output); the
 ``run-tests-uv`` action puts it in an environment variable and calls this script with
-the variable's name. Each command runs through the shell, in order, in the current
+the variable's name. Each command runs under ``bash -c`` (as ``wads ci-local`` runs it; Git Bash on Windows runners), in order, in the current
 directory and environment (the venv is already activated), and the first failure stops
 the run with its exit status. An empty or unset list does nothing. Stdlib only.
 
@@ -23,7 +23,7 @@ from typing import Callable, Sequence, Union
 
 
 def _default_run(command: str, **kwargs) -> int:
-    return subprocess.run(command, shell=True, **kwargs).returncode
+    return subprocess.run(["bash", "-c", command], **kwargs).returncode
 
 
 def run_commands(

@@ -50,7 +50,11 @@ def test_run_commands_really_runs_the_shell(tmp_path, capsys):
 
 
 def test_workflow_threads_commands_to_every_test_run():
-    wf = yaml.safe_load((ROOT / ".github/workflows/uv-ci.yml").read_text())
+    for path in (".github/workflows/uv-ci.yml", "wads/data/github_ci_uv.yml"):
+        _check_workflow(yaml.safe_load((ROOT / path).read_text()))
+
+
+def _check_workflow(wf):
     setup_out = wf["jobs"]["setup"]["outputs"]
     assert {"pre-test-commands", "post-test-commands"} <= set(setup_out)
     for job in ("validation", "windows-validation"):
@@ -73,7 +77,7 @@ def test_action_runs_post_test_even_after_a_test_failure():
     assert names.index("Pre-test commands") < names.index("Run Tests")
     post = action["runs"]["steps"][names.index("Post-test commands")]
     assert names.index("Post-test commands") > names.index("Run Tests")
-    assert post["if"] == "always()"
+    assert post["if"] == "${{ !cancelled() }}"
 
 
 def test_ci_local_runs_pre_and_post_test_around_pytest():
@@ -100,3 +104,34 @@ def test_ci_local_runs_pre_and_post_test_around_pytest():
     (pre,) = [s for s in steps if s.name.endswith("pre_test 1/1")]
     assert pre.argv == ("bash", "-c", "echo pre")
 
+
+
+def test_commands_run_under_bash(tmp_path):
+    seen = []
+    import wads.scripts.run_ci_commands as m
+
+    real = m.subprocess.run
+
+    def spy(argv, **kw):
+        seen.append(argv)
+        return real(argv, **kw)
+
+    m.subprocess.run = spy
+    try:
+        assert m._default_run("[[ a == a ]]") == 0  # a bashism dash rejects
+    finally:
+        m.subprocess.run = real
+    assert seen == [["bash", "-c", "[[ a == a ]]"]]
+
+
+def test_a_string_command_is_one_command_and_junk_is_an_error():
+    def cfg(v):
+        return CIConfig({"tool": {"wads": {"ci": {"commands": {"pre_test": v}}}}})
+
+    assert cfg("make data").commands_pre_test == ["make data"]
+    assert cfg("").commands_pre_test == []
+    import pytest
+
+    for bad in (3, ["ok", 4], {"a": 1}):
+        with pytest.raises(ValueError, match="pre_test"):
+            cfg(bad).commands_pre_test

@@ -27,6 +27,8 @@ jobs:
       project-name: ${{ steps.config.outputs.project-name }}
       python-versions: ${{ steps.config.outputs.python-versions }}
       pytest-args: ${{ steps.config.outputs.pytest-args }}
+      pre-test-commands: ${{ steps.config.outputs.pre-test-commands }}
+      post-test-commands: ${{ steps.config.outputs.post-test-commands }}
       coverage-enabled: ${{ steps.config.outputs.coverage-enabled }}
       exclude-paths: ${{ steps.config.outputs.exclude-paths }}
       test-on-windows: ${{ steps.config.outputs.test-on-windows }}
@@ -342,6 +344,8 @@ jobs:
         with:
           root-dir: ${{ needs.setup.outputs.project-name }}
           pytest-args: ${{ needs.setup.outputs.pytest-args }}
+          pre-test-commands: ${{ needs.setup.outputs.pre-test-commands }}
+          post-test-commands: ${{ needs.setup.outputs.post-test-commands }}
           exclude-paths: ${{ needs.setup.outputs.exclude-paths }}
           coverage: ${{ needs.setup.outputs.coverage-enabled }}
 
@@ -416,6 +420,8 @@ jobs:
         with:
           root-dir: ${{ needs.setup.outputs.project-name }}
           pytest-args: ${{ needs.setup.outputs.pytest-args }}
+          pre-test-commands: ${{ needs.setup.outputs.pre-test-commands }}
+          post-test-commands: ${{ needs.setup.outputs.post-test-commands }}
           exclude-paths: ${{ needs.setup.outputs.exclude-paths }}
 
   # Publishing job

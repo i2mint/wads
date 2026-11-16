@@ -148,7 +148,7 @@ extras = "dev"
 # Commands executed during different CI phases
 
 [tool.wads.ci.commands]
-# Pre-test setup commands - run before testing/linting begins
+# Pre-test setup commands - run (bash, venv active) just before pytest, once per test run
 # Examples: database migrations, data generation, environment setup
 pre_test = [
     # "python scripts/setup_test_data.py",
