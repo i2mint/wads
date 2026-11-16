@@ -37,7 +37,11 @@ from wads import (
 )
 from wads.util import mk_conditional_logger, git, ensure_no_slash_suffix
 from wads.pack import write_configs
-from wads.toml_util import write_pyproject_toml, read_pyproject_toml
+from wads.toml_util import (
+    write_pyproject_toml,
+    read_pyproject_toml,
+    get_project_metadata,
+)
 from wads.licensing import (
     license_body,
     resolve_author,
@@ -1011,7 +1015,7 @@ def _python_metadata_seed(pkg_dir: str) -> dict:
     >>> _python_metadata_seed(d)
     {'version': '0.3.12', 'description': 'Does x'}
     """
-    project = read_pyproject_toml(pkg_dir).get("project", {})
+    project = get_project_metadata(pkg_dir)
     return {
         key: project[key]
         for key in ("version", "description")

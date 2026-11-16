@@ -343,8 +343,6 @@ def test_populate_with_npm_is_js_alias(tmp_path):
     assert (pkg_dir / ".github" / "workflows" / "npm-ci.yml").exists()
 
 
-if __name__ == "__main__":
-    pytest.main([__file__, "-v"])
 
 
 def _populate_ts_on_existing_python_pkg(tmp_path, pyproject, **kwargs):
@@ -390,8 +388,20 @@ def test_an_explicit_npm_version_wins_over_the_python_one(tmp_path):
     assert pkg["description"] == "Mine"
 
 
+def test_a_description_with_quotes_keeps_package_json_valid(tmp_path):
+    pkg = _populate_ts_on_existing_python_pkg(
+        tmp_path,
+        '[project]\nname = "widget"\nversion = "1.0.0"\ndescription = \'A "dol" for C:\\\\x\'\n',
+    )
+    assert pkg["description"] == 'A "dol" for C:\\\\x'
+
+
 def test_a_dynamic_python_version_falls_back_to_the_default(tmp_path):
     pkg = _populate_ts_on_existing_python_pkg(
         tmp_path, '[project]\nname = "widget"\ndynamic = ["version"]\n'
     )
     assert pkg["version"] == "0.0.1"
+
+
+if __name__ == "__main__":
+    pytest.main([__file__, "-v"])
