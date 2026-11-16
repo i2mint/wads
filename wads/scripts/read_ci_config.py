@@ -220,10 +220,8 @@ def read_and_export_ci_config(pyproject_path: str | Path = ".") -> int:
             ignored = {}
         for key, commands in ignored.items():
             print(
-                f"::warning title=CI commands ignored::[tool.wads.ci.commands].{key} "
-                f"({'; '.join(commands)}) is not run by CI: only pre_test and post_test "
-                f"are. CI's own pytest, ruff and format steps come from "
-                f"[tool.wads.ci.testing] and [tool.wads.ci.quality]."
+                f"::warning title=CI commands ignored::"
+                f"{ci_config_module.ignored_commands_message(key, commands)}"
             )
 
         # testpaths that leave the package's doctests uncollected (i2mint/wads#56).

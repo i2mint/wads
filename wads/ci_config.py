@@ -222,6 +222,26 @@ class PinnedTestRun:
         )
 
 
+#: ``[tool.wads.ci.commands]`` keys the reusable workflow never runs (issue #228):
+#: ``pre_test`` / ``post_test`` run (#203); these do not.
+IGNORED_COMMAND_KEYS = ("test", "lint", "format")
+
+
+def ignored_commands_message(key: str, commands) -> str:
+    """The one sentence both ``read_ci_config`` and ``wads ci-local`` say about an
+    ignored ``[tool.wads.ci.commands]`` key (single line: it goes in a workflow command).
+
+    >>> ignored_commands_message("lint", ["ruff check ."])
+    '[tool.wads.ci.commands].lint (ruff check .) is not run by CI: only pre_test and post_test are. CI runs pytest, ruff and the formatter from [tool.wads.ci.testing] and [tool.wads.ci.quality].'
+    """
+    shown = "; ".join(" ".join(str(c).split()) for c in commands)
+    return (
+        f"[tool.wads.ci.commands].{key} ({shown}) is not run by CI: only pre_test "
+        f"and post_test are. CI runs pytest, ruff and the formatter from "
+        f"[tool.wads.ci.testing] and [tool.wads.ci.quality]."
+    )
+
+
 class CIConfig:
     """Represents CI configuration extracted from pyproject.toml."""
 
@@ -372,7 +392,7 @@ class CIConfig:
 
     @property
     def commands_test(self) -> list[str]:
-        """Get test commands (defaults to ['pytest'])."""
+        """Get test commands (defaults to ['pytest']). CI does not run them (#228)."""
         return self.ci_config.get("commands", {}).get("test", ["pytest"])
 
     @property
@@ -382,39 +402,38 @@ class CIConfig:
 
     @property
     def commands_lint(self) -> list[str]:
-        """Get lint commands."""
+        """Get lint commands. CI does not run them (#228)."""
         return self.ci_config.get("commands", {}).get("lint", [])
-
-    #: ``[tool.wads.ci.commands]`` keys the reusable workflow never runs (issue #228):
-    #: ``pre_test`` / ``post_test`` run (#203); these do not.
-    IGNORED_COMMAND_KEYS = ("test", "lint", "format")
 
     @property
     def ignored_commands(self) -> dict[str, list[str]]:
         """The ``[tool.wads.ci.commands]`` entries CI ignores, by key.
 
-        ``test`` counts only when it differs from the default ``["pytest"]`` that the
-        template scaffolds. CI runs pytest, ruff and the formatter from the other
-        ``[tool.wads.ci]`` sections, never these lists.
+        ``test`` counts only when it is not plain ``["pytest"]``, which is what CI runs
+        anyway. A malformed value is reported as its ``repr`` rather than raising: this
+        is a diagnostic, and the keys are not read by anything that would fail on it.
 
         >>> cfg = lambda cmds: CIConfig({"tool": {"wads": {"ci": {"commands": cmds}}}})
         >>> cfg({"test": ["pytest"], "lint": []}).ignored_commands
         {}
         >>> cfg({"test": ["tox"], "lint": ["ruff check ."]}).ignored_commands
         {'test': ['tox'], 'lint': ['ruff check .']}
+        >>> cfg({"lint": 3}).ignored_commands
+        {'lint': ['3']}
         """
-        commands = self.ci_config.get("commands", {})
         ignored = {}
-        for key in self.IGNORED_COMMAND_KEYS:
-            value = commands.get(key) or []
-            value = [value] if isinstance(value, str) else list(value)
+        for key in IGNORED_COMMAND_KEYS:
+            try:
+                value = self._command_list(key)
+            except ValueError:
+                value = [repr(self.ci_config.get("commands", {}).get(key))]
             if value and not (key == "test" and value == ["pytest"]):
                 ignored[key] = value
         return ignored
 
     @property
     def commands_format(self) -> list[str]:
-        """Get format commands."""
+        """Get format commands. CI does not run them (#228)."""
         return self.ci_config.get("commands", {}).get("format", [])
 
     # 🌍 ENVIRONMENT VARIABLES

@@ -162,3 +162,45 @@ def test_no_warning_when_only_pre_and_post_test_are_set(tmp_path, monkeypatch, c
     monkeypatch.setenv("GITHUB_ENV", str(tmp_path / "env"))
     assert read_and_export_ci_config(str(tmp_path)) == 0
     assert "CI commands ignored" not in capsys.readouterr().out
+
+
+@pytest.mark.parametrize(
+    "commands",
+    ['lint = [1]', 'lint = ["ruff", {x = 1}]', 'test = [["pytest"]]', "lint = 3", "format = true"],
+)
+def test_malformed_ignored_commands_never_fail_the_setup_job_or_ci_local(
+    tmp_path, monkeypatch, capsys, commands
+):
+    """#228: a diagnostic about keys nothing reads must not fail anything."""
+    (tmp_path / "pyproject.toml").write_text(
+        '[project]\nname = "demo"\nversion = "0.1.0"\n\n'
+        f"[tool.wads.ci.commands]\n{commands}\n"
+    )
+    monkeypatch.setenv("GITHUB_OUTPUT", str(tmp_path / "out"))
+    monkeypatch.setenv("GITHUB_ENV", str(tmp_path / "env"))
+    assert read_and_export_ci_config(str(tmp_path)) == 0
+    assert "::warning title=CI commands ignored::" in capsys.readouterr().out
+    assert CIConfig.from_file(tmp_path).ignored_commands
+
+
+def test_ci_local_notes_the_commands_it_does_not_run(tmp_path):
+    import io
+
+    from wads.ci_local import RunResult, run_ci_local
+
+    (tmp_path / "pyproject.toml").write_text(
+        '[project]\nname = "pkg"\nversion = "0.1.0"\n'
+        '[tool.wads.ci.commands]\nformat = ["black ."]\n'
+    )
+    out = io.StringIO()
+    report = run_ci_local(
+        tmp_path, runner=lambda argv, **kw: RunResult(0), environ={}, out=out
+    )
+    assert "[tool.wads.ci.commands].format (black .) is not run by CI" in out.getvalue()
+    assert report.ok
+
+
+def test_a_multiline_command_stays_on_one_annotation_line():
+    from wads.ci_config import ignored_commands_message
+
+    assert "\n" not in ignored_commands_message("lint", ["a \\\n  b"])
