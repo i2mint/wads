@@ -987,6 +987,7 @@ def populate_pkg_dir(
                 subdir=subdir_override,
                 package_name=name_override,
                 version=npm_version,
+                repository_url=_repository_url(pkg_dir, configs.get("url")),
                 package_manager=pm_override,
                 overwrite=overwrite,
                 on_add=tracker.add,
@@ -1031,6 +1032,17 @@ def _license_text(
             author=author, pyproject_authors=pyproject_authors, url=url
         ),
     )
+
+
+def _repository_url(pkg_dir: str, url: Optional[str]) -> Optional[str]:
+    """``url`` if given, else the project url of ``pkg_dir``'s git ``origin`` (``None``
+    when it has none): what package.json's ``repository`` is rendered from."""
+    if url:
+        return url
+    try:
+        return _get_pkg_url_from_pkg_dir(pkg_dir) or None
+    except Exception:
+        return None
 
 
 def _selected_frontends(frontend: str, with_npm: bool) -> list:
@@ -1125,6 +1137,7 @@ def _populate_frontend_only(
             subdir=npm_subdir if single and npm_subdir != "js" else default_subdir,
             package_name=npm_package_name if single else None,
             version=version,
+            repository_url=_repository_url(pkg_dir, url),
             package_manager=npm_package_manager
             if npm_package_manager != "npm"
             else None,

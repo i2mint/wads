@@ -27,9 +27,11 @@ from __future__ import annotations
 
 import inspect
 import json
-import posixpath
 import os
+import posixpath
+import re
 from dataclasses import dataclass, field
+from urllib.parse import urlsplit, urlunsplit
 from typing import Callable, Mapping, Optional, Sequence
 
 from wads import (
@@ -163,6 +165,66 @@ def _workflow_name(subdir: str) -> str:
     return "NPM CI" if subdir in _ANCHOR_SUBDIRS else f"NPM CI ({subdir})"
 
 
+#: Where the ``ts-monorepo`` example package lives, relative to the workspace root.
+EXAMPLE_PACKAGE_DIR = "packages/core"
+
+
+def _repository_field(
+    url: Optional[str], *, directory: Optional[str]
+) -> Optional[dict]:
+    """The package.json ``repository`` object for ``url`` (``None`` when unknown).
+
+    >>> _repository_field("https://github.com/o/r", directory="ts")
+    {'type': 'git', 'url': 'git+https://github.com/o/r.git', 'directory': 'ts'}
+    >>> _repository_field(None, directory="ts") is None
+    True
+    """
+    git_url = git_repository_url(url)
+    if git_url is None:
+        return None
+    field = {"type": "git", "url": git_url}
+    if directory:
+        field["directory"] = directory
+    return field
+
+
+def git_repository_url(url: Optional[str]) -> Optional[str]:
+    """``url`` as the ``git+https://....git`` form package.json's ``repository`` takes.
+
+    An ssh remote (``git@host:o/r``) becomes https, credentials in a url are dropped
+    (package.json is published), and a ``git+`` or shorthand (``github:o/r``) url
+    is kept as it is.
+
+    >>> git_repository_url("https://github.com/thorwhalen/byok/")
+    'git+https://github.com/thorwhalen/byok.git'
+    >>> git_repository_url("git+https://github.com/o/r.git")
+    'git+https://github.com/o/r.git'
+    >>> git_repository_url("git@github.com:o/r.git")
+    'git+https://github.com/o/r.git'
+    >>> git_repository_url("https://user:tok@github.com/o/r")
+    'git+https://github.com/o/r.git'
+    >>> git_repository_url("github:o/r")
+    'github:o/r'
+    >>> git_repository_url(None) is None
+    True
+    """
+    if not url or not url.strip():
+        return None
+    url = url.strip().rstrip("/")
+    if re.match(r"^[a-z]+:(?!//)[^@\s]+/[^@\s]+$", url) and "@" not in url:
+        return url  # shorthand: github:o/r
+    ssh = re.match(r"^[\w.-]+@([^:/]+):(.+)$", url)
+    if ssh:
+        url = f"https://{ssh.group(1)}/{ssh.group(2)}"
+    parts = urlsplit(url.removeprefix("git+"))
+    if parts.hostname:
+        host = parts.hostname + (f":{parts.port}" if parts.port else "")
+        url = urlunsplit((parts.scheme, host, parts.path, "", ""))
+    if not url.endswith(".git"):
+        url += ".git"
+    return url if url.startswith("git+") else f"git+{url}"
+
+
 def frontend_context(
     *,
     profile_name: str,
@@ -180,6 +242,7 @@ def frontend_context(
     node_versions: Sequence[str] = DFLT_NODE_VERSIONS,
     engines_node: Optional[str] = None,
     vitest_range: str = DFLT_VITEST_RANGE,
+    repository_url: Optional[str] = None,
 ) -> dict:
     """Build the render context shared by all frontend-profile templates.
 
@@ -193,6 +256,7 @@ def frontend_context(
         if profile_name == "ts-monorepo"
         else _SINGLE_PACKAGE_REUSABLE
     )
+    example_package_dir = _at(subdir, EXAMPLE_PACKAGE_DIR)
     return {
         "npm_package_name": package_name or project_name,
         "npm_version": version,
@@ -206,6 +270,18 @@ def frontend_context(
         # ``engines.node`` range of package.json (the ``ts`` template omits it when None)
         "npm_engines_node": engines_node,
         "npm_vitest_range": vitest_range,
+        # package.json ``repository`` (npm provenance checks it against the repo that
+        # publishes); ``None`` leaves the field out. ``directory`` is the package's
+        # place in the repo when it is not the root.
+        "npm_repository": _repository_field(
+            repository_url,
+            directory=(
+                example_package_dir
+                if profile_name == "ts-monorepo"
+                else (None if subdir == ROOT_SUBDIR else subdir)
+            ),
+        ),
+        "example_package_dir": example_package_dir,
         "npm_is_root": subdir == ROOT_SUBDIR,
         # Stub workflow wiring (per-component, collision-free):
         "npm_workflow_name": _workflow_name(subdir),
@@ -325,7 +401,7 @@ def _ts_monorepo_artifacts(ctx: Mapping) -> list:
     which discovers and matrixes over the workspace packages.
     """
     subdir = ctx["npm_subdir"]
-    pkg_dir = f"{subdir}/packages/core"
+    pkg_dir = ctx["example_package_dir"]
     return [
         _jinja(f"{subdir}/package.json", package_json_monorepo_root_tpl_path),
         _jinja(f"{subdir}/pnpm-workspace.yaml", pnpm_workspace_tpl_path),
@@ -459,6 +535,7 @@ def apply_frontend(
     workspace_glob: str = "packages/*",
     example_package_name: Optional[str] = None,
     watch_paths: Optional[list] = None,
+    repository_url: Optional[str] = None,
     overwrite=(),
     on_add=None,
     on_skip=None,
@@ -496,6 +573,7 @@ def apply_frontend(
         watch_paths=(
             default_npm_watch_paths(pkg_dir) if watch_paths is None else watch_paths
         ),
+        repository_url=repository_url,
     )
     artifacts = prof.artifacts(context)
     return generate(
