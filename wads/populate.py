@@ -43,6 +43,7 @@ from wads.toml_util import (
     get_project_metadata,
 )
 from wads.licensing import (
+    require_license,
     license_body,
     resolve_author,
     substitute_license_placeholders,
@@ -425,6 +426,12 @@ def populate_pkg_dir(
     pkg_dir = ensure_no_slash_suffix(pkg_dir)
     name = os.path.basename(pkg_dir)
     pjoin = lambda *p: os.path.join(pkg_dir, *p)
+
+    # Fail on an unknown licence before anything is written, when it is going to be
+    # written: an existing LICENSE is kept, and pyproject takes any SPDX expression.
+    _licence = license or args_defaults.get("license")
+    if _licence and ("LICENSE" in overwrite or not os.path.isfile(pjoin("LICENSE"))):
+        require_license(_licence)
 
     frontend_only = _frontend_only_profiles(
         project_type, _selected_frontends(frontend, with_npm)
@@ -1033,7 +1040,7 @@ def _license_text(
     True
     """
     return substitute_license_placeholders(
-        license_body(license_name),
+        license_body(require_license(license_name)["key"]),
         author=resolve_author(
             author=author, pyproject_authors=pyproject_authors, url=url
         ),

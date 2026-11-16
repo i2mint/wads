@@ -1,6 +1,7 @@
 """Licensing"""
 
 from wads import licenses_json_path
+import difflib
 import json
 import os
 import re
@@ -139,6 +140,43 @@ def license_body(license=None, search_name_and_spdx_id=True, refresh=False):
         return _license_info["body"]
 
 
+def require_license(license: str) -> dict:
+    """The ``license_info`` of ``license``, or a ``ValueError`` naming the closest keys.
+
+    ``license`` is a key, name or SPDX id, in any case, or a name
+    :func:`wads.toml_util.pep639_license` knows (``Apache Software License``). An
+    unknown one used to print the key list and carry on to write an empty LICENSE
+    (issue #237).
+
+    >>> require_license("mit")["spdx_id"], require_license("APACHE-2.0")["key"]
+    ('MIT', 'apache-2.0')
+    >>> require_license("Apache Software License")["key"]
+    'apache-2.0'
+    >>> require_license("apach")  # doctest: +ELLIPSIS
+    Traceback (most recent call last):
+      ...
+    ValueError: 'apach' is not a valid licence key; closest: apache-2.0 (...
+    """
+    from wads.toml_util import pep639_license
+
+    licenses = licenses_dict()
+    spellings = {}  # lowercased key / name / SPDX id -> key
+    for info in licenses.values():
+        for spelling in (info["key"], info["name"], info["spdx_id"]):
+            spellings[str(spelling).lower()] = info["key"]
+    spdx = pep639_license(license)  # a string when `license` names an SPDX id
+    for candidate in (str(license), spdx if isinstance(spdx, str) else ""):
+        if candidate.lower() in spellings:
+            return licenses[spellings[candidate.lower()]]
+    close = difflib.get_close_matches(str(license).lower(), spellings, n=3, cutoff=0.4)
+    keys = list(dict.fromkeys(spellings[c] for c in close))
+    suggestion = f"closest: {', '.join(keys)} " if keys else ""
+    raise ValueError(
+        f"{license!r} is not a valid licence key; {suggestion}"
+        f"(all keys: {', '.join(sorted(licenses))})"
+    )
+
+
 def license_info(license=None, search_name_and_spdx_id=True, refresh=False):
     licenses = licenses_dict(refresh=refresh)
     if license not in licenses:
@@ -165,7 +203,8 @@ def get_licenses(refresh=False):
         except Exception:
             raise
 
-    return json.load(open(licenses_json_path))
+    with open(licenses_json_path) as f:
+        return json.load(f)
 
 
 def get_licenses_from_github():
