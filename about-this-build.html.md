@@ -2,7 +2,7 @@
 
 # About this build
 
-This documentation was built on **2026-11-16 09:06 UTC** from commit <a href="https://github.com/i2mint/wads/commit/487e1839ea16db9b30ade54767f42f3a4fbafece"><code>487e183</code></a> on branch <code>master</code>, for **wads 0.2.91** (from <code>pyproject.toml</code>).
+This documentation was built on **2026-11-16 09:19 UTC** from commit <a href="https://github.com/i2mint/wads/commit/1ab40689bc2fcb46755268b62b69659df329bfa6"><code>1ab4068</code></a> on branch <code>master</code>, for **wads 0.2.92** (from <code>pyproject.toml</code>).
 
 #### NOTE
 Nothing suggests a mismatch: the tree was clean at the commit above, and the documented version is the one on PyPI.
@@ -11,7 +11,7 @@ Nothing suggests a mismatch: the tree was clean at the commit above, and the doc
 
 |                     |                                                                                                                                                    |
 |---------------------|----------------------------------------------------------------------------------------------------------------------------------------------------|
-| Commit              | <a href="https://github.com/i2mint/wads/commit/487e1839ea16db9b30ade54767f42f3a4fbafece"><code>487e1839ea16db9b30ade54767f42f3a4fbafece</code></a> |
+| Commit              | <a href="https://github.com/i2mint/wads/commit/1ab40689bc2fcb46755268b62b69659df329bfa6"><code>1ab40689bc2fcb46755268b62b69659df329bfa6</code></a> |
 | Branch              | <code>master</code>                                                                                                                                |
 | Tags at this commit | none                                                                                                                                               |
 | Working tree        | clean                                                                                                                                              |
@@ -22,9 +22,9 @@ Nothing suggests a mismatch: the tree was clean at the commit above, and the doc
 |              |                                                                                            |
 |--------------|--------------------------------------------------------------------------------------------|
 | Repository   | <code>i2mint/wads</code>                                                                   |
-| Run          | <a href="https://github.com/i2mint/wads/actions/runs/43836284946">43836284946</a>          |
+| Run          | <a href="https://github.com/i2mint/wads/actions/runs/43838112009">43838112009</a>          |
 | Ref          | <code>refs/heads/master</code>                                                             |
-| Event commit | <code>487e1839ea16db9b30ade54767f42f3a4fbafece</code> (in the history of the built commit) |
+| Event commit | <code>1ab40689bc2fcb46755268b62b69659df329bfa6</code> (in the history of the built commit) |
 
 ## Tools
 
@@ -49,13 +49,13 @@ Nothing suggests a mismatch: the tree was clean at the commit above, and the doc
 
 ## Package on PyPI
 
-Latest release: <a href="https://pypi.org/project/wads/0.2.91/">0.2.91</a>, the same as the documented version.
+Latest release: <a href="https://pypi.org/project/wads/0.2.92/">0.2.92</a>, the same as the documented version.
 
 ## Reproduce
 
 ```bash
 git clone https://github.com/i2mint/wads && cd wads
-git checkout 487e1839ea16db9b30ade54767f42f3a4fbafece
+git checkout 1ab40689bc2fcb46755268b62b69659df329bfa6
 pip install "epythet==0.2.22"
 epythet quickstart . --ignore tests/ scrap/ examples/
 ```

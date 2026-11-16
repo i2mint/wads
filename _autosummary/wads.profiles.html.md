@@ -32,6 +32,7 @@ Nothing here runs by default; the Python `populate` path and the
 | [`ROOT_SUBDIR`](#wads.profiles.ROOT_SUBDIR)                | `subdir` of a component that is the repo root (a TypeScript-only package).                                                              |
 | [`DFLT_VITEST_RANGE`](#wads.profiles.DFLT_VITEST_RANGE)          | vitest's semver range in the `ts` template.                                                                                             |
 | [`DFLT_NODE_VERSIONS`](#wads.profiles.DFLT_NODE_VERSIONS)         | Node versions a component's CI matrix runs, unless its profile says otherwise.                                                          |
+| [`EXAMPLE_PACKAGE_DIR`](#wads.profiles.EXAMPLE_PACKAGE_DIR)        | Where the `ts-monorepo` example package lives, relative to the workspace root.                                                          |
 | [`LICENSE_FILENAMES`](#wads.profiles.LICENSE_FILENAMES)          | Root licence file names a frontend component copies, in order of preference.                                                            |
 | [`FRONTEND_PROFILES`](#wads.profiles.FRONTEND_PROFILES)          | The frontend profile registry.                                                                                                          |
 | [`NATIVE_PROFILES`](#wads.profiles.NATIVE_PROFILES)            | The native-backend registry.                                                                                                            |
@@ -48,6 +49,7 @@ Nothing here runs by default; the Python `populate` path and the
 | [`frontend_context`](#wads.profiles.frontend_context)(\*, profile_name, project_name)   | Build the render context shared by all frontend-profile templates.            |
 | [`get_frontend_profile`](#wads.profiles.get_frontend_profile)(name)                         | Look up a registered profile, with an informative error if unknown.           |
 | [`get_native_profile`](#wads.profiles.get_native_profile)(name)                           | Look up a registered native profile, with an informative error if unknown.    |
+| [`git_repository_url`](#wads.profiles.git_repository_url)(url)                            | `url` as the `git+https://....git` form package.json's `repository` takes.    |
 | [`make_tests_overlay_artifacts`](#wads.profiles.make_tests_overlay_artifacts)(project_name, \*)     | Artifacts that scaffold a `tests/` folder for a project.                      |
 | [`merge_native_pyproject`](#wads.profiles.merge_native_pyproject)(pyproject, fragment, \*)    | A copy of `pyproject` with a native `fragment` merged in (for a NEW package). |
 | [`native_artifacts`](#wads.profiles.native_artifacts)(backend, project_name, \*[, ...]) | The `Artifact` list a native backend writes for `project_name`.               |
@@ -87,6 +89,10 @@ run (i2mint/wads#209). A change there runs the npm CI as well as the Python CI.
 vitest’s semver range in the `ts` template. 3.x still installs on Node 20; 2.x has a
 critical advisory (tinypool) and 4.x a moderate one (`@vitest/mocker`); 5.x needs
 Node >= 22.12, so only a profile that sets a Node floor of 22 uses it.
+
+### wads.profiles.EXAMPLE_PACKAGE_DIR *= 'packages/core'*
+
+Where the `ts-monorepo` example package lives, relative to the workspace root.
 
 ### wads.profiles.FRONTEND_PROFILES *: [dict](https://docs.python.org/3/builtins/stdtypes.html#dict)* *= {'js': FrontendProfile(name='js', default_subdir='js', default_package_manager='npm', artifacts=<function \_js_artifacts>, description='JavaScript single package (the original #32 overlay).', python=True, context_defaults={}), 'ts': FrontendProfile(name='ts', default_subdir='ts', default_package_manager='npm', artifacts=<function \_ts_artifacts>, description='TypeScript single package (tsconfig + tsup build + vitest).', python=True, context_defaults={}), 'ts-monorepo': FrontendProfile(name='ts-monorepo', default_subdir='ts', default_package_manager='pnpm', artifacts=<function \_ts_monorepo_artifacts>, description='TypeScript monorepo (pnpm workspaces + turbo).', python=True, context_defaults={}), 'ts-package': FrontendProfile(name='ts-package', default_subdir='.', default_package_manager='npm', artifacts=<function \_ts_artifacts>, description='A repo that is only a TypeScript package, at its root (no Python project; Node >= 22, CI on 22 and 24).', python=False, context_defaults={'node_versions': ('22', '24'), 'engines_node': '>=22.12', 'vitest_range': '^5'})}*
 
@@ -154,7 +160,7 @@ Paths are template paths (with the tokens); pyproject tables are dotted
 
 `subdir` of a component that is the repo root (a TypeScript-only package).
 
-### wads.profiles.apply_frontend(pkg_dir, , profile='js', project_name, description='', license=None, subdir=None, package_name=None, version='0.0.1', package_manager=None, workspace_glob='packages/\*', example_package_name=None, watch_paths=None, overwrite=(), on_add=None, on_skip=None)
+### wads.profiles.apply_frontend(pkg_dir, , profile='js', project_name, description='', license=None, subdir=None, package_name=None, version='0.0.1', package_manager=None, workspace_glob='packages/\*', example_package_name=None, watch_paths=None, repository_url=None, overwrite=(), on_add=None, on_skip=None)
 
 Apply one frontend profile component to an existing project directory.
 
@@ -244,7 +250,7 @@ True
 * **Return type:**
   [`Optional`](https://docs.python.org/3/library/typing.html#typing.Optional)[[`tuple`](https://docs.python.org/3/builtins/stdtypes.html#tuple)]
 
-### wads.profiles.frontend_context(, profile_name, project_name, description='', license=None, subdir, package_name=None, version='0.0.1', package_manager='npm', workspace_glob='packages/\*', example_package_name=None, license_file=None, watch_paths=None, node_versions=('20', '22', '24'), engines_node=None, vitest_range='^3')
+### wads.profiles.frontend_context(, profile_name, project_name, description='', license=None, subdir, package_name=None, version='0.0.1', package_manager='npm', workspace_glob='packages/\*', example_package_name=None, license_file=None, watch_paths=None, node_versions=('20', '22', '24'), engines_node=None, vitest_range='^3', repository_url=None)
 
 Build the render context shared by all frontend-profile templates.
 
@@ -269,6 +275,32 @@ Look up a registered native profile, with an informative error if unknown.
 
 * **Return type:**
   [`NativeProfile`](#wads.profiles.NativeProfile)
+
+### wads.profiles.git_repository_url(url)
+
+`url` as the `git+https://....git` form package.json’s `repository` takes.
+
+An ssh remote (`git@host:o/r`) becomes https, credentials in a url are dropped
+(package.json is published), and a `git+` or shorthand (`github:o/r`) url
+is kept as it is.
+
+```pycon
+>>> git_repository_url("https://github.com/thorwhalen/byok/")
+'git+https://github.com/thorwhalen/byok.git'
+>>> git_repository_url("git+https://github.com/o/r.git")
+'git+https://github.com/o/r.git'
+>>> git_repository_url("git@github.com:o/r.git")
+'git+https://github.com/o/r.git'
+>>> git_repository_url("https://user:tok@github.com/o/r")
+'git+https://github.com/o/r.git'
+>>> git_repository_url("github:o/r")
+'github:o/r'
+>>> git_repository_url(None) is None
+True
+```
+
+* **Return type:**
+  [`Optional`](https://docs.python.org/3/library/typing.html#typing.Optional)[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str)]
 
 ### wads.profiles.make_tests_overlay_artifacts(project_name, , with_data_util=True)
 

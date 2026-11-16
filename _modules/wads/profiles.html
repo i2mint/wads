@@ -316,9 +316,11 @@
 
 <span class="kn">import</span><span class="w"> </span><span class="nn">inspect</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">json</span>
-<span class="kn">import</span><span class="w"> </span><span class="nn">posixpath</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">posixpath</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">re</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">dataclasses</span><span class="w"> </span><span class="kn">import</span> <span class="n">dataclass</span><span class="p">,</span> <span class="n">field</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">urllib.parse</span><span class="w"> </span><span class="kn">import</span> <span class="n">urlsplit</span><span class="p">,</span> <span class="n">urlunsplit</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">Mapping</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Sequence</span>
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">wads</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
@@ -455,6 +457,69 @@
     <span class="k">return</span> <span class="s2">"NPM CI"</span> <span class="k">if</span> <span class="n">subdir</span> <span class="ow">in</span> <span class="n">_ANCHOR_SUBDIRS</span> <span class="k">else</span> <span class="sa">f</span><span class="s2">"NPM CI (</span><span class="si">{</span><span class="n">subdir</span><span class="si">}</span><span class="s2">)"</span>
 
 
+<span class="c1">#: Where the ``ts-monorepo`` example package lives, relative to the workspace root.</span>
+<span class="n">EXAMPLE_PACKAGE_DIR</span> <span class="o">=</span> <span class="s2">"packages/core"</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_repository_field</span><span class="p">(</span>
+    <span class="n">url</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span> <span class="o">*</span><span class="p">,</span> <span class="n">directory</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">dict</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">"""The package.json ``repository`` object for ``url`` (``None`` when unknown).</span>
+
+<span class="sd">    &gt;&gt;&gt; _repository_field("https://github.com/o/r", directory="ts")</span>
+<span class="sd">    {'type': 'git', 'url': 'git+https://github.com/o/r.git', 'directory': 'ts'}</span>
+<span class="sd">    &gt;&gt;&gt; _repository_field(None, directory="ts") is None</span>
+<span class="sd">    True</span>
+<span class="sd">    """</span>
+    <span class="n">git_url</span> <span class="o">=</span> <span class="n">git_repository_url</span><span class="p">(</span><span class="n">url</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">git_url</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">return</span> <span class="kc">None</span>
+    <span class="n">field</span> <span class="o">=</span> <span class="p">{</span><span class="s2">"type"</span><span class="p">:</span> <span class="s2">"git"</span><span class="p">,</span> <span class="s2">"url"</span><span class="p">:</span> <span class="n">git_url</span><span class="p">}</span>
+    <span class="k">if</span> <span class="n">directory</span><span class="p">:</span>
+        <span class="n">field</span><span class="p">[</span><span class="s2">"directory"</span><span class="p">]</span> <span class="o">=</span> <span class="n">directory</span>
+    <span class="k">return</span> <span class="n">field</span>
+
+
+<div class="viewcode-block" id="git_repository_url">
+<a class="viewcode-back" href="../../_autosummary/wads.profiles.html#wads.profiles.git_repository_url">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">git_repository_url</span><span class="p">(</span><span class="n">url</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">"""``url`` as the ``git+https://....git`` form package.json's ``repository`` takes.</span>
+
+<span class="sd">    An ssh remote (``git@host:o/r``) becomes https, credentials in a url are dropped</span>
+<span class="sd">    (package.json is published), and a ``git+`` or shorthand (``github:o/r``) url</span>
+<span class="sd">    is kept as it is.</span>
+
+<span class="sd">    &gt;&gt;&gt; git_repository_url("https://github.com/thorwhalen/byok/")</span>
+<span class="sd">    'git+https://github.com/thorwhalen/byok.git'</span>
+<span class="sd">    &gt;&gt;&gt; git_repository_url("git+https://github.com/o/r.git")</span>
+<span class="sd">    'git+https://github.com/o/r.git'</span>
+<span class="sd">    &gt;&gt;&gt; git_repository_url("git@github.com:o/r.git")</span>
+<span class="sd">    'git+https://github.com/o/r.git'</span>
+<span class="sd">    &gt;&gt;&gt; git_repository_url("https://user:tok@github.com/o/r")</span>
+<span class="sd">    'git+https://github.com/o/r.git'</span>
+<span class="sd">    &gt;&gt;&gt; git_repository_url("github:o/r")</span>
+<span class="sd">    'github:o/r'</span>
+<span class="sd">    &gt;&gt;&gt; git_repository_url(None) is None</span>
+<span class="sd">    True</span>
+<span class="sd">    """</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">url</span> <span class="ow">or</span> <span class="ow">not</span> <span class="n">url</span><span class="o">.</span><span class="n">strip</span><span class="p">():</span>
+        <span class="k">return</span> <span class="kc">None</span>
+    <span class="n">url</span> <span class="o">=</span> <span class="n">url</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span><span class="o">.</span><span class="n">rstrip</span><span class="p">(</span><span class="s2">"/"</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">re</span><span class="o">.</span><span class="n">match</span><span class="p">(</span><span class="sa">r</span><span class="s2">"^[a-z]+:(?!//)[^@\s]+/[^@\s]+$"</span><span class="p">,</span> <span class="n">url</span><span class="p">)</span> <span class="ow">and</span> <span class="s2">"@"</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">url</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">url</span>  <span class="c1"># shorthand: github:o/r</span>
+    <span class="n">ssh</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">match</span><span class="p">(</span><span class="sa">r</span><span class="s2">"^[\w.-]+@([^:/]+):(.+)$"</span><span class="p">,</span> <span class="n">url</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">ssh</span><span class="p">:</span>
+        <span class="n">url</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">"https://</span><span class="si">{</span><span class="n">ssh</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="n">ssh</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span><span class="si">}</span><span class="s2">"</span>
+    <span class="n">parts</span> <span class="o">=</span> <span class="n">urlsplit</span><span class="p">(</span><span class="n">url</span><span class="o">.</span><span class="n">removeprefix</span><span class="p">(</span><span class="s2">"git+"</span><span class="p">))</span>
+    <span class="k">if</span> <span class="n">parts</span><span class="o">.</span><span class="n">hostname</span><span class="p">:</span>
+        <span class="n">host</span> <span class="o">=</span> <span class="n">parts</span><span class="o">.</span><span class="n">hostname</span> <span class="o">+</span> <span class="p">(</span><span class="sa">f</span><span class="s2">":</span><span class="si">{</span><span class="n">parts</span><span class="o">.</span><span class="n">port</span><span class="si">}</span><span class="s2">"</span> <span class="k">if</span> <span class="n">parts</span><span class="o">.</span><span class="n">port</span> <span class="k">else</span> <span class="s2">""</span><span class="p">)</span>
+        <span class="n">url</span> <span class="o">=</span> <span class="n">urlunsplit</span><span class="p">((</span><span class="n">parts</span><span class="o">.</span><span class="n">scheme</span><span class="p">,</span> <span class="n">host</span><span class="p">,</span> <span class="n">parts</span><span class="o">.</span><span class="n">path</span><span class="p">,</span> <span class="s2">""</span><span class="p">,</span> <span class="s2">""</span><span class="p">))</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">url</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s2">".git"</span><span class="p">):</span>
+        <span class="n">url</span> <span class="o">+=</span> <span class="s2">".git"</span>
+    <span class="k">return</span> <span class="n">url</span> <span class="k">if</span> <span class="n">url</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">"git+"</span><span class="p">)</span> <span class="k">else</span> <span class="sa">f</span><span class="s2">"git+</span><span class="si">{</span><span class="n">url</span><span class="si">}</span><span class="s2">"</span></div>
+
+
+
 <div class="viewcode-block" id="frontend_context">
 <a class="viewcode-back" href="../../_autosummary/wads.profiles.html#wads.profiles.frontend_context">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">frontend_context</span><span class="p">(</span>
@@ -474,6 +539,7 @@
     <span class="n">node_versions</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="n">DFLT_NODE_VERSIONS</span><span class="p">,</span>
     <span class="n">engines_node</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="n">vitest_range</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">DFLT_VITEST_RANGE</span><span class="p">,</span>
+    <span class="n">repository_url</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">"""Build the render context shared by all frontend-profile templates.</span>
 
@@ -487,6 +553,7 @@
         <span class="k">if</span> <span class="n">profile_name</span> <span class="o">==</span> <span class="s2">"ts-monorepo"</span>
         <span class="k">else</span> <span class="n">_SINGLE_PACKAGE_REUSABLE</span>
     <span class="p">)</span>
+    <span class="n">example_package_dir</span> <span class="o">=</span> <span class="n">_at</span><span class="p">(</span><span class="n">subdir</span><span class="p">,</span> <span class="n">EXAMPLE_PACKAGE_DIR</span><span class="p">)</span>
     <span class="k">return</span> <span class="p">{</span>
         <span class="s2">"npm_package_name"</span><span class="p">:</span> <span class="n">package_name</span> <span class="ow">or</span> <span class="n">project_name</span><span class="p">,</span>
         <span class="s2">"npm_version"</span><span class="p">:</span> <span class="n">version</span><span class="p">,</span>
@@ -500,6 +567,18 @@
         <span class="c1"># ``engines.node`` range of package.json (the ``ts`` template omits it when None)</span>
         <span class="s2">"npm_engines_node"</span><span class="p">:</span> <span class="n">engines_node</span><span class="p">,</span>
         <span class="s2">"npm_vitest_range"</span><span class="p">:</span> <span class="n">vitest_range</span><span class="p">,</span>
+        <span class="c1"># package.json ``repository`` (npm provenance checks it against the repo that</span>
+        <span class="c1"># publishes); ``None`` leaves the field out. ``directory`` is the package's</span>
+        <span class="c1"># place in the repo when it is not the root.</span>
+        <span class="s2">"npm_repository"</span><span class="p">:</span> <span class="n">_repository_field</span><span class="p">(</span>
+            <span class="n">repository_url</span><span class="p">,</span>
+            <span class="n">directory</span><span class="o">=</span><span class="p">(</span>
+                <span class="n">example_package_dir</span>
+                <span class="k">if</span> <span class="n">profile_name</span> <span class="o">==</span> <span class="s2">"ts-monorepo"</span>
+                <span class="k">else</span> <span class="p">(</span><span class="kc">None</span> <span class="k">if</span> <span class="n">subdir</span> <span class="o">==</span> <span class="n">ROOT_SUBDIR</span> <span class="k">else</span> <span class="n">subdir</span><span class="p">)</span>
+            <span class="p">),</span>
+        <span class="p">),</span>
+        <span class="s2">"example_package_dir"</span><span class="p">:</span> <span class="n">example_package_dir</span><span class="p">,</span>
         <span class="s2">"npm_is_root"</span><span class="p">:</span> <span class="n">subdir</span> <span class="o">==</span> <span class="n">ROOT_SUBDIR</span><span class="p">,</span>
         <span class="c1"># Stub workflow wiring (per-component, collision-free):</span>
         <span class="s2">"npm_workflow_name"</span><span class="p">:</span> <span class="n">_workflow_name</span><span class="p">(</span><span class="n">subdir</span><span class="p">),</span>
@@ -623,7 +702,7 @@
 <span class="sd">    which discovers and matrixes over the workspace packages.</span>
 <span class="sd">    """</span>
     <span class="n">subdir</span> <span class="o">=</span> <span class="n">ctx</span><span class="p">[</span><span class="s2">"npm_subdir"</span><span class="p">]</span>
-    <span class="n">pkg_dir</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">subdir</span><span class="si">}</span><span class="s2">/packages/core"</span>
+    <span class="n">pkg_dir</span> <span class="o">=</span> <span class="n">ctx</span><span class="p">[</span><span class="s2">"example_package_dir"</span><span class="p">]</span>
     <span class="k">return</span> <span class="p">[</span>
         <span class="n">_jinja</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">subdir</span><span class="si">}</span><span class="s2">/package.json"</span><span class="p">,</span> <span class="n">package_json_monorepo_root_tpl_path</span><span class="p">),</span>
         <span class="n">_jinja</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">subdir</span><span class="si">}</span><span class="s2">/pnpm-workspace.yaml"</span><span class="p">,</span> <span class="n">pnpm_workspace_tpl_path</span><span class="p">),</span>
@@ -768,6 +847,7 @@
     <span class="n">workspace_glob</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"packages/*"</span><span class="p">,</span>
     <span class="n">example_package_name</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="n">watch_paths</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">list</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">repository_url</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="n">overwrite</span><span class="o">=</span><span class="p">(),</span>
     <span class="n">on_add</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
     <span class="n">on_skip</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
@@ -805,6 +885,7 @@
         <span class="n">watch_paths</span><span class="o">=</span><span class="p">(</span>
             <span class="n">default_npm_watch_paths</span><span class="p">(</span><span class="n">pkg_dir</span><span class="p">)</span> <span class="k">if</span> <span class="n">watch_paths</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">watch_paths</span>
         <span class="p">),</span>
+        <span class="n">repository_url</span><span class="o">=</span><span class="n">repository_url</span><span class="p">,</span>
     <span class="p">)</span>
     <span class="n">artifacts</span> <span class="o">=</span> <span class="n">prof</span><span class="o">.</span><span class="n">artifacts</span><span class="p">(</span><span class="n">context</span><span class="p">)</span>
     <span class="k">return</span> <span class="n">generate</span><span class="p">(</span>
@@ -1724,7 +1805,7 @@
       
     </aside>
   </div>
-</div><script src="../../_static/documentation_options.js?v=22c1e04f"></script>
+</div><script src="../../_static/documentation_options.js?v=02707aa4"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/scripts/furo.js?v=46bd48cc"></script>
