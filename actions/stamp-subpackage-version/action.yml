@@ -1,0 +1,20 @@
+name: "Stamp a subpackage version"
+description: "Write a release version into a subpackage's pyproject.toml (i2mint/wads#220); stdlib only, run from this action's own checkout."
+
+inputs:
+  pyproject:
+    description: "Path of the subpackage's pyproject.toml"
+    required: true
+  version:
+    description: "The release version"
+    required: true
+
+runs:
+  using: "composite"
+  steps:
+    - name: Stamp
+      shell: bash
+      env:
+        PYPROJECT: ${{ inputs.pyproject }}
+        RELEASE: ${{ inputs.version }}
+      run: python3 -I "$GITHUB_ACTION_PATH/../../wads/scripts/stamp_subpackage_version.py" "$PYPROJECT" "$RELEASE"

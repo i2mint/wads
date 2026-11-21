@@ -49,6 +49,19 @@ inputs:
     description: "Directory holding pyproject.toml"
     required: false
     default: "."
+  artifact-prefix:
+    description: >-
+      Prefix of the uploaded artifact's name (<prefix><name>). A second package built in
+      the same run (i2mint/wads#220) uses its own prefix so the root package's publish
+      job, which collects wheels-*, never picks its wheels up.
+    required: false
+    default: "wheels-"
+  stamp-version:
+    description: >-
+      Write this version into <project-dir>/pyproject.toml before building (a subpackage,
+      whose release version the sub-plan job computes; no artifact to restore). Empty: none.
+    required: false
+    default: ""
 
 runs:
   using: "composite"
@@ -74,6 +87,14 @@ runs:
         SRC: ${{ runner.temp }}/wads-release-pyproject/pyproject.toml
         DST: ${{ inputs.project-dir }}/pyproject.toml
       run: cp "$SRC" "$DST" && grep -m1 -E '^version\s*=' "$DST"
+
+    - name: Stamp the release version (not committed)
+      if: inputs.stamp-version != ''
+      shell: bash
+      env:
+        PYPROJECT: ${{ inputs.project-dir }}/pyproject.toml
+        STAMP: ${{ inputs.stamp-version }}
+      run: python3 -I "$GITHUB_ACTION_PATH/../../wads/scripts/stamp_subpackage_version.py" "$PYPROJECT" "$STAMP"
 
     - name: Build the wheel
       uses: PyO3/maturin-action@v1
@@ -128,7 +149,7 @@ runs:
     - name: Upload the wheel
       uses: actions/upload-artifact@v6
       with:
-        name: wheels-${{ inputs.name }}
+        name: ${{ inputs.artifact-prefix }}${{ inputs.name }}
         path: ${{ inputs.project-dir }}/dist/*.whl
         if-no-files-found: error
         overwrite: true

@@ -200,7 +200,7 @@ runs:
             only_version_files=1
             for path in $conflicted; do
               case "$path" in
-                pyproject.toml|setup.cfg|setup.py) ;;
+                pyproject.toml|*/pyproject.toml|setup.cfg|*/setup.cfg|setup.py|*/setup.py) ;;
                 # [tool.wads.ci.version].sync (i2mint/wads#210): the bump commit
                 # also carries the npm twin's version, in its manifest and lockfile.
                 # Only when this commit actually bumped it (stage 3 differs from
@@ -224,7 +224,7 @@ runs:
               # another table's `version` key (a tool setting) is not it.
               version_section() {
                 case "$1" in
-                  setup.cfg) echo metadata ;;
+                  setup.cfg|*/setup.cfg) echo metadata ;;
                   *) echo project ;;
                 esac
               }
@@ -265,7 +265,7 @@ runs:
                 fi
                 if [ -n "$new_version" ]; then
                   case "$path" in
-                    pyproject.toml|setup.cfg)
+                    pyproject.toml|*/pyproject.toml|setup.cfg|*/setup.cfg)
                       # Rewrite only the X.Y.Z of the project's version line --
                       # the same line the version was read from -- keeping the
                       # file's own spacing and quoting (i2mint/wads#98: the old
@@ -287,7 +287,7 @@ runs:
                         exit 1
                       fi
                       ;;
-                    setup.py)
+                    setup.py|*/setup.py)
                       # No fixed version-field syntax to target safely; skip --
                       # the next publish run's own bump step corrects it, and
                       # skipping never loses data (unlike the old --theirs).

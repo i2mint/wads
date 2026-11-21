@@ -206,6 +206,7 @@ jobs:
       native: ${{ steps.config.outputs.native }}
       native-targets: ${{ steps.config.outputs.native-targets }}
       native-options: ${{ steps.config.outputs.native-options }}
+      subpackages: ${{ steps.config.outputs.subpackages }}
       version-sync: ${{ steps.config.outputs.version-sync }}
       tests-enabled: ${{ steps.config.outputs.tests-enabled }}
       build-sdist: ${{ steps.config.outputs.build-sdist }}
@@ -1079,6 +1080,150 @@ jobs:
       - *publish-upload
       - *publish-commit
       - *publish-tag
+
+  # ------------------------------------------------------------------
+  # SUBPACKAGES (issue #220): [[tool.wads.ci.packages]] lists native (maturin) packages that
+  # live in subdirectories of a repo whose root package is released by `publish` above (the
+  # root is pure Python there). Each listed package has its own pyproject.toml, wheels,
+  # PyPI release and tag (<tag_prefix><version>); the root's jobs are untouched. All of
+  # these jobs are gated on setup's `subpackages` output, so a repo that lists none runs
+  # exactly the jobs it ran before.
+  #
+  #   sub-plan     which subpackages release now ("on-change": files under dir changed
+  #                since its last tag) and at which version;
+  #   sub-wheels   one abi3 wheel per release x target, through the same
+  #                build-native-wheel action as the root native path;
+  #   sub-publish  per package: sdist + its wheels, PyPI upload, commit of the bumped
+  #                pyproject.toml, tag. A queue per package, so two releases of one
+  #                package never race and the root's queue is not blocked.
+  sub-plan:
+    name: Plan subpackage releases
+    permissions:
+      contents: read
+    if: "needs.setup.outputs.subpackages != '[]' && needs.setup.outputs.subpackages != '' && needs.setup.outputs.skip-publish == 'false' && github.ref == format('refs/heads/{0}', github.event.repository.default_branch) && (needs.setup.outputs.publish-enabled == 'true' || contains(needs.setup.outputs.commit-subject, needs.setup.outputs.publish-marker)) && needs.setup.outputs.deploy == 'true'"
+    needs: [setup, validation]
+    runs-on: ubuntu-latest
+    outputs:
+      releases: ${{ steps.plan.outputs.releases }}
+      wheel-matrix: ${{ steps.plan.outputs.wheel-matrix }}
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Plan
+        id: plan
+        uses: i2mint/wads/actions/plan-subpackages@master
+
+  sub-wheels:
+    name: Subpackage wheel
+    permissions:
+      contents: read
+    if: "needs.sub-plan.outputs.wheel-matrix != '[]' && needs.sub-plan.outputs.wheel-matrix != ''"
+    needs: [setup, sub-plan]
+    strategy:
+      fail-fast: false
+      matrix:
+        include: ${{ fromJson(needs.sub-plan.outputs.wheel-matrix) }}
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: ${{ fromJSON(needs.setup.outputs.job-timeout-minutes || '60') }}
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+      - name: Build the wheel
+        uses: i2mint/wads/actions/build-native-wheel@master
+        with:
+          name: ${{ matrix.package }}--${{ matrix.name }}
+          artifact-prefix: subwheels-
+          target: ${{ matrix.target }}
+          manylinux: ${{ matrix.manylinux }}
+          python-arch: ${{ matrix.python_arch }}
+          smoke: ${{ matrix.smoke }}
+          smoke-import: ${{ matrix.smoke_import }}
+          maturin-args: ${{ matrix.maturin_args }}
+          version: ${{ matrix.version }}
+          stamp-version: ${{ matrix.version }}
+          project-dir: ${{ matrix.dir }}
+          python-version: ${{ fromJson(needs.setup.outputs.python-versions)[0] }}
+
+  sub-publish:
+    name: Publish ${{ matrix.package }}
+    permissions:
+      contents: write
+    if: "needs.sub-plan.outputs.releases != '[]' && needs.sub-plan.outputs.releases != ''"
+    needs: [setup, sub-plan, sub-wheels]
+    strategy:
+      fail-fast: false
+      matrix:
+        include: ${{ fromJson(needs.sub-plan.outputs.releases) }}
+    runs-on: ubuntu-latest
+    concurrency:
+      group: wads-publish-${{ github.repository }}-${{ github.ref }}-${{ matrix.package }}
+      queue: max
+    steps:
+      - *publish-checkout
+      - *publish-rerun-guard
+      - *publish-setup-uv
+
+      # sub-plan computed this version before the queue; a release that landed while this
+      # run waited (or while the wheels built) moves it, and the wheels would ship under a
+      # version they do not carry (the root native path checks the same, `publish-native`).
+      # Plan again, now that this job holds the queue and the tags are current.
+      - name: Check the release is still the one that was planned
+        id: replan
+        uses: i2mint/wads/actions/plan-subpackages@master
+      - name: Refuse a stale plan
+        env:
+          PLANNED: ${{ matrix.version }}
+          PACKAGE: ${{ matrix.package }}
+          RELEASES: ${{ steps.replan.outputs.releases }}
+        run: |
+          now=$(python3 -c 'import json, os; print(next((r["version"] for r in json.loads(os.environ["RELEASES"]) if r["package"] == os.environ["PACKAGE"]), ""))')
+          if [ "$now" != "$PLANNED" ]; then
+            echo "::error::$PACKAGE was planned as $PLANNED, but a release landed while this run waited: it would now release ${now:-nothing}. Re-run ALL jobs of this workflow (not just the failed one) to rebuild the wheels for the new version."
+            exit 1
+          fi
+
+      - name: Stamp the release version
+        uses: i2mint/wads/actions/stamp-subpackage-version@master
+        with:
+          pyproject: ${{ matrix.dir }}/pyproject.toml
+          version: ${{ matrix.version }}
+
+      - name: Build the sdist
+        run: uv build --sdist --out-dir dist "$PKG_DIR"
+        env:
+          PKG_DIR: ${{ matrix.dir }}
+
+      - name: Collect the wheels
+        uses: actions/download-artifact@v7
+        with:
+          pattern: subwheels-${{ matrix.package }}--*
+          path: dist
+          merge-multiple: true
+
+      - name: List the distributions
+        run: ls -la dist/
+
+      - *publish-resolve-token
+      - *publish-upload
+
+      - name: Commit the release version
+        id: bump
+        uses: i2mint/wads/actions/git-commit@master
+        with:
+          commit-message: "**CI** ${{ matrix.package }} version ${{ matrix.version }} [skip ci]"
+          add-pattern: ${{ matrix.dir }}/pyproject.toml
+          push: true
+
+      - name: Tag Repository
+        uses: i2mint/wads/actions/git-tag@master
+        with:
+          tag: ${{ matrix.tag_prefix }}${{ matrix.version }}
+          message: "Release ${{ matrix.package }} ${{ matrix.version }}"
+          ref: ${{ steps.bump.outputs.commit-sha }}
+          push: true
 
   # Optional GitHub Pages (skipped when [tool.wads.ci.docs].enabled = false, or
   # when the subject carries the skip-ci or skip-pages marker: setup's

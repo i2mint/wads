@@ -62,6 +62,17 @@ def _project_dir(pyproject_path: str | Path) -> Path:
     return path if path.is_dir() else path.parent
 
 
+def _read_toml(path: Path) -> dict:
+    try:
+        import tomllib
+    except ImportError:  # Python < 3.11
+        import tomli as tomllib
+    try:
+        return tomllib.loads(path.read_text(encoding="utf-8"))
+    except OSError as e:
+        raise ValueError(f"cannot read {path}: {e}") from None
+
+
 def pinned_runs_matrix_include(config) -> list[dict]:
     """The validation matrix's ``include`` entries, one per pinned run (issue #189).
 
@@ -138,6 +149,27 @@ def read_and_export_ci_config(pyproject_path: str | Path = ".") -> int:
         _set_output("native", native is not None)
         _set_output("native-targets", native.matrix() if native else [])
         _set_output("native-options", native.options() if native else {})
+
+        # Native subpackages (i2mint/wads#220): [[tool.wads.ci.packages]]. Invalid
+        # entries raise, as an invalid native setting does.
+        subpackages = load_wads_module("subpackages").subpackage_configs(
+            config.data,
+            read_pyproject=lambda d: _read_toml(
+                _project_dir(pyproject_path) / d / "pyproject.toml"
+            ),
+        )
+        _set_output(
+            "subpackages",
+            [
+                {
+                    "name": p.name,
+                    "dir": p.dir,
+                    "release": p.release,
+                    "tag_prefix": p.tag_prefix,
+                }
+                for p in subpackages
+            ],
+        )
 
         # One version across PyPI and npm (i2mint/wads#210): the manifests the
         # publish job writes the bumped version into. Versions that already
