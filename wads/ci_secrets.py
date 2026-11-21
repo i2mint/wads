@@ -103,6 +103,7 @@ _PUBLISHING = (
     "PYPI_PASSWORD",  # wads-historical name; it is a PyPI *token*. Required to publish.
     "TEST_PYPI_PASSWORD",
     "NPM_TOKEN",
+    "CARGO_REGISTRY_TOKEN",  # crates.io token for [tool.wads.ci.build.native] publish_crates
     "SSH_PRIVATE_KEY",
     "CODECOV_TOKEN",
     "DOCKERHUB_USERNAME",

@@ -51,6 +51,8 @@ on:
         required: false
       NPM_TOKEN:
         required: false
+      CARGO_REGISTRY_TOKEN:
+        required: false
       SSH_PRIVATE_KEY:
         required: false
       CODECOV_TOKEN:
@@ -963,12 +965,70 @@ jobs:
           ref: ${{ steps.bump.outputs.commit-sha }}
           push: true
 
+  # crates.io (wads#211): [tool.wads.ci.build.native] publish_crates lists the crates, in
+  # publish order. The dry run is the gate: publish-crates waits for it, and publish-native
+  # waits for publish-crates (crates.io, then PyPI). Both jobs run on every native path, so
+  # publish-native never waits on a skipped job; with an empty list their steps are skipped.
+  crates-dry-run:
+    name: Crates dry run
+    permissions:
+      contents: read
+    if: "needs.setup.outputs.native == 'true'"
+    needs: [setup]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+        if: join(fromJson(needs.setup.outputs.native-options || '{}').publish_crates, '') != ''
+        with:
+          persist-credentials: false
+      - name: Set up Rust
+        if: join(fromJson(needs.setup.outputs.native-options || '{}').publish_crates, '') != ''
+        uses: i2mint/wads/actions/setup-rust@master
+        with:
+          project-dir: ${{ fromJson(needs.setup.outputs.native-options).crates_dir }}
+          manifest-path: Cargo.toml
+      - name: cargo publish --dry-run
+        if: join(fromJson(needs.setup.outputs.native-options || '{}').publish_crates, '') != ''
+        uses: i2mint/wads/actions/publish-crates@master
+        with:
+          crates: ${{ toJSON(fromJson(needs.setup.outputs.native-options).publish_crates) }}
+          crates-dir: ${{ fromJson(needs.setup.outputs.native-options).crates_dir }}
+          dry-run: "true"
+
+  publish-crates:
+    name: Publish (crates.io)
+    permissions:
+      contents: read
+    if: "needs.setup.outputs.native == 'true' && needs.setup.outputs.skip-publish == 'false' && github.ref == format('refs/heads/{0}', github.event.repository.default_branch) && (needs.setup.outputs.publish-enabled == 'true' || contains(needs.setup.outputs.commit-subject, needs.setup.outputs.publish-marker)) && needs.setup.outputs.deploy == 'true'"
+    needs: [setup, validation, crates-dry-run]
+    runs-on: ubuntu-latest
+    # No concurrency group: a crate version already on crates.io is skipped, so a re-run is safe.
+    steps:
+      - uses: actions/checkout@v6
+        if: join(fromJson(needs.setup.outputs.native-options || '{}').publish_crates, '') != ''
+        with:
+          persist-credentials: false
+      - name: Set up Rust
+        if: join(fromJson(needs.setup.outputs.native-options || '{}').publish_crates, '') != ''
+        uses: i2mint/wads/actions/setup-rust@master
+        with:
+          project-dir: ${{ fromJson(needs.setup.outputs.native-options).crates_dir }}
+          manifest-path: Cargo.toml
+      - name: cargo publish
+        if: join(fromJson(needs.setup.outputs.native-options || '{}').publish_crates, '') != ''
+        uses: i2mint/wads/actions/publish-crates@master
+        with:
+          crates: ${{ toJSON(fromJson(needs.setup.outputs.native-options).publish_crates) }}
+          crates-dir: ${{ fromJson(needs.setup.outputs.native-options).crates_dir }}
+          registry-token: ${{ secrets.CARGO_REGISTRY_TOKEN }}
+
   publish-native:
     name: Publish (native)
     permissions:
       contents: write
+    # crates.io first (publish-crates succeeds, doing nothing, with no publish_crates).
     if: "needs.setup.outputs.native == 'true' && needs.setup.outputs.skip-publish == 'false' && github.ref == format('refs/heads/{0}', github.event.repository.default_branch) && (needs.setup.outputs.publish-enabled == 'true' || contains(needs.setup.outputs.commit-subject, needs.setup.outputs.publish-marker)) && needs.setup.outputs.deploy == 'true'"
-    needs: [setup, validation, native-version, native-wheels]
+    needs: [setup, validation, native-version, native-wheels, publish-crates]
     runs-on: ubuntu-latest
     # Same queue as `publish` (a repo is one or the other).
     concurrency:
