@@ -236,13 +236,16 @@
 <li class="toctree-l4"><a class="reference internal" href="../../../_autosummary/wads.scripts.cargo_test_args.html">wads.scripts.cargo_test_args</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../_autosummary/wads.scripts.export_ci_env.html">wads.scripts.export_ci_env</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../_autosummary/wads.scripts.npm_publish_guard.html">wads.scripts.npm_publish_guard</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../_autosummary/wads.scripts.plan_subpackages.html">wads.scripts.plan_subpackages</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../_autosummary/wads.scripts.pytest_doctest_flags.html">wads.scripts.pytest_doctest_flags</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../_autosummary/wads.scripts.run_ci_commands.html">wads.scripts.run_ci_commands</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../_autosummary/wads.scripts.stamp_subpackage_version.html">wads.scripts.stamp_subpackage_version</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../_autosummary/wads.scripts.sync_version.html">wads.scripts.sync_version</a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="../../../_autosummary/wads.secrets_cli.html">wads.secrets_cli</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../../_autosummary/wads.setup_utils.html">wads.setup_utils</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../_autosummary/wads.subpackages.html">wads.subpackages</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../../_autosummary/wads.templating.html">wads.templating</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../../_autosummary/wads.toml_util.html">wads.toml_util</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../../_autosummary/wads.user_dirs.html">wads.user_dirs</a></li>
@@ -351,6 +354,17 @@
     <span class="k">return</span> <span class="n">path</span> <span class="k">if</span> <span class="n">path</span><span class="o">.</span><span class="n">is_dir</span><span class="p">()</span> <span class="k">else</span> <span class="n">path</span><span class="o">.</span><span class="n">parent</span>
 
 
+<span class="k">def</span><span class="w"> </span><span class="nf">_read_toml</span><span class="p">(</span><span class="n">path</span><span class="p">:</span> <span class="n">Path</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="kn">import</span><span class="w"> </span><span class="nn">tomllib</span>
+    <span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span>  <span class="c1"># Python &lt; 3.11</span>
+        <span class="kn">import</span><span class="w"> </span><span class="nn">tomli</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">tomllib</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">tomllib</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">path</span><span class="o">.</span><span class="n">read_text</span><span class="p">(</span><span class="n">encoding</span><span class="o">=</span><span class="s2">"utf-8"</span><span class="p">))</span>
+    <span class="k">except</span> <span class="ne">OSError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"cannot read </span><span class="si">{</span><span class="n">path</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="kc">None</span>
+
+
 <div class="viewcode-block" id="pinned_runs_matrix_include">
 <a class="viewcode-back" href="../../../_autosummary/wads.scripts.read_ci_config.html#wads.scripts.read_ci_config.pinned_runs_matrix_include">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">pinned_runs_matrix_include</span><span class="p">(</span><span class="n">config</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">dict</span><span class="p">]:</span>
@@ -432,6 +446,27 @@
         <span class="n">_set_output</span><span class="p">(</span><span class="s2">"native"</span><span class="p">,</span> <span class="n">native</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">)</span>
         <span class="n">_set_output</span><span class="p">(</span><span class="s2">"native-targets"</span><span class="p">,</span> <span class="n">native</span><span class="o">.</span><span class="n">matrix</span><span class="p">()</span> <span class="k">if</span> <span class="n">native</span> <span class="k">else</span> <span class="p">[])</span>
         <span class="n">_set_output</span><span class="p">(</span><span class="s2">"native-options"</span><span class="p">,</span> <span class="n">native</span><span class="o">.</span><span class="n">options</span><span class="p">()</span> <span class="k">if</span> <span class="n">native</span> <span class="k">else</span> <span class="p">{})</span>
+
+        <span class="c1"># Native subpackages (i2mint/wads#220): [[tool.wads.ci.packages]]. Invalid</span>
+        <span class="c1"># entries raise, as an invalid native setting does.</span>
+        <span class="n">subpackages</span> <span class="o">=</span> <span class="n">load_wads_module</span><span class="p">(</span><span class="s2">"subpackages"</span><span class="p">)</span><span class="o">.</span><span class="n">subpackage_configs</span><span class="p">(</span>
+            <span class="n">config</span><span class="o">.</span><span class="n">data</span><span class="p">,</span>
+            <span class="n">read_pyproject</span><span class="o">=</span><span class="k">lambda</span> <span class="n">d</span><span class="p">:</span> <span class="n">_read_toml</span><span class="p">(</span>
+                <span class="n">_project_dir</span><span class="p">(</span><span class="n">pyproject_path</span><span class="p">)</span> <span class="o">/</span> <span class="n">d</span> <span class="o">/</span> <span class="s2">"pyproject.toml"</span>
+            <span class="p">),</span>
+        <span class="p">)</span>
+        <span class="n">_set_output</span><span class="p">(</span>
+            <span class="s2">"subpackages"</span><span class="p">,</span>
+            <span class="p">[</span>
+                <span class="p">{</span>
+                    <span class="s2">"name"</span><span class="p">:</span> <span class="n">p</span><span class="o">.</span><span class="n">name</span><span class="p">,</span>
+                    <span class="s2">"dir"</span><span class="p">:</span> <span class="n">p</span><span class="o">.</span><span class="n">dir</span><span class="p">,</span>
+                    <span class="s2">"release"</span><span class="p">:</span> <span class="n">p</span><span class="o">.</span><span class="n">release</span><span class="p">,</span>
+                    <span class="s2">"tag_prefix"</span><span class="p">:</span> <span class="n">p</span><span class="o">.</span><span class="n">tag_prefix</span><span class="p">,</span>
+                <span class="p">}</span>
+                <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">subpackages</span>
+            <span class="p">],</span>
+        <span class="p">)</span>
 
         <span class="c1"># One version across PyPI and npm (i2mint/wads#210): the manifests the</span>
         <span class="c1"># publish job writes the bumped version into. Versions that already</span>
@@ -628,7 +663,7 @@
       
     </aside>
   </div>
-</div><script src="../../../_static/documentation_options.js?v=cae2a1ff"></script>
+</div><script src="../../../_static/documentation_options.js?v=63a2d599"></script>
     <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../../_static/scripts/furo.js?v=46bd48cc"></script>

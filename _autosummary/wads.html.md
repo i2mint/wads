@@ -40,6 +40,7 @@ wads --help
 | [`scripts`](wads.scripts.html.md#module-wads.scripts)                         | CI and automation scripts for wads.                                                                                              |
 | [`secrets_cli`](wads.secrets_cli.html.md#module-wads.secrets_cli)                 | `wads-secrets` — manage the CI secrets/env vars of a wads-managed repo.                                                          |
 | [`setup_utils`](wads.setup_utils.html.md#module-wads.setup_utils)                 | Utilities for setting up packages based on pyproject.toml configuration.                                                         |
+| [`subpackages`](wads.subpackages.html.md#module-wads.subpackages)                 | Release a second package that lives in a subdirectory of the repo (i2mint/wads#220).                                             |
 | [`templating`](wads.templating.html.md#module-wads.templating)                   | Declarative, template-source-driven generation engine.                                                                           |
 | [`toml_util`](wads.toml_util.html.md#module-wads.toml_util)                     | Utilities for reading and writing pyproject.toml files.                                                                          |
 | [`user_dirs`](wads.user_dirs.html.md#module-wads.user_dirs)                     | Platform-appropriate user directories for wads configuration and data.                                                           |

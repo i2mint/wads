@@ -1,4 +1,4 @@
-> built 2026-11-21 09:39 UTC from 28a518c (master) · wads 0.2.96. Details: build_info.json
+> built 2026-11-21 22:40 UTC from 2366aed (master) · wads 0.2.97. Details: build_info.json
 
 # index.html.md
 
@@ -3500,6 +3500,7 @@ wads --help
 | [`scripts`](_autosummary/wads.scripts.html.md#module-wads.scripts)                         | CI and automation scripts for wads.                                                                                              |
 | [`secrets_cli`](_autosummary/wads.secrets_cli.html.md#module-wads.secrets_cli)                 | `wads-secrets` — manage the CI secrets/env vars of a wads-managed repo.                                                          |
 | [`setup_utils`](_autosummary/wads.setup_utils.html.md#module-wads.setup_utils)                 | Utilities for setting up packages based on pyproject.toml configuration.                                                         |
+| [`subpackages`](_autosummary/wads.subpackages.html.md#module-wads.subpackages)                 | Release a second package that lives in a subdirectory of the repo (i2mint/wads#220).                                             |
 | [`templating`](_autosummary/wads.templating.html.md#module-wads.templating)                   | Declarative, template-source-driven generation engine.                                                                           |
 | [`toml_util`](_autosummary/wads.toml_util.html.md#module-wads.toml_util)                     | Utilities for reading and writing pyproject.toml files.                                                                          |
 | [`user_dirs`](_autosummary/wads.user_dirs.html.md#module-wads.user_dirs)                     | Platform-appropriate user directories for wads configuration and data.                                                           |
@@ -7955,18 +7956,20 @@ Available scripts:
 
 ### Modules
 
-| [`build_dist`](_autosummary/wads.scripts.build_dist.html.md#module-wads.scripts.build_dist)                     | Build Python Distribution Packages                                                           |
-|----------------------------------------------------------------------------------------------------------------|----------------------------------------------------------------------------------------------|
-| [`install_deps`](_autosummary/wads.scripts.install_deps.html.md#module-wads.scripts.install_deps)                 | Install Dependencies                                                                         |
-| [`read_ci_config`](_autosummary/wads.scripts.read_ci_config.html.md#module-wads.scripts.read_ci_config)             | Read CI Configuration and Export to GitHub Actions                                           |
-| [`set_env_vars`](_autosummary/wads.scripts.set_env_vars.html.md#module-wads.scripts.set_env_vars)                 | Set Environment Variables from GitHub Secrets                                                |
-| [`validate_ci_env`](_autosummary/wads.scripts.validate_ci_env.html.md#module-wads.scripts.validate_ci_env)           | CI Environment Validation Script                                                             |
-| [`cargo_test_args`](_autosummary/wads.scripts.cargo_test_args.html.md#module-wads.scripts.cargo_test_args)           | Print the `cargo test` arguments for a maturin package (issue #166).                         |
-| [`export_ci_env`](_autosummary/wads.scripts.export_ci_env.html.md#module-wads.scripts.export_ci_env)               | Export the pyproject-declared CI environment to `$GITHUB_ENV`.                               |
-| [`npm_publish_guard`](_autosummary/wads.scripts.npm_publish_guard.html.md#module-wads.scripts.npm_publish_guard)       | Refuse an npm publish that would reuse the previous PyPI release's number (i2mint/wads#210). |
-| [`pytest_doctest_flags`](_autosummary/wads.scripts.pytest_doctest_flags.html.md#module-wads.scripts.pytest_doctest_flags) | Print the `-o doctest_optionflags=...` pytest argument CI should add, if any.                |
-| [`run_ci_commands`](_autosummary/wads.scripts.run_ci_commands.html.md#module-wads.scripts.run_ci_commands)           | Run the `[tool.wads.ci.commands]` `pre_test` / `post_test` lists in CI.                      |
-| [`sync_version`](_autosummary/wads.scripts.sync_version.html.md#module-wads.scripts.sync_version)                 | Write the release version into the manifests `[tool.wads.ci.version].sync` lists.            |
+| [`build_dist`](_autosummary/wads.scripts.build_dist.html.md#module-wads.scripts.build_dist)                             | Build Python Distribution Packages                                                           |
+|------------------------------------------------------------------------------------------------------------------------|----------------------------------------------------------------------------------------------|
+| [`install_deps`](_autosummary/wads.scripts.install_deps.html.md#module-wads.scripts.install_deps)                         | Install Dependencies                                                                         |
+| [`read_ci_config`](_autosummary/wads.scripts.read_ci_config.html.md#module-wads.scripts.read_ci_config)                     | Read CI Configuration and Export to GitHub Actions                                           |
+| [`set_env_vars`](_autosummary/wads.scripts.set_env_vars.html.md#module-wads.scripts.set_env_vars)                         | Set Environment Variables from GitHub Secrets                                                |
+| [`validate_ci_env`](_autosummary/wads.scripts.validate_ci_env.html.md#module-wads.scripts.validate_ci_env)                   | CI Environment Validation Script                                                             |
+| [`cargo_test_args`](_autosummary/wads.scripts.cargo_test_args.html.md#module-wads.scripts.cargo_test_args)                   | Print the `cargo test` arguments for a maturin package (issue #166).                         |
+| [`export_ci_env`](_autosummary/wads.scripts.export_ci_env.html.md#module-wads.scripts.export_ci_env)                       | Export the pyproject-declared CI environment to `$GITHUB_ENV`.                               |
+| [`npm_publish_guard`](_autosummary/wads.scripts.npm_publish_guard.html.md#module-wads.scripts.npm_publish_guard)               | Refuse an npm publish that would reuse the previous PyPI release's number (i2mint/wads#210). |
+| [`plan_subpackages`](_autosummary/wads.scripts.plan_subpackages.html.md#module-wads.scripts.plan_subpackages)                 | Decide which subpackages release now (`[[tool.wads.ci.packages]]`, i2mint/wads#220).         |
+| [`pytest_doctest_flags`](_autosummary/wads.scripts.pytest_doctest_flags.html.md#module-wads.scripts.pytest_doctest_flags)         | Print the `-o doctest_optionflags=...` pytest argument CI should add, if any.                |
+| [`run_ci_commands`](_autosummary/wads.scripts.run_ci_commands.html.md#module-wads.scripts.run_ci_commands)                   | Run the `[tool.wads.ci.commands]` `pre_test` / `post_test` lists in CI.                      |
+| [`stamp_subpackage_version`](_autosummary/wads.scripts.stamp_subpackage_version.html.md#module-wads.scripts.stamp_subpackage_version) | Write a release version into a subpackage's `pyproject.toml` (i2mint/wads#220).              |
+| [`sync_version`](_autosummary/wads.scripts.sync_version.html.md#module-wads.scripts.sync_version)                         | Write the release version into the manifests `[tool.wads.ci.version].sync` lists.            |
 
 
 # _autosummary/wads.scripts.install_deps.html.md
@@ -8051,6 +8054,40 @@ own file counts as part of the npm package.
 
 * **Return type:**
   [`int`](https://docs.python.org/3/builtins/functions.html#int)
+
+
+# _autosummary/wads.scripts.plan_subpackages.html.md
+
+# wads.scripts.plan_subpackages
+
+Decide which subpackages release now (`[[tool.wads.ci.packages]]`, i2mint/wads#220).
+
+Run by the `plan-subpackages` action in uv-ci’s `sub-plan` job, in a checkout with the
+full history and tags. Prints nothing but GitHub Actions outputs:
+
+- `releases`: JSON list of `{package, dir, tag_prefix, version}`, one per subpackage
+  that releases (`wads.subpackages.plan_release`);
+- `wheel-matrix`: the `sub-wheels` matrix rows (one per release x target, each carrying
+  its `version`).
+
+Usage:
+
+```default
+python3 -I plan_subpackages.py [REPO_DIR]
+```
+
+### Functions
+
+| `main`([argv])                                              |                                                    |
+|-------------------------------------------------------------|----------------------------------------------------|
+| [`plan`](_autosummary/wads.scripts.plan_subpackages.html.md#wads.scripts.plan_subpackages.plan)(repo) | `(releases, wheel_matrix)` for the repo at `repo`. |
+
+### wads.scripts.plan_subpackages.plan(repo)
+
+`(releases, wheel_matrix)` for the repo at `repo`.
+
+* **Return type:**
+  [`tuple`](https://docs.python.org/3/builtins/stdtypes.html#tuple)[[`list`](https://docs.python.org/3/builtins/stdtypes.html#list), [`list`](https://docs.python.org/3/builtins/stdtypes.html#list)]
 
 
 # _autosummary/wads.scripts.pytest_doctest_flags.html.md
@@ -8297,6 +8334,24 @@ Set environment variables from GitHub Secrets based on CI config.
   [`int`](https://docs.python.org/3/builtins/functions.html#int)
 * **Returns:**
   Exit code (0 for success, 1 for failure)
+
+
+# _autosummary/wads.scripts.stamp_subpackage_version.html.md
+
+# wads.scripts.stamp_subpackage_version
+
+Write a release version into a subpackage’s `pyproject.toml` (i2mint/wads#220).
+
+Usage:
+
+```default
+python3 -I stamp_subpackage_version.py PYPROJECT_PATH VERSION
+```
+
+### Functions
+
+| `main`([argv])   |    |
+|------------------|----|
 
 
 # _autosummary/wads.scripts.sync_version.html.md
@@ -8650,6 +8705,182 @@ Print a formatted diagnostic report.
 
 * **Parameters:**
   **result** ([`DiagnosticResult`](_autosummary/wads.setup_utils.html.md#wads.setup_utils.DiagnosticResult)) – DiagnosticResult to display
+
+
+# _autosummary/wads.subpackages.html.md
+
+# wads.subpackages
+
+Release a second package that lives in a subdirectory of the repo (i2mint/wads#220).
+
+A repo can hold a pure-Python root package plus a maturin package in a subdirectory
+(`thorwhalen/equate`: the root is `equate`, `rust/` is `equate-rust`, which has its
+own `pyproject.toml`). The root package keeps the ordinary `publish` job; each
+subpackage listed here gets its own native release path:
+
+```default
+[[tool.wads.ci.packages]]
+dir = "rust"                    # holds a pyproject.toml; required
+release = "on-change"           # or "always": every release run
+tag_prefix = "equate-rust-v"    # tags are <tag_prefix><version>; default "<name>-v"
+```
+
+The subpackage’s own `pyproject.toml` configures it exactly as a root package is
+configured (`[tool.wads.ci.build.native]`, `[tool.maturin]`): [`subpackage_configs()`](_autosummary/wads.subpackages.html.md#wads.subpackages.subpackage_configs)
+resolves it with [`wads.native_build.native_build_config()`](_autosummary/wads.native_build.html.md#wads.native_build.native_build_config). With no
+`[[tool.wads.ci.packages]]` nothing changes.
+
+Release rule ([`plan_release()`](_autosummary/wads.subpackages.html.md#wads.subpackages.plan_release)): `on-change` releases a package only when files under
+its `dir` changed since its last tag (never tagged: it releases). The version is the next
+patch after the last tag, or the version in the subpackage’s `pyproject.toml` when that is
+higher, so a hand-raised minor or major is honoured and a stale one never goes backwards.
+Tags are `<tag_prefix><version>`, so they do not collide with the root’s bare `X.Y.Z`.
+
+Migrating a package that already releases from a hand-written workflow: create its first
+tag (`<tag_prefix><current version>`) before enabling this, or the first run, finding no tag,
+releases the version in `pyproject.toml`. Two things are not covered yet: the Rust checks
+(fmt, clippy, cargo test) run only for the root native path, not for a subpackage, and the
+inline `wads/data/github_ci_uv.yml` has no subpackage jobs (the reusable workflow only).
+
+Everything here is standard library only: the CI jobs load this file by path
+(`wads/scripts/_checkout_import.py`), without installing wads.
+
+### Module Attributes
+
+| [`RELEASE_MODES`](_autosummary/wads.subpackages.html.md#wads.subpackages.RELEASE_MODES)   | when a subpackage is released.   |
+|------------------------------------------------------------------|----------------------------------|
+
+### Functions
+
+| [`latest_tag_version`](_autosummary/wads.subpackages.html.md#wads.subpackages.latest_tag_version)(tags, tag_prefix)              | The highest version among `<tag_prefix>X.Y.Z` tags, or `None`.                                             |
+|----------------------------------------------------------------------------------------------------|------------------------------------------------------------------------------------------------------------|
+| [`next_version`](_autosummary/wads.subpackages.html.md#wads.subpackages.next_version)(last_tag, committed)                 | The release version: next patch after the last tag, unless the file is higher.                             |
+| [`parse_version`](_autosummary/wads.subpackages.html.md#wads.subpackages.parse_version)(text)                               | `(major, minor, patch)` of an `X.Y.Z` string, else `None`.                                                 |
+| [`plan_release`](_autosummary/wads.subpackages.html.md#wads.subpackages.plan_release)(package, \*, tags, ...)              | The version to release for `package` now, or `None` when it does not release.                              |
+| [`stamp_version`](_autosummary/wads.subpackages.html.md#wads.subpackages.stamp_version)(pyproject_text, version)            | `pyproject_text` with `[project].version` set to `version`.                                                |
+| [`subpackage_configs`](_autosummary/wads.subpackages.html.md#wads.subpackages.subpackage_configs)(pyproject, \*, read_pyproject) | The repo's [`SubPackage`](_autosummary/wads.subpackages.html.md#wads.subpackages.SubPackage) list (empty when it declares none). |
+
+### Classes
+
+| [`SubPackage`](_autosummary/wads.subpackages.html.md#wads.subpackages.SubPackage)(dir, name, release, tag_prefix, ...)   | One entry of `[[tool.wads.ci.packages]]`, resolved against its own pyproject.   |
+|----------------------------------------------------------------------------------------------------|---------------------------------------------------------------------------------|
+
+### wads.subpackages.RELEASE_MODES *= ('on-change', 'always')*
+
+when a subpackage is released.
+
+* **Type:**
+  `release` values
+
+### *class* wads.subpackages.SubPackage(dir, name, release, tag_prefix, native)
+
+Bases: [`object`](https://docs.python.org/3/builtins/functions.html#object)
+
+One entry of `[[tool.wads.ci.packages]]`, resolved against its own pyproject.
+
+#### wheel_matrix()
+
+One `sub-wheels` matrix row per target, each carrying what the job needs.
+
+* **Return type:**
+  [`list`](https://docs.python.org/3/builtins/stdtypes.html#list)
+
+### wads.subpackages.latest_tag_version(tags, tag_prefix)
+
+The highest version among `<tag_prefix>X.Y.Z` tags, or `None`.
+
+```pycon
+>>> latest_tag_version(["p-v0.1.2", "p-v0.1.10", "q-v9.0.0", "p-vx"], "p-v")
+(0, 1, 10)
+```
+
+* **Return type:**
+  [`Optional`](https://docs.python.org/3/library/typing.html#typing.Optional)[[`tuple`](https://docs.python.org/3/builtins/stdtypes.html#tuple)]
+
+### wads.subpackages.next_version(last_tag, committed)
+
+The release version: next patch after the last tag, unless the file is higher.
+
+```pycon
+>>> next_version((0, 1, 2), (0, 1, 0))      # stale file: follow the tags
+(0, 1, 3)
+>>> next_version((0, 1, 2), (0, 2, 0))      # hand-raised minor: honoured
+(0, 2, 0)
+>>> next_version(None, (0, 1, 0))           # never tagged: release what the file says
+(0, 1, 0)
+>>> next_version(None, None)
+(0, 0, 1)
+```
+
+* **Return type:**
+  [`tuple`](https://docs.python.org/3/builtins/stdtypes.html#tuple)
+
+### wads.subpackages.parse_version(text)
+
+`(major, minor, patch)` of an `X.Y.Z` string, else `None`.
+
+```pycon
+>>> parse_version("1.2.3"), parse_version("1.2"), parse_version("v1.2.3")
+((1, 2, 3), None, None)
+```
+
+* **Return type:**
+  [`Optional`](https://docs.python.org/3/library/typing.html#typing.Optional)[[`tuple`](https://docs.python.org/3/builtins/stdtypes.html#tuple)]
+
+### wads.subpackages.plan_release(package, , tags, committed_version, changed_since)
+
+The version to release for `package` now, or `None` when it does not release.
+
+`changed_since(tag)` says whether files under the package’s dir changed since `tag`
+(called only for `on-change` packages that have a tag).
+
+```pycon
+>>> from types import SimpleNamespace as NS
+>>> p = NS(dir="rust", release="on-change", tag_prefix="p-v")
+>>> plan_release(p, tags=["p-v0.1.0"], committed_version="0.1.0", changed_since=lambda t: False)
+>>> plan_release(p, tags=["p-v0.1.0"], committed_version="0.1.0", changed_since=lambda t: True)
+'0.1.1'
+>>> plan_release(p, tags=[], committed_version="0.1.0", changed_since=lambda t: False)
+'0.1.0'
+>>> plan_release(NS(dir="r", release="always", tag_prefix="p-v"), tags=["p-v1.0.0"],
+...              committed_version="0.1.0", changed_since=lambda t: False)
+'1.0.1'
+```
+
+* **Return type:**
+  [`Optional`](https://docs.python.org/3/library/typing.html#typing.Optional)[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str)]
+
+### wads.subpackages.stamp_version(pyproject_text, version)
+
+`pyproject_text` with `[project].version` set to `version`.
+
+```pycon
+>>> stamp_version('[project]\nname = "p"\nversion = "0.1.0"\n[tool.x]\nversion = "9"\n', "0.2.0")
+'[project]\nname = "p"\nversion = "0.2.0"\n[tool.x]\nversion = "9"\n'
+```
+
+* **Return type:**
+  [`str`](https://docs.python.org/3/builtins/stdtypes.html#str)
+
+### wads.subpackages.subpackage_configs(pyproject, , read_pyproject)
+
+The repo’s [`SubPackage`](_autosummary/wads.subpackages.html.md#wads.subpackages.SubPackage) list (empty when it declares none).
+
+`read_pyproject(dir)` returns the parsed `<dir>/pyproject.toml`. Raises
+`ValueError` on an entry that does not parse, as `native_build_config()` does.
+
+```pycon
+>>> data = {"tool": {"wads": {"ci": {"packages": [{"dir": "rust"}]}}}}
+>>> sub = {"project": {"name": "pkg-rust", "version": "0.1.0"}, "build-system": {"build-backend": "maturin"}}
+>>> [(p.dir, p.name, p.release, p.tag_prefix)
+...  for p in subpackage_configs(data, read_pyproject=lambda d: sub)]
+[('rust', 'pkg-rust', 'on-change', 'pkg-rust-v')]
+>>> subpackage_configs({}, read_pyproject=lambda d: sub)
+[]
+```
+
+* **Return type:**
+  [`list`](https://docs.python.org/3/builtins/stdtypes.html#list)[[`SubPackage`](_autosummary/wads.subpackages.html.md#wads.subpackages.SubPackage)]
 
 
 # _autosummary/wads.templating.html.md
@@ -9640,18 +9871,16 @@ cannot be removed is not reported.
 
 # About this build
 
-This documentation was built on **2026-11-21 09:39 UTC** from commit <a href="https://github.com/i2mint/wads/commit/28a518c0aaeb16afd22376bd5c6ad99330b6b392"><code>28a518c</code></a> on branch <code>master</code>, for **wads 0.2.96** (from <code>pyproject.toml</code>).
+This documentation was built on **2026-11-21 22:40 UTC** from commit <a href="https://github.com/i2mint/wads/commit/2366aed81c38133b0e229353fb1997cc194f671a"><code>2366aed</code></a> on branch <code>master</code>, for **wads 0.2.97** (from <code>pyproject.toml</code>).
 
-#### WARNING
-The documentation and the package may be misaligned:
-
-- The documented version (0.2.96) is behind the latest release on PyPI (0.2.97): `pip install wads` gives newer code than these docs describe.
+#### NOTE
+Nothing suggests a mismatch: the tree was clean at the commit above, and the documented version is the one on PyPI.
 
 ## Source
 
 |                     |                                                                                                                                                    |
 |---------------------|----------------------------------------------------------------------------------------------------------------------------------------------------|
-| Commit              | <a href="https://github.com/i2mint/wads/commit/28a518c0aaeb16afd22376bd5c6ad99330b6b392"><code>28a518c0aaeb16afd22376bd5c6ad99330b6b392</code></a> |
+| Commit              | <a href="https://github.com/i2mint/wads/commit/2366aed81c38133b0e229353fb1997cc194f671a"><code>2366aed81c38133b0e229353fb1997cc194f671a</code></a> |
 | Branch              | <code>master</code>                                                                                                                                |
 | Tags at this commit | none                                                                                                                                               |
 | Working tree        | clean                                                                                                                                              |
@@ -9662,15 +9891,15 @@ The documentation and the package may be misaligned:
 |              |                                                                                            |
 |--------------|--------------------------------------------------------------------------------------------|
 | Repository   | <code>i2mint/wads</code>                                                                   |
-| Run          | <a href="https://github.com/i2mint/wads/actions/runs/44890299251">44890299251</a>          |
+| Run          | <a href="https://github.com/i2mint/wads/actions/runs/44957571691">44957571691</a>          |
 | Ref          | <code>refs/heads/master</code>                                                             |
-| Event commit | <code>28a518c0aaeb16afd22376bd5c6ad99330b6b392</code> (in the history of the built commit) |
+| Event commit | <code>2366aed81c38133b0e229353fb1997cc194f671a</code> (in the history of the built commit) |
 
 ## Tools
 
 |          |         |
 |----------|---------|
-| epythet  | 0.2.22  |
+| epythet  | 0.2.23  |
 | Sphinx   | 9.1.1   |
 | docutils | 0.22.4  |
 | Python   | 3.12.16 |
@@ -9689,14 +9918,14 @@ The documentation and the package may be misaligned:
 
 ## Package on PyPI
 
-Latest release: <a href="https://pypi.org/project/wads/0.2.97/">0.2.97</a>, newer than the documented version (0.2.96).
+Latest release: <a href="https://pypi.org/project/wads/0.2.97/">0.2.97</a>, the same as the documented version.
 
 ## Reproduce
 
 ```bash
 git clone https://github.com/i2mint/wads && cd wads
-git checkout 28a518c0aaeb16afd22376bd5c6ad99330b6b392
-pip install "epythet==0.2.22"
+git checkout 2366aed81c38133b0e229353fb1997cc194f671a
+pip install "epythet==0.2.23"
 epythet quickstart . --ignore tests/ scrap/ examples/
 ```
 

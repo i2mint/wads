@@ -235,13 +235,16 @@
 <li class="toctree-l4"><a class="reference internal" href="_autosummary/wads.scripts.cargo_test_args.html">wads.scripts.cargo_test_args</a></li>
 <li class="toctree-l4"><a class="reference internal" href="_autosummary/wads.scripts.export_ci_env.html">wads.scripts.export_ci_env</a></li>
 <li class="toctree-l4"><a class="reference internal" href="_autosummary/wads.scripts.npm_publish_guard.html">wads.scripts.npm_publish_guard</a></li>
+<li class="toctree-l4"><a class="reference internal" href="_autosummary/wads.scripts.plan_subpackages.html">wads.scripts.plan_subpackages</a></li>
 <li class="toctree-l4"><a class="reference internal" href="_autosummary/wads.scripts.pytest_doctest_flags.html">wads.scripts.pytest_doctest_flags</a></li>
 <li class="toctree-l4"><a class="reference internal" href="_autosummary/wads.scripts.run_ci_commands.html">wads.scripts.run_ci_commands</a></li>
+<li class="toctree-l4"><a class="reference internal" href="_autosummary/wads.scripts.stamp_subpackage_version.html">wads.scripts.stamp_subpackage_version</a></li>
 <li class="toctree-l4"><a class="reference internal" href="_autosummary/wads.scripts.sync_version.html">wads.scripts.sync_version</a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="_autosummary/wads.secrets_cli.html">wads.secrets_cli</a></li>
 <li class="toctree-l3"><a class="reference internal" href="_autosummary/wads.setup_utils.html">wads.setup_utils</a></li>
+<li class="toctree-l3"><a class="reference internal" href="_autosummary/wads.subpackages.html">wads.subpackages</a></li>
 <li class="toctree-l3"><a class="reference internal" href="_autosummary/wads.templating.html">wads.templating</a></li>
 <li class="toctree-l3"><a class="reference internal" href="_autosummary/wads.toml_util.html">wads.toml_util</a></li>
 <li class="toctree-l3"><a class="reference internal" href="_autosummary/wads.user_dirs.html">wads.user_dirs</a></li>
@@ -934,6 +937,8 @@
 </li>
         <li><a href="_autosummary/wads.licence_check.html#wads.licence_check.LADDER">LADDER (in module wads.licence_check)</a>
 </li>
+        <li><a href="_autosummary/wads.subpackages.html#wads.subpackages.latest_tag_version">latest_tag_version() (in module wads.subpackages)</a>
+</li>
         <li><a href="_autosummary/wads.licence_check.html#wads.licence_check.LEGACY_POLICY_KEYS">LEGACY_POLICY_KEYS (in module wads.licence_check)</a>
 </li>
         <li><a href="_autosummary/wads.ci_config.html#wads.ci_config.CIConfig.licence_config">licence_config (wads.ci_config.CIConfig property)</a>
@@ -1060,10 +1065,10 @@
 </li>
         <li><a href="_autosummary/wads.util.html#wads.util.mk_import_root_replacer">mk_import_root_replacer() (in module wads.util)</a>
 </li>
-    </ul></td>
-    <td style="width: 33%; vertical-align: top;"><ul>
         <li><a href="_autosummary/wads.util.html#wads.util.mk_replacer_from_dict">mk_replacer_from_dict() (in module wads.util)</a>
 </li>
+    </ul></td>
+    <td style="width: 33%; vertical-align: top;"><ul>
         <li>
     module
 
@@ -1128,6 +1133,8 @@
 </li>
           <li><a href="_autosummary/wads.scripts.npm_publish_guard.html#module-wads.scripts.npm_publish_guard">wads.scripts.npm_publish_guard</a>
 </li>
+          <li><a href="_autosummary/wads.scripts.plan_subpackages.html#module-wads.scripts.plan_subpackages">wads.scripts.plan_subpackages</a>
+</li>
           <li><a href="_autosummary/wads.scripts.pytest_doctest_flags.html#module-wads.scripts.pytest_doctest_flags">wads.scripts.pytest_doctest_flags</a>
 </li>
           <li><a href="_autosummary/wads.scripts.read_ci_config.html#module-wads.scripts.read_ci_config">wads.scripts.read_ci_config</a>
@@ -1136,6 +1143,8 @@
 </li>
           <li><a href="_autosummary/wads.scripts.set_env_vars.html#module-wads.scripts.set_env_vars">wads.scripts.set_env_vars</a>
 </li>
+          <li><a href="_autosummary/wads.scripts.stamp_subpackage_version.html#module-wads.scripts.stamp_subpackage_version">wads.scripts.stamp_subpackage_version</a>
+</li>
           <li><a href="_autosummary/wads.scripts.sync_version.html#module-wads.scripts.sync_version">wads.scripts.sync_version</a>
 </li>
           <li><a href="_autosummary/wads.scripts.validate_ci_env.html#module-wads.scripts.validate_ci_env">wads.scripts.validate_ci_env</a>
@@ -1143,6 +1152,8 @@
           <li><a href="_autosummary/wads.secrets_cli.html#module-wads.secrets_cli">wads.secrets_cli</a>
 </li>
           <li><a href="_autosummary/wads.setup_utils.html#module-wads.setup_utils">wads.setup_utils</a>
+</li>
+          <li><a href="_autosummary/wads.subpackages.html#module-wads.subpackages">wads.subpackages</a>
 </li>
           <li><a href="_autosummary/wads.templating.html#module-wads.templating">wads.templating</a>
 </li>
@@ -1199,10 +1210,12 @@
 </li>
         <li><a href="_autosummary/wads.native_build.html#wads.native_build.NativeTarget">NativeTarget (class in wads.native_build)</a>
 </li>
-        <li><a href="_autosummary/wads.licence_check.html#wads.licence_check.normalise">normalise() (in module wads.licence_check)</a>
+        <li><a href="_autosummary/wads.subpackages.html#wads.subpackages.next_version">next_version() (in module wads.subpackages)</a>
 </li>
     </ul></td>
     <td style="width: 33%; vertical-align: top;"><ul>
+        <li><a href="_autosummary/wads.licence_check.html#wads.licence_check.normalise">normalise() (in module wads.licence_check)</a>
+</li>
         <li><a href="_autosummary/wads.ci_secrets.html#wads.ci_secrets.normalize_secret_name">normalize_secret_name() (in module wads.ci_secrets)</a>
 </li>
         <li><a href="_autosummary/wads.npm_config.html#wads.npm_config.NPM_CI_DEFAULTS">NPM_CI_DEFAULTS (in module wads.npm_config)</a>
@@ -1291,6 +1304,8 @@
         </ul></li>
         <li><a href="_autosummary/wads.ci_trigger.html#wads.ci_trigger.parse_stub_if">parse_stub_if() (in module wads.ci_trigger)</a>
 </li>
+        <li><a href="_autosummary/wads.subpackages.html#wads.subpackages.parse_version">parse_version() (in module wads.subpackages)</a>
+</li>
         <li><a href="_autosummary/wads.toml_util.html#wads.toml_util.pep639_license">pep639_license() (in module wads.toml_util)</a>
 </li>
         <li><a href="_autosummary/wads.licence_check.html#wads.licence_check.PERMISSIVE_CANARIES">PERMISSIVE_CANARIES (in module wads.licence_check)</a>
@@ -1309,7 +1324,11 @@
 </li>
         <li><a href="_autosummary/wads.ci_config.html#wads.ci_config.PinnedTestRun">PinnedTestRun (class in wads.ci_config)</a>
 </li>
+        <li><a href="_autosummary/wads.scripts.plan_subpackages.html#wads.scripts.plan_subpackages.plan">plan() (in module wads.scripts.plan_subpackages)</a>
+</li>
         <li><a href="_autosummary/wads.ci_local.html#wads.ci_local.plan_ci_local">plan_ci_local() (in module wads.ci_local)</a>
+</li>
+        <li><a href="_autosummary/wads.subpackages.html#wads.subpackages.plan_release">plan_release() (in module wads.subpackages)</a>
 </li>
         <li><a href="_autosummary/wads.licence_check.html#wads.licence_check.POLICY_TOML_KEYS">POLICY_TOML_KEYS (in module wads.licence_check)</a>
 </li>
@@ -1321,12 +1340,12 @@
 </li>
         <li><a href="_autosummary/wads.populate.html#wads.populate.PopulateTracker">PopulateTracker (class in wads.populate)</a>
 </li>
+    </ul></td>
+    <td style="width: 33%; vertical-align: top;"><ul>
         <li><a href="_autosummary/wads.pack.html#wads.pack.postprocess_ini_section_items">postprocess_ini_section_items() (in module wads.pack)</a>
 </li>
         <li><a href="_autosummary/wads.npm_trust.html#wads.npm_trust.preflight">preflight() (in module wads.npm_trust)</a>
 </li>
-    </ul></td>
-    <td style="width: 33%; vertical-align: top;"><ul>
         <li><a href="_autosummary/wads.pack.html#wads.pack.preprocess_ini_section_items">preprocess_ini_section_items() (in module wads.pack)</a>
 </li>
         <li><a href="_autosummary/wads.agents.ci_debug_agent.html#wads.agents.ci_debug_agent.print_diagnosis">print_diagnosis() (in module wads.agents.ci_debug_agent)</a>
@@ -1429,6 +1448,8 @@
 </li>
         <li><a href="_autosummary/wads.profiles.html#wads.profiles.register_native_profile">register_native_profile() (in module wads.profiles)</a>
 </li>
+        <li><a href="_autosummary/wads.subpackages.html#wads.subpackages.RELEASE_MODES">RELEASE_MODES (in module wads.subpackages)</a>
+</li>
         <li><a href="_autosummary/wads.templating.html#wads.templating.render">render() (in module wads.templating)</a>
 
         <ul>
@@ -1451,10 +1472,10 @@
 </li>
         <li><a href="_autosummary/wads.ci_trigger.html#wads.ci_trigger.render_stub_trigger">render_stub_trigger() (in module wads.ci_trigger)</a>
 </li>
-        <li><a href="_autosummary/wads.ci_secrets.html#wads.ci_secrets.render_workflow_call_secrets">render_workflow_call_secrets() (in module wads.ci_secrets)</a>
-</li>
     </ul></td>
     <td style="width: 33%; vertical-align: top;"><ul>
+        <li><a href="_autosummary/wads.ci_secrets.html#wads.ci_secrets.render_workflow_call_secrets">render_workflow_call_secrets() (in module wads.ci_secrets)</a>
+</li>
         <li><a href="_autosummary/wads.util.html#wads.util.replace_import_names">replace_import_names() (in module wads.util)</a>
 </li>
         <li><a href="_autosummary/wads.project_setup.html#wads.project_setup.repo_exists">repo_exists() (in module wads.project_setup)</a>
@@ -1563,16 +1584,18 @@
 </li>
         <li><a href="_autosummary/wads.licence_check.html#wads.licence_check.LicenceReport.stale_exceptions">stale_exceptions (wads.licence_check.LicenceReport property)</a>
 </li>
+        <li><a href="_autosummary/wads.subpackages.html#wads.subpackages.stamp_version">stamp_version() (in module wads.subpackages)</a>
+</li>
         <li><a href="_autosummary/wads.install_system_deps.html#wads.install_system_deps.static_ffmpeg_commands">static_ffmpeg_commands() (in module wads.install_system_deps)</a>
 </li>
         <li><a href="_autosummary/wads.install_system_deps.html#wads.install_system_deps.STATIC_FFMPEG_DEFAULTS">STATIC_FFMPEG_DEFAULTS (in module wads.install_system_deps)</a>
 </li>
         <li><a href="_autosummary/wads.version_sync.html#wads.version_sync.static_project_version">static_project_version() (in module wads.version_sync)</a>
 </li>
-    </ul></td>
-    <td style="width: 33%; vertical-align: top;"><ul>
         <li><a href="_autosummary/wads.licence_check.html#wads.licence_check.Status">Status (class in wads.licence_check)</a>
 </li>
+    </ul></td>
+    <td style="width: 33%; vertical-align: top;"><ul>
         <li><a href="_autosummary/wads.ci_local.html#wads.ci_local.Step">Step (class in wads.ci_local)</a>
 </li>
         <li><a href="_autosummary/wads.ci_local.html#wads.ci_local.steps_env">steps_env() (in module wads.ci_local)</a>
@@ -1598,6 +1621,10 @@
         <li><a href="_autosummary/wads.ci_secrets.html#wads.ci_secrets.stub_with_named_transport">stub_with_named_transport() (in module wads.ci_secrets)</a>
 </li>
         <li><a href="_autosummary/wads.ci_secrets.html#wads.ci_secrets.stub_with_transport">stub_with_transport() (in module wads.ci_secrets)</a>
+</li>
+        <li><a href="_autosummary/wads.subpackages.html#wads.subpackages.SubPackage">SubPackage (class in wads.subpackages)</a>
+</li>
+        <li><a href="_autosummary/wads.subpackages.html#wads.subpackages.subpackage_configs">subpackage_configs() (in module wads.subpackages)</a>
 </li>
         <li><a href="_autosummary/wads.npm_trust.html#wads.npm_trust.subprocess_run">subprocess_run() (in module wads.npm_trust)</a>
 </li>
@@ -1960,8 +1987,6 @@
           <li><a href="_autosummary/wads.scripts.cargo_test_args.html#module-wads.scripts.cargo_test_args">module</a>
 </li>
         </ul></li>
-    </ul></td>
-    <td style="width: 33%; vertical-align: top;"><ul>
         <li>
     wads.scripts.export_ci_env
 
@@ -1969,6 +1994,8 @@
           <li><a href="_autosummary/wads.scripts.export_ci_env.html#module-wads.scripts.export_ci_env">module</a>
 </li>
         </ul></li>
+    </ul></td>
+    <td style="width: 33%; vertical-align: top;"><ul>
         <li>
     wads.scripts.install_deps
 
@@ -1981,6 +2008,13 @@
 
         <ul>
           <li><a href="_autosummary/wads.scripts.npm_publish_guard.html#module-wads.scripts.npm_publish_guard">module</a>
+</li>
+        </ul></li>
+        <li>
+    wads.scripts.plan_subpackages
+
+        <ul>
+          <li><a href="_autosummary/wads.scripts.plan_subpackages.html#module-wads.scripts.plan_subpackages">module</a>
 </li>
         </ul></li>
         <li>
@@ -2012,6 +2046,13 @@
 </li>
         </ul></li>
         <li>
+    wads.scripts.stamp_subpackage_version
+
+        <ul>
+          <li><a href="_autosummary/wads.scripts.stamp_subpackage_version.html#module-wads.scripts.stamp_subpackage_version">module</a>
+</li>
+        </ul></li>
+        <li>
     wads.scripts.sync_version
 
         <ul>
@@ -2037,6 +2078,13 @@
 
         <ul>
           <li><a href="_autosummary/wads.setup_utils.html#module-wads.setup_utils">module</a>
+</li>
+        </ul></li>
+        <li>
+    wads.subpackages
+
+        <ul>
+          <li><a href="_autosummary/wads.subpackages.html#module-wads.subpackages">module</a>
 </li>
         </ul></li>
         <li>
@@ -2090,6 +2138,8 @@
         <li><a href="_autosummary/wads.ci_secrets.html#wads.ci_secrets.warn_names_outside_superset">warn_names_outside_superset() (in module wads.ci_secrets)</a>
 </li>
         <li><a href="_autosummary/wads.ci_trigger.html#wads.ci_trigger.WATCH_ALL">WATCH_ALL (in module wads.ci_trigger)</a>
+</li>
+        <li><a href="_autosummary/wads.subpackages.html#wads.subpackages.SubPackage.wheel_matrix">wheel_matrix() (wads.subpackages.SubPackage method)</a>
 </li>
         <li><a href="_autosummary/wads.ci_config.html#wads.ci_config.CIConfig.windows_blocking">windows_blocking (wads.ci_config.CIConfig property)</a>
 </li>
@@ -2149,7 +2199,7 @@
       
     </aside>
   </div>
-</div><script src="_static/documentation_options.js?v=cae2a1ff"></script>
+</div><script src="_static/documentation_options.js?v=63a2d599"></script>
     <script src="_static/doctools.js?v=fd6eb6e6"></script>
     <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="_static/scripts/furo.js?v=46bd48cc"></script>

@@ -239,13 +239,16 @@
 <li class="toctree-l4"><a class="reference internal" href="wads.scripts.cargo_test_args.html">wads.scripts.cargo_test_args</a></li>
 <li class="toctree-l4"><a class="reference internal" href="wads.scripts.export_ci_env.html">wads.scripts.export_ci_env</a></li>
 <li class="toctree-l4"><a class="reference internal" href="wads.scripts.npm_publish_guard.html">wads.scripts.npm_publish_guard</a></li>
+<li class="toctree-l4"><a class="reference internal" href="wads.scripts.plan_subpackages.html">wads.scripts.plan_subpackages</a></li>
 <li class="toctree-l4"><a class="reference internal" href="wads.scripts.pytest_doctest_flags.html">wads.scripts.pytest_doctest_flags</a></li>
 <li class="toctree-l4"><a class="reference internal" href="wads.scripts.run_ci_commands.html">wads.scripts.run_ci_commands</a></li>
+<li class="toctree-l4"><a class="reference internal" href="wads.scripts.stamp_subpackage_version.html">wads.scripts.stamp_subpackage_version</a></li>
 <li class="toctree-l4"><a class="reference internal" href="wads.scripts.sync_version.html">wads.scripts.sync_version</a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="wads.secrets_cli.html">wads.secrets_cli</a></li>
 <li class="toctree-l3"><a class="reference internal" href="wads.setup_utils.html">wads.setup_utils</a></li>
+<li class="toctree-l3"><a class="reference internal" href="wads.subpackages.html">wads.subpackages</a></li>
 <li class="toctree-l3"><a class="reference internal" href="wads.templating.html">wads.templating</a></li>
 <li class="toctree-l3"><a class="reference internal" href="wads.toml_util.html">wads.toml_util</a></li>
 <li class="toctree-l3"><a class="reference internal" href="wads.user_dirs.html">wads.user_dirs</a></li>
@@ -338,11 +341,17 @@ making them easier to test, maintain, and reuse.</p>
 <tr class="row-even"><td><p><a class="reference internal" href="wads.scripts.npm_publish_guard.html#module-wads.scripts.npm_publish_guard" title="wads.scripts.npm_publish_guard"><code class="xref py py-obj docutils literal notranslate"><span class="pre">npm_publish_guard</span></code></a></p></td>
 <td><p>Refuse an npm publish that would reuse the previous PyPI release's number (i2mint/wads#210).</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="wads.scripts.pytest_doctest_flags.html#module-wads.scripts.pytest_doctest_flags" title="wads.scripts.pytest_doctest_flags"><code class="xref py py-obj docutils literal notranslate"><span class="pre">pytest_doctest_flags</span></code></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="wads.scripts.plan_subpackages.html#module-wads.scripts.plan_subpackages" title="wads.scripts.plan_subpackages"><code class="xref py py-obj docutils literal notranslate"><span class="pre">plan_subpackages</span></code></a></p></td>
+<td><p>Decide which subpackages release now (<code class="docutils literal notranslate"><span class="pre">[[tool.wads.ci.packages]]</span></code>, i2mint/wads#220).</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="wads.scripts.pytest_doctest_flags.html#module-wads.scripts.pytest_doctest_flags" title="wads.scripts.pytest_doctest_flags"><code class="xref py py-obj docutils literal notranslate"><span class="pre">pytest_doctest_flags</span></code></a></p></td>
 <td><p>Print the <code class="docutils literal notranslate"><span class="pre">-o</span> <span class="pre">doctest_optionflags=...</span></code> pytest argument CI should add, if any.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="wads.scripts.run_ci_commands.html#module-wads.scripts.run_ci_commands" title="wads.scripts.run_ci_commands"><code class="xref py py-obj docutils literal notranslate"><span class="pre">run_ci_commands</span></code></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="wads.scripts.run_ci_commands.html#module-wads.scripts.run_ci_commands" title="wads.scripts.run_ci_commands"><code class="xref py py-obj docutils literal notranslate"><span class="pre">run_ci_commands</span></code></a></p></td>
 <td><p>Run the <code class="docutils literal notranslate"><span class="pre">[tool.wads.ci.commands]</span></code> <code class="docutils literal notranslate"><span class="pre">pre_test</span></code> / <code class="docutils literal notranslate"><span class="pre">post_test</span></code> lists in CI.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="wads.scripts.stamp_subpackage_version.html#module-wads.scripts.stamp_subpackage_version" title="wads.scripts.stamp_subpackage_version"><code class="xref py py-obj docutils literal notranslate"><span class="pre">stamp_subpackage_version</span></code></a></p></td>
+<td><p>Write a release version into a subpackage's <code class="docutils literal notranslate"><span class="pre">pyproject.toml</span></code> (i2mint/wads#220).</p></td>
 </tr>
 <tr class="row-odd"><td><p><a class="reference internal" href="wads.scripts.sync_version.html#module-wads.scripts.sync_version" title="wads.scripts.sync_version"><code class="xref py py-obj docutils literal notranslate"><span class="pre">sync_version</span></code></a></p></td>
 <td><p>Write the release version into the manifests <code class="docutils literal notranslate"><span class="pre">[tool.wads.ci.version].sync</span></code> lists.</p></td>
@@ -397,7 +406,7 @@ making them easier to test, maintain, and reuse.</p>
       
     </aside>
   </div>
-</div><script src="../_static/documentation_options.js?v=cae2a1ff"></script>
+</div><script src="../_static/documentation_options.js?v=63a2d599"></script>
     <script src="../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../_static/scripts/furo.js?v=46bd48cc"></script>
