@@ -93,6 +93,7 @@ def test_the_table_form_sets_targets_args_and_imports():
         "cargo_test_args": ["-p", "pkg-core"],
         "publish_crates": [],
         "crates_dir": ".",
+        "deny": "auto",
     }
 
 
@@ -351,7 +352,18 @@ def test_rust_checks_action_runs_cargo_deny_when_a_deny_toml_exists():
     )
     steps = {s["name"]: s for s in action["runs"]["steps"]}
     assert steps["cargo deny"]["if"] == "steps.deny.outputs.present == 'true'"
-    assert action["inputs"]["deny-version"]["default"] in steps["Install cargo-deny"]["with"]["tool"] or "deny-version" in steps["Install cargo-deny"]["with"]["tool"]
+    assert steps["Install cargo-deny"]["with"]["tool"] == "cargo-deny@${{ inputs.deny-version }}"
+    # uv-ci feeds the native `deny` option to the action
+    uv = UV_CI.read_text()
+    assert "deny: ${{ fromJson(needs.setup.outputs.native-options || '{}').deny }}" in uv
+
+
+def test_native_deny_option():
+    named = {"project": {"name": "p"}}
+    assert native_build_config(_with_native({"deny": False}, **named)).deny == "false"
+    assert native_build_config({**MATURIN, **named}).deny == "auto"
+    with pytest.raises(ValueError, match="deny must be"):
+        native_build_config(_with_native({"deny": "sometimes"}, **named))
 
 
 def test_ci_local_has_no_rust_steps_for_a_pure_python_repo(tmp_path):

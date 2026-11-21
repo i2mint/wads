@@ -571,6 +571,9 @@ def _rust_steps(config: CIConfig, *, repo: Path) -> list[Step]:
         return f"exit {result.returncode}" if result.returncode else None
 
     def cargo_deny(ctx):
+        if native.deny == "false":
+            ctx.notes.append("deny = false: cargo deny skipped")
+            return None
         # Mirrors the rust-checks action: only when the workspace has a deny.toml.
         meta = ctx.run(
             ["cargo", "metadata", *manifest, "--no-deps", "--format-version", "1"],
@@ -584,10 +587,7 @@ def _rust_steps(config: CIConfig, *, repo: Path) -> list[Step]:
             ctx.notes.append("no deny.toml: cargo deny skipped")
             return None
         if shutil.which("cargo-deny") is None:
-            ctx.notes.append(
-                "deny.toml present but cargo-deny is not installed (cargo install cargo-deny --locked): skipped"
-            )
-            return None
+            return "deny.toml present but cargo-deny is not installed (cargo install cargo-deny --locked); CI would enforce it"
         result = ctx.run(["cargo", "deny", *manifest, "check", "--config", str(config)])
         return f"exit {result.returncode}" if result.returncode else None
 

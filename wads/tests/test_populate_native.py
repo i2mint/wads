@@ -610,4 +610,9 @@ def test_the_scaffold_has_a_deny_toml_that_rust_checks_will_run(native_pkg):
     """#223: populate --native maturin writes the cargo-deny policy the CI step looks for."""
     root = native_pkg if hasattr(native_pkg, "joinpath") else native_pkg[0]
     deny = (root / "deny.toml").read_text()
-    assert "[licenses]" in deny and "[advisories]" in deny
+    from wads.toml_util import tomllib
+
+    policy = tomllib.loads(deny)
+    # the workspace crates are publish = false with the package's own (or no) licence
+    assert policy["licenses"]["private"]["ignore"] is True
+    assert set(policy) <= {"advisories", "licenses", "bans", "sources", "graph"}
