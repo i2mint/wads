@@ -24,13 +24,22 @@ def main(argv=None) -> int:
     """Sync ``VERSION`` into each file of ``FILES_JSON``; 1 with an error annotation on failure."""
     argv = sys.argv[1:] if argv is None else argv
     version_sync = load_wads_module("version_sync")
+    if argv[:2] == [
+        "--read-version",
+        "Cargo.toml",
+    ]:  # stdin -> version (git-commit's resolver)
+        print(version_sync.cargo_version(sys.stdin.read()) or "")
+        return 0
     if argv[:1] == ["--file"]:
         if len(argv) != 3:
             print(__doc__, file=sys.stderr)
             return 2
         _, path, version = argv
         try:
-            version_sync.set_json_version(Path(path), version)
+            if Path(path).name == "Cargo.toml":
+                version_sync.set_cargo_version(Path(path), version)
+            else:
+                version_sync.set_json_version(Path(path), version)
         except (ValueError, OSError) as e:
             print(f"::error::Version sync failed: {e}", file=sys.stderr)
             return 1

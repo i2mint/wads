@@ -755,6 +755,36 @@ class TestPushBackRecovery:
         ).stdout
         assert shown == '[project]\nversion = "0.1.2"\n'
 
+    def test_a_cargo_manifest_bump_is_replayed_with_its_lockfile(
+        self, remote_and_clone, tmp_path
+    ):
+        """[tool.wads.ci.version].sync listing a Cargo.toml (i2mint/wads#210)."""
+        origin, clone = remote_and_clone
+
+        def files(v):
+            return {
+                "rust/Cargo.toml": f'[package]\nname = "a"\nversion = "{v}"\n',
+                "rust/Cargo.lock": f'[[package]]\nname = "a"\nversion = "{v}"\n',
+            }
+
+        seed = tmp_path / "seed"
+        self._commit_files(seed, files("0.1.0"), "add rust")
+        _git("push", "origin", DEFAULT_BRANCH, cwd=seed)
+        _git("pull", "-q", "origin", DEFAULT_BRANCH, cwd=clone)
+        self._commit_files(clone, files("0.1.2"), "**CI** bump 0.1.2 [skip ci]")
+        other = tmp_path / "earlier-release"
+        _git("clone", str(origin), str(other), cwd=tmp_path)
+        _configure(other)
+        self._commit_files(other, files("0.1.1"), "**CI** bump 0.1.1 [skip ci]")
+        _git("push", "origin", DEFAULT_BRANCH, cwd=other)
+
+        result = run_push_step(clone)
+
+        assert result.returncode == 0, result.stdout + result.stderr
+        for rel, expected in files("0.1.2").items():
+            shown = _git("show", f"origin/{DEFAULT_BRANCH}:{rel}", cwd=clone).stdout
+            assert shown == expected, rel
+
     def test_a_dependency_merged_into_package_json_survives_the_replay(
         self, remote_and_clone, tmp_path
     ):

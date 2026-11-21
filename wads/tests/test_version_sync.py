@@ -71,7 +71,7 @@ def _package_json(path: Path, version="0.1.0", *, indent=2):
         ["../other/package.json"],
         ["/abs/package.json"],
         ["ts\\package.json"],
-        ["rust/core/Cargo.toml"],
+        ["rust/core/setup.py"],
         ["ts/package-lock.json"],
     ],
 )
@@ -1034,3 +1034,31 @@ def test_publish_fails_when_it_releases_nothing(
 def test_the_npm_hint_mentions_pypi_sync_only_as_a_condition(name):
     run = _publish_run(name)["run"]
     assert "if this repo also publishes to PyPI, [tool.wads.ci.version].sync" in run
+
+
+# --- Cargo.toml (i2mint/wads#210) -------------------------------------------------------
+
+
+def test_cargo_version_is_synced_with_its_lockfile_and_agreement_is_checked(tmp_path):
+    from wads.version_sync import check_versions_agree, sync_version
+
+    (tmp_path / "rust").mkdir()
+    (tmp_path / "rust" / "Cargo.toml").write_text(
+        '[workspace.package]\nversion = "0.1.0"  # shared\n[workspace.dependencies]\nserde = { version = "1" }\n'
+    )
+    (tmp_path / "rust" / "Cargo.lock").write_text(
+        '[[package]]\nname = "a"\nversion = "0.1.0"\n\n'
+        '[[package]]\nname = "serde"\nversion = "0.1.0"\nsource = "registry+x"\n'
+    )
+    data = {
+        "project": {"version": "0.1.0"},
+        "tool": {"wads": {"ci": {"version": {"sync": ["rust/Cargo.toml"]}}}},
+    }
+    check_versions_agree(tmp_path, data)
+    written = sync_version(tmp_path, ["rust/Cargo.toml"], "0.2.0")
+    assert [p.name for p in written] == ["Cargo.toml", "Cargo.lock"]
+    assert (tmp_path / "rust" / "Cargo.toml").read_text().splitlines()[1] == 'version = "0.2.0"  # shared'
+    lock = (tmp_path / "rust" / "Cargo.lock").read_text()
+    assert lock.count('"0.2.0"') == 1 and 'source = "registry+x"' in lock and lock.count('"0.1.0"') == 1
+    with pytest.raises(ValueError, match="disagree"):
+        check_versions_agree(tmp_path, data)  # file now 0.2.0, pyproject 0.1.0
