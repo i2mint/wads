@@ -20,6 +20,16 @@ inputs:
       workspace crate except the binding one maturin builds, from cargo metadata.
     required: false
     default: ""
+  deny:
+    description: >-
+      "auto" (default): run `cargo deny check` (licences, advisories, bans, sources) when the
+      Cargo workspace has a deny.toml; "false": never (issue #223).
+    required: false
+    default: "auto"
+  deny-version:
+    description: "cargo-deny release to install (a prebuilt binary, not compiled)"
+    required: false
+    default: "0.19.9"
 
 runs:
   using: "composite"
@@ -59,3 +69,38 @@ runs:
         fi
         echo "Running: cargo test ${args[*]}"
         cargo test --manifest-path "$MANIFEST" "${args[@]}"
+
+    - name: Look for a deny.toml
+      id: deny
+      shell: bash
+      working-directory: ${{ inputs.project-dir }}
+      env:
+        DENY: ${{ inputs.deny }}
+        MANIFEST: ${{ inputs.manifest-path }}
+      run: |
+        set -e
+        [ "$DENY" = "false" ] && { echo "present=false" >> "$GITHUB_OUTPUT"; exit 0; }
+        root=$(cargo metadata --manifest-path "$MANIFEST" --no-deps --format-version 1 \
+          | python3 -I -c 'import json, sys; print(json.load(sys.stdin)["workspace_root"])')
+        if [ -f "$root/deny.toml" ]; then
+          echo "present=true" >> "$GITHUB_OUTPUT"
+          echo "config=$root/deny.toml" >> "$GITHUB_OUTPUT"
+        else
+          echo "No deny.toml in $root: skipping cargo deny."
+          echo "present=false" >> "$GITHUB_OUTPUT"
+        fi
+
+    - name: Install cargo-deny
+      if: steps.deny.outputs.present == 'true'
+      uses: taiki-e/install-action@v2
+      with:
+        tool: cargo-deny@${{ inputs.deny-version }}
+
+    - name: cargo deny
+      if: steps.deny.outputs.present == 'true'
+      shell: bash
+      working-directory: ${{ inputs.project-dir }}
+      env:
+        MANIFEST: ${{ inputs.manifest-path }}
+        CONFIG: ${{ steps.deny.outputs.config }}
+      run: cargo deny --manifest-path "$MANIFEST" check --config "$CONFIG"

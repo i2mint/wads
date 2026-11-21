@@ -324,6 +324,36 @@ def test_ci_local_runs_the_rust_checks_for_a_native_repo(tmp_path):
     assert ["cargo", "fmt", "--all", "--check", *manifest] in runner.argvs()
 
 
+def test_ci_local_runs_cargo_deny_only_with_a_deny_toml(tmp_path, monkeypatch):
+    from wads.ci_local import run_ci_local
+    from wads.tests.test_ci_local import FakeRunner, RunResult
+
+    (tmp_path / "pyproject.toml").write_text(_scaffold_pyproject(tmp_path))
+    monkeypatch.setattr("shutil.which", lambda name, *a, **k: "/bin/" + name)
+    meta = lambda: json.dumps({"packages": [], "workspace_root": str(tmp_path)})
+
+    runner = FakeRunner((["cargo", "metadata"], RunResult(0, meta())))
+    run_ci_local(tmp_path, runner=runner, environ={}, out=io.StringIO())
+    assert not any(a[:2] == ["cargo", "deny"] for a in runner.argvs())
+
+    (tmp_path / "deny.toml").write_text("[licenses]\n")
+    runner = FakeRunner((["cargo", "metadata"], RunResult(0, meta())))
+    run_ci_local(tmp_path, runner=runner, environ={}, out=io.StringIO())
+    assert [
+        "cargo", "deny", "--manifest-path", "rust/py/Cargo.toml", "check",
+        "--config", str(tmp_path / "deny.toml"),
+    ] in runner.argvs()
+
+
+def test_rust_checks_action_runs_cargo_deny_when_a_deny_toml_exists():
+    action = yaml.safe_load(
+        (ROOT / "actions" / "rust-checks" / "action.yml").read_text()
+    )
+    steps = {s["name"]: s for s in action["runs"]["steps"]}
+    assert steps["cargo deny"]["if"] == "steps.deny.outputs.present == 'true'"
+    assert action["inputs"]["deny-version"]["default"] in steps["Install cargo-deny"]["with"]["tool"] or "deny-version" in steps["Install cargo-deny"]["with"]["tool"]
+
+
 def test_ci_local_has_no_rust_steps_for_a_pure_python_repo(tmp_path):
     from wads.ci_local import plan_ci_local
 

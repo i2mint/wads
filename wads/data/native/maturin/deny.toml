@@ -1,0 +1,31 @@
+# cargo-deny policy for the Rust half of tmpl_pkg: `cargo deny check` runs in CI (wads'
+# rust-checks action) and in `wads ci-local`. Licences: permissive ones only; add an id
+# to `allow` when a dependency you accept needs it. Advisories come from RustSec.
+
+[graph]
+all-features = true
+
+[advisories]
+yanked = "deny"
+
+[licenses]
+allow = [
+    "MIT",
+    "Apache-2.0",
+    "Apache-2.0 WITH LLVM-exception",
+    "BSD-2-Clause",
+    "BSD-3-Clause",
+    "ISC",
+    "Unicode-3.0",
+    "Zlib",
+    "CC0-1.0",
+]
+confidence-threshold = 0.9
+
+[bans]
+multiple-versions = "warn"
+wildcards = "allow"
+
+[sources]
+unknown-registry = "deny"
+unknown-git = "deny"
