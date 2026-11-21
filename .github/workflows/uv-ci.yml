@@ -539,6 +539,7 @@ jobs:
         uses: i2mint/wads/actions/rust-checks@master
         with:
           cargo-test-args: ${{ toJSON(fromJson(needs.setup.outputs.native-options || '{}').cargo_test_args) }}
+          deny: ${{ fromJson(needs.setup.outputs.native-options || '{}').deny }}
           manifest-path: ${{ fromJson(needs.setup.outputs.native-options || '{}').manifest_path }}
 
       # Write the pyproject-declared env vars into $GITHUB_ENV (and fail fast

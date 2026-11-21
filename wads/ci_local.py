@@ -570,6 +570,27 @@ def _rust_steps(config: CIConfig, *, repo: Path) -> list[Step]:
         result = ctx.run(["cargo", "test", *manifest, *args])
         return f"exit {result.returncode}" if result.returncode else None
 
+    def cargo_deny(ctx):
+        if native.deny == "false":
+            ctx.notes.append("deny = false: cargo deny skipped")
+            return None
+        # Mirrors the rust-checks action: only when the workspace has a deny.toml.
+        meta = ctx.run(
+            ["cargo", "metadata", *manifest, "--no-deps", "--format-version", "1"],
+            capture=True,
+        )
+        if meta.returncode != 0:
+            return f"cargo metadata failed (exit {meta.returncode})"
+        root = json.loads(meta.stdout).get("workspace_root")
+        config = Path(root) / "deny.toml" if root else None
+        if config is None or not config.is_file():
+            ctx.notes.append("no deny.toml: cargo deny skipped")
+            return None
+        if shutil.which("cargo-deny") is None:
+            return "deny.toml present but cargo-deny is not installed (cargo install cargo-deny --locked); CI would enforce it"
+        result = ctx.run(["cargo", "deny", *manifest, "check", "--config", str(config)])
+        return f"exit {result.returncode}" if result.returncode else None
+
     manifest = ("--manifest-path", native.manifest_path)
     return [
         Step("rust: fmt", ("cargo", "fmt", "--all", "--check", *manifest)),
@@ -582,6 +603,11 @@ def _rust_steps(config: CIConfig, *, repo: Path) -> list[Step]:
             "rust: test",
             check=cargo_test,
             description="cargo test on the pure-Rust crates (not the binding one)",
+        ),
+        Step(
+            "rust: deny",
+            check=cargo_deny,
+            description="cargo deny check (licences, advisories) when the workspace has a deny.toml",
         ),
     ]
 

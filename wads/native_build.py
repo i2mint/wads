@@ -20,6 +20,7 @@ table for the details::
     cargo_test_args = ["-p", "mypkg-core"]        # default: derived from cargo metadata
     publish_crates = ["mypkg-core"]               # crates.io, in publish order; default: none
     crates_dir = "rust"                           # the Cargo workspace; default: the manifest's dir
+    deny = false                                  # skip `cargo deny check`; default "auto" (when deny.toml exists)
 
 ``publish_crates`` adds a ``crates-dry-run`` job (``cargo publish --dry-run``, on every run) and
 a ``publish-crates`` job on release (``cargo publish --locked``, skipping a crate version that is
@@ -94,6 +95,9 @@ class NativeBuild:
     publish_crates: tuple = ()
     #: The Cargo workspace the crates are published from; ``""``: the manifest's directory.
     crates_dir: str = ""
+    #: ``cargo deny check`` in the Rust checks: ``"auto"`` (when the workspace has a
+    #: deny.toml) or ``"false"`` (#223).
+    deny: str = "auto"
 
     def matrix(self) -> list:
         """The ``native-wheels`` job's ``matrix.include``."""
@@ -108,6 +112,7 @@ class NativeBuild:
             "cargo_test_args": (
                 None if self.cargo_test_args is None else list(self.cargo_test_args)
             ),
+            "deny": self.deny,
             "publish_crates": list(self.publish_crates),
             "crates_dir": self.crates_dir
             or (str(PurePosixPath(self.manifest_path).parent)),
@@ -211,6 +216,7 @@ def native_build_config(pyproject: dict) -> Optional[NativeBuild]:
                 if cargo_test is None
                 else _str_tuple(cargo_test, key="cargo_test_args")
             ),
+            deny=_deny_mode(table.get("deny", "auto")),
             publish_crates=_crate_names(table.get("publish_crates", [])),
             crates_dir=(
                 _non_blank_str(table["crates_dir"], key="crates_dir")
@@ -230,9 +236,23 @@ _TABLE_KEYS = {
     "cargo_test_args",
     "publish_crates",
     "crates_dir",
+    "deny",
 }
 
 _CRATE_NAME_RE = re.compile(r"[A-Za-z][A-Za-z0-9_-]*")
+
+
+def _deny_mode(value) -> str:
+    """``deny``: ``"auto"``, or ``false``/``"false"`` to skip ``cargo deny``.
+
+    >>> _deny_mode(False), _deny_mode("auto")
+    ('false', 'auto')
+    """
+    if value is False or value == "false":
+        return "false"
+    if value == "auto":
+        return "auto"
+    raise ValueError(f'deny must be "auto" or false, got {value!r}')
 
 
 def _crate_names(value) -> tuple:
