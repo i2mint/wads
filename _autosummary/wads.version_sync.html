@@ -319,8 +319,12 @@ it), so the bump commit carries all of them.</p></li>
 bump commit of the Python release the same push cuts, so it would carry the
 previous release’s number with newer code. <a class="reference internal" href="#wads.version_sync.npm_publish_refusal" title="wads.version_sync.npm_publish_refusal"><code class="xref py py-func docutils literal notranslate"><span class="pre">npm_publish_refusal()</span></code></a> refuses
 that publish (see its docstring).</p>
-<p>Only <code class="docutils literal notranslate"><span class="pre">package.json</span></code> is supported: a Rust crate usually keeps its own version
-line. This module imports only the standard library (and <code class="docutils literal notranslate"><span class="pre">wads.ci_config</span></code>, which
+<p><code class="docutils literal notranslate"><span class="pre">package.json</span></code> (npm) and <code class="docutils literal notranslate"><span class="pre">Cargo.toml</span></code> (a crate that ships with the Python package, as a
+maturin binding crate does) are supported. A Cargo manifest’s version is <code class="docutils literal notranslate"><span class="pre">[package].version</span></code>,
+or <code class="docutils literal notranslate"><span class="pre">[workspace.package].version</span></code> when the crate inherits it; the <code class="docutils literal notranslate"><span class="pre">Cargo.lock</span></code> beside it
+follows (the crates that take the version: the manifest’s own, and the workspace members that inherit it), so
+<code class="docutils literal notranslate"><span class="pre">cargo</span> <span class="pre">build</span> <span class="pre">--locked</span></code> still passes. A crate that has its own release line on crates.io
+should not be listed. This module imports only the standard library (and <code class="docutils literal notranslate"><span class="pre">wads.ci_config</span></code>, which
 does too), because the CI scripts load it by path from the wads checkout
 (<code class="docutils literal notranslate"><span class="pre">wads/scripts/_checkout_import.py</span></code>).</p>
 <p class="rubric">Module Attributes</p>
@@ -346,20 +350,26 @@ does too), because the CI scripts load it by path from the wads checkout
 <tr class="row-odd"><td><p><a class="reference internal" href="#wads.version_sync.caller_workflow_path" title="wads.version_sync.caller_workflow_path"><code class="xref py py-obj docutils literal notranslate"><span class="pre">caller_workflow_path</span></code></a>(workflow_ref)</p></td>
 <td><p>The repo-relative workflow file in <code class="docutils literal notranslate"><span class="pre">github.workflow_ref</span></code>; <code class="docutils literal notranslate"><span class="pre">None</span></code> if there is none.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#wads.version_sync.check_versions_agree" title="wads.version_sync.check_versions_agree"><code class="xref py py-obj docutils literal notranslate"><span class="pre">check_versions_agree</span></code></a>(repo_dir, pyproject_data)</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#wads.version_sync.cargo_version" title="wads.version_sync.cargo_version"><code class="xref py py-obj docutils literal notranslate"><span class="pre">cargo_version</span></code></a>(text)</p></td>
+<td><p>The version a <code class="docutils literal notranslate"><span class="pre">Cargo.toml</span></code>'s text declares (see <code class="xref py py-func docutils literal notranslate"><span class="pre">_cargo_version_line()</span></code>).</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#wads.version_sync.check_versions_agree" title="wads.version_sync.check_versions_agree"><code class="xref py py-obj docutils literal notranslate"><span class="pre">check_versions_agree</span></code></a>(repo_dir, pyproject_data)</p></td>
 <td><p>Raise <code class="docutils literal notranslate"><span class="pre">ValueError</span></code> naming every listed manifest whose version differs.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#wads.version_sync.npm_publish_refusal" title="wads.version_sync.npm_publish_refusal"><code class="xref py py-obj docutils literal notranslate"><span class="pre">npm_publish_refusal</span></code></a>(pyproject_data, ...[, ...])</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#wads.version_sync.npm_publish_refusal" title="wads.version_sync.npm_publish_refusal"><code class="xref py py-obj docutils literal notranslate"><span class="pre">npm_publish_refusal</span></code></a>(pyproject_data, ...[, ...])</p></td>
 <td><p>Why npm-ci must not publish <code class="docutils literal notranslate"><span class="pre">package_dir</span></code> from this push, or <code class="docutils literal notranslate"><span class="pre">None</span></code> when it may.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#wads.version_sync.pypi_release_expected" title="wads.version_sync.pypi_release_expected"><code class="xref py py-obj docutils literal notranslate"><span class="pre">pypi_release_expected</span></code></a>(pyproject_data, subject)</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#wads.version_sync.pypi_release_expected" title="wads.version_sync.pypi_release_expected"><code class="xref py py-obj docutils literal notranslate"><span class="pre">pypi_release_expected</span></code></a>(pyproject_data, subject)</p></td>
 <td><p>Whether uv-ci's publish job releases to PyPI for a push with this commit <code class="docutils literal notranslate"><span class="pre">subject</span></code>.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#wads.version_sync.set_cargo_version" title="wads.version_sync.set_cargo_version"><code class="xref py py-obj docutils literal notranslate"><span class="pre">set_cargo_version</span></code></a>(path, version)</p></td>
+<td><p>Write <code class="docutils literal notranslate"><span class="pre">version</span></code> into a <code class="docutils literal notranslate"><span class="pre">Cargo.toml</span></code> (and the <code class="docutils literal notranslate"><span class="pre">Cargo.lock</span></code> beside it).</p></td>
 </tr>
 <tr class="row-odd"><td><p><a class="reference internal" href="#wads.version_sync.set_json_version" title="wads.version_sync.set_json_version"><code class="xref py py-obj docutils literal notranslate"><span class="pre">set_json_version</span></code></a>(path, version)</p></td>
 <td><p>Write <code class="docutils literal notranslate"><span class="pre">version</span></code> into one <code class="docutils literal notranslate"><span class="pre">package.json</span></code> or <code class="docutils literal notranslate"><span class="pre">package-lock.json</span></code>, as npm would.</p></td>
 </tr>
 <tr class="row-even"><td><p><a class="reference internal" href="#wads.version_sync.set_manifest_version" title="wads.version_sync.set_manifest_version"><code class="xref py py-obj docutils literal notranslate"><span class="pre">set_manifest_version</span></code></a>(manifest, version)</p></td>
-<td><p>Write <code class="docutils literal notranslate"><span class="pre">version</span></code> into <code class="docutils literal notranslate"><span class="pre">manifest</span></code> and the npm lockfile beside it.</p></td>
+<td><p>Write <code class="docutils literal notranslate"><span class="pre">version</span></code> into <code class="docutils literal notranslate"><span class="pre">manifest</span></code> and the lockfile beside it (npm or Cargo).</p></td>
 </tr>
 <tr class="row-odd"><td><p><a class="reference internal" href="#wads.version_sync.static_project_version" title="wads.version_sync.static_project_version"><code class="xref py py-obj docutils literal notranslate"><span class="pre">static_project_version</span></code></a>(pyproject_data)</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">[project].version</span></code>, which <code class="docutils literal notranslate"><span class="pre">sync</span></code> needs: CI bumps and copies that line.</p></td>
@@ -390,7 +400,7 @@ does too), because the CI scripts load it by path from the wads checkout
 
 <dl class="py data">
 <dt class="sig sig-object py" id="wads.version_sync.SYNCABLE_MANIFESTS">
-<span class="sig-prename descclassname"><span class="pre">wads.version_sync.</span></span><span class="sig-name descname"><span class="pre">SYNCABLE_MANIFESTS</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">('package.json',)</span></span><a class="headerlink" href="#wads.version_sync.SYNCABLE_MANIFESTS" title="Link to this definition">¶</a></dt>
+<span class="sig-prename descclassname"><span class="pre">wads.version_sync.</span></span><span class="sig-name descname"><span class="pre">SYNCABLE_MANIFESTS</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">('package.json',</span> <span class="pre">'Cargo.toml')</span></span><a class="headerlink" href="#wads.version_sync.SYNCABLE_MANIFESTS" title="Link to this definition">¶</a></dt>
 <dd><p>Manifest file names <code class="docutils literal notranslate"><span class="pre">[tool.wads.ci.version].sync</span></code> may list.</p>
 </dd></dl>
 
@@ -406,6 +416,17 @@ does too), because the CI scripts load it by path from the wads checkout
 <span class="go">True</span>
 </pre></div>
 </div>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a> | <span class="highlight sphinx_autodoc_typehints-value"><a class="reference external" href="https://docs.python.org/3/builtins/constants.html#None" title="(in Python v3.15)"><code class="xref py py-obj docutils literal notranslate"><span class="kc"><span class="pre">None</span></span></code></a></span></span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="wads.version_sync.cargo_version">
+<span class="sig-prename descclassname"><span class="pre">wads.version_sync.</span></span><span class="sig-name descname"><span class="pre">cargo_version</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">text</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/wads/version_sync.html#cargo_version"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#wads.version_sync.cargo_version" title="Link to this definition">¶</a></dt>
+<dd><p>The version a <code class="docutils literal notranslate"><span class="pre">Cargo.toml</span></code>’s text declares (see <code class="xref py py-func docutils literal notranslate"><span class="pre">_cargo_version_line()</span></code>).</p>
 <dl class="field-list simple">
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a> | <span class="highlight sphinx_autodoc_typehints-value"><a class="reference external" href="https://docs.python.org/3/builtins/constants.html#None" title="(in Python v3.15)"><code class="xref py py-obj docutils literal notranslate"><span class="kc"><span class="pre">None</span></span></code></a></span></span></p>
@@ -486,6 +507,30 @@ the run-ci marker when <code class="docutils literal notranslate"><span class="p
 </dd></dl>
 
 <dl class="py function">
+<dt class="sig sig-object py" id="wads.version_sync.set_cargo_version">
+<span class="sig-prename descclassname"><span class="pre">wads.version_sync.</span></span><span class="sig-name descname"><span class="pre">set_cargo_version</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">version</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/wads/version_sync.html#set_cargo_version"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#wads.version_sync.set_cargo_version" title="Link to this definition">¶</a></dt>
+<dd><p>Write <code class="docutils literal notranslate"><span class="pre">version</span></code> into a <code class="docutils literal notranslate"><span class="pre">Cargo.toml</span></code> (and the <code class="docutils literal notranslate"><span class="pre">Cargo.lock</span></code> beside it).</p>
+<p>Returns the files written. Only the version line changes, in the file’s own layout.</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span><span class="w"> </span><span class="nn">tempfile</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">d</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">tempfile</span><span class="o">.</span><span class="n">mkdtemp</span><span class="p">())</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">_</span> <span class="o">=</span> <span class="p">(</span><span class="n">d</span> <span class="o">/</span> <span class="s2">"Cargo.toml"</span><span class="p">)</span><span class="o">.</span><span class="n">write_text</span><span class="p">(</span><span class="s1">'[package]</span><span class="se">\n</span><span class="s1">name = "a"</span><span class="se">\n</span><span class="s1">version = "0.1.0"</span><span class="se">\n</span><span class="s1">'</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">_</span> <span class="o">=</span> <span class="p">(</span><span class="n">d</span> <span class="o">/</span> <span class="s2">"Cargo.lock"</span><span class="p">)</span><span class="o">.</span><span class="n">write_text</span><span class="p">(</span><span class="s1">'[[package]]</span><span class="se">\n</span><span class="s1">name = "a"</span><span class="se">\n</span><span class="s1">version = "0.1.0"</span><span class="se">\n\n</span><span class="s1">[[package]]</span><span class="se">\n</span><span class="s1">name = "dep"</span><span class="se">\n</span><span class="s1">version = "0.1.0"</span><span class="se">\n</span><span class="s1">source = "registry+x"</span><span class="se">\n</span><span class="s1">'</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="p">[</span><span class="n">p</span><span class="o">.</span><span class="n">name</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">set_cargo_version</span><span class="p">(</span><span class="n">d</span> <span class="o">/</span> <span class="s2">"Cargo.toml"</span><span class="p">,</span> <span class="s2">"0.2.0"</span><span class="p">)]</span>
+<span class="go">['Cargo.toml', 'Cargo.lock']</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="p">(</span><span class="n">d</span> <span class="o">/</span> <span class="s2">"Cargo.toml"</span><span class="p">)</span><span class="o">.</span><span class="n">read_text</span><span class="p">()</span>
+<span class="go">'[package]\nname = "a"\nversion = "0.2.0"\n'</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="p">(</span><span class="n">d</span> <span class="o">/</span> <span class="s2">"Cargo.lock"</span><span class="p">)</span><span class="o">.</span><span class="n">read_text</span><span class="p">()</span><span class="o">.</span><span class="n">count</span><span class="p">(</span><span class="s1">'0.2.0'</span><span class="p">),</span> <span class="p">(</span><span class="n">d</span> <span class="o">/</span> <span class="s2">"Cargo.lock"</span><span class="p">)</span><span class="o">.</span><span class="n">read_text</span><span class="p">()</span><span class="o">.</span><span class="n">count</span><span class="p">(</span><span class="s1">'0.1.0'</span><span class="p">)</span>
+<span class="go">(1, 1)</span>
+</pre></div>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#list" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">list</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/pathlib.html#pathlib.Path" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Path</span></code></a>]</span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
 <dt class="sig sig-object py" id="wads.version_sync.set_json_version">
 <span class="sig-prename descclassname"><span class="pre">wads.version_sync.</span></span><span class="sig-name descname"><span class="pre">set_json_version</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">version</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/wads/version_sync.html#set_json_version"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#wads.version_sync.set_json_version" title="Link to this definition">¶</a></dt>
 <dd><p>Write <code class="docutils literal notranslate"><span class="pre">version</span></code> into one <code class="docutils literal notranslate"><span class="pre">package.json</span></code> or <code class="docutils literal notranslate"><span class="pre">package-lock.json</span></code>, as npm would.</p>
@@ -503,7 +548,7 @@ and by the git-commit action’s push-back conflict resolver.</p>
 <dl class="py function">
 <dt class="sig sig-object py" id="wads.version_sync.set_manifest_version">
 <span class="sig-prename descclassname"><span class="pre">wads.version_sync.</span></span><span class="sig-name descname"><span class="pre">set_manifest_version</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">manifest</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">version</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/wads/version_sync.html#set_manifest_version"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#wads.version_sync.set_manifest_version" title="Link to this definition">¶</a></dt>
-<dd><p>Write <code class="docutils literal notranslate"><span class="pre">version</span></code> into <code class="docutils literal notranslate"><span class="pre">manifest</span></code> and the npm lockfile beside it.</p>
+<dd><p>Write <code class="docutils literal notranslate"><span class="pre">version</span></code> into <code class="docutils literal notranslate"><span class="pre">manifest</span></code> and the lockfile beside it (npm or Cargo).</p>
 <p>Returns the files written. Refuses a version npm would reject, before writing.</p>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span><span class="w"> </span><span class="nn">tempfile</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">d</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">tempfile</span><span class="o">.</span><span class="n">mkdtemp</span><span class="p">())</span>
@@ -533,7 +578,7 @@ and by the git-commit action’s push-back conflict resolver.</p>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">static_project_version</span><span class="p">({</span><span class="s2">"project"</span><span class="p">:</span> <span class="p">{</span><span class="s2">"dynamic"</span><span class="p">:</span> <span class="p">[</span><span class="s2">"version"</span><span class="p">]}})</span>
 <span class="gt">Traceback (most recent call last):</span>
 <span class="w">  </span><span class="c">...</span>
-<span class="gr">ValueError</span>: <span class="n">[tool.wads.ci.version].sync needs a static [project].version in pyproject.toml, and this project's version is dynamic. Make it static, or remove the sync key (and keep the npm version by hand).</span>
+<span class="gr">ValueError</span>: <span class="n">[tool.wads.ci.version].sync needs a static [project].version in pyproject.toml, and this project's version is dynamic. Make it static, or remove the sync key (and keep those versions by hand).</span>
 </pre></div>
 </div>
 <dl class="field-list simple">
@@ -551,10 +596,10 @@ and by the git-commit action’s push-back conflict resolver.</p>
 <span class="go">['ts/package.json']</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">sync_files</span><span class="p">({})</span>
 <span class="go">[]</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">sync_files</span><span class="p">({</span><span class="s2">"tool"</span><span class="p">:</span> <span class="p">{</span><span class="s2">"wads"</span><span class="p">:</span> <span class="p">{</span><span class="s2">"ci"</span><span class="p">:</span> <span class="p">{</span><span class="s2">"version"</span><span class="p">:</span> <span class="p">{</span><span class="s2">"sync"</span><span class="p">:</span> <span class="p">[</span><span class="s2">"rust/core/Cargo.toml"</span><span class="p">]}}}}})</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">sync_files</span><span class="p">({</span><span class="s2">"tool"</span><span class="p">:</span> <span class="p">{</span><span class="s2">"wads"</span><span class="p">:</span> <span class="p">{</span><span class="s2">"ci"</span><span class="p">:</span> <span class="p">{</span><span class="s2">"version"</span><span class="p">:</span> <span class="p">{</span><span class="s2">"sync"</span><span class="p">:</span> <span class="p">[</span><span class="s2">"rust/core/setup.py"</span><span class="p">]}}}}})</span>
 <span class="gt">Traceback (most recent call last):</span>
 <span class="w">  </span><span class="c">...</span>
-<span class="gr">ValueError</span>: <span class="n">[tool.wads.ci.version].sync: 'rust/core/Cargo.toml' is not one of ('package.json',); a Rust crate keeps its own version line.</span>
+<span class="gr">ValueError</span>: <span class="n">[tool.wads.ci.version].sync: 'rust/core/setup.py' is not one of ('package.json', 'Cargo.toml').</span>
 </pre></div>
 </div>
 <dl class="field-list simple">
@@ -645,9 +690,11 @@ and by the git-commit action’s push-back conflict resolver.</p>
 <li><a class="reference internal" href="#wads.version_sync.SEMVER"><code class="docutils literal notranslate"><span class="pre">SEMVER</span></code></a></li>
 <li><a class="reference internal" href="#wads.version_sync.SYNCABLE_MANIFESTS"><code class="docutils literal notranslate"><span class="pre">SYNCABLE_MANIFESTS</span></code></a></li>
 <li><a class="reference internal" href="#wads.version_sync.caller_workflow_path"><code class="docutils literal notranslate"><span class="pre">caller_workflow_path()</span></code></a></li>
+<li><a class="reference internal" href="#wads.version_sync.cargo_version"><code class="docutils literal notranslate"><span class="pre">cargo_version()</span></code></a></li>
 <li><a class="reference internal" href="#wads.version_sync.check_versions_agree"><code class="docutils literal notranslate"><span class="pre">check_versions_agree()</span></code></a></li>
 <li><a class="reference internal" href="#wads.version_sync.npm_publish_refusal"><code class="docutils literal notranslate"><span class="pre">npm_publish_refusal()</span></code></a></li>
 <li><a class="reference internal" href="#wads.version_sync.pypi_release_expected"><code class="docutils literal notranslate"><span class="pre">pypi_release_expected()</span></code></a></li>
+<li><a class="reference internal" href="#wads.version_sync.set_cargo_version"><code class="docutils literal notranslate"><span class="pre">set_cargo_version()</span></code></a></li>
 <li><a class="reference internal" href="#wads.version_sync.set_json_version"><code class="docutils literal notranslate"><span class="pre">set_json_version()</span></code></a></li>
 <li><a class="reference internal" href="#wads.version_sync.set_manifest_version"><code class="docutils literal notranslate"><span class="pre">set_manifest_version()</span></code></a></li>
 <li><a class="reference internal" href="#wads.version_sync.static_project_version"><code class="docutils literal notranslate"><span class="pre">static_project_version()</span></code></a></li>
@@ -665,7 +712,7 @@ and by the git-commit action’s push-back conflict resolver.</p>
       
     </aside>
   </div>
-</div><script src="../_static/documentation_options.js?v=63a2d599"></script>
+</div><script src="../_static/documentation_options.js?v=c1d524de"></script>
     <script src="../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../_static/scripts/furo.js?v=46bd48cc"></script>

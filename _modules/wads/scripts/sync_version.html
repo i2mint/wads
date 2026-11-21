@@ -295,7 +295,7 @@
 
 <span class="sd">Run by the ``sync-version`` action in uv-ci's publish jobs, right after the version</span>
 <span class="sd">bump, so the bump commit carries every manifest (i2mint/wads#210). The ``--file``</span>
-<span class="sd">form writes one ``package.json`` or ``package-lock.json``; the ``git-commit``</span>
+<span class="sd">form writes one ``package.json``, ``package-lock.json`` or ``Cargo.toml`` (with its ``Cargo.lock``); the ``git-commit``</span>
 <span class="sd">action's push-back conflict resolver uses it to put this run's version on top of</span>
 <span class="sd">upstream's file.</span>
 
@@ -318,13 +318,22 @@
 <span class="w">    </span><span class="sd">"""Sync ``VERSION`` into each file of ``FILES_JSON``; 1 with an error annotation on failure."""</span>
     <span class="n">argv</span> <span class="o">=</span> <span class="n">sys</span><span class="o">.</span><span class="n">argv</span><span class="p">[</span><span class="mi">1</span><span class="p">:]</span> <span class="k">if</span> <span class="n">argv</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">argv</span>
     <span class="n">version_sync</span> <span class="o">=</span> <span class="n">load_wads_module</span><span class="p">(</span><span class="s2">"version_sync"</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">argv</span><span class="p">[:</span><span class="mi">2</span><span class="p">]</span> <span class="o">==</span> <span class="p">[</span>
+        <span class="s2">"--read-version"</span><span class="p">,</span>
+        <span class="s2">"Cargo.toml"</span><span class="p">,</span>
+    <span class="p">]:</span>  <span class="c1"># stdin -&gt; version (git-commit's resolver)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="n">version_sync</span><span class="o">.</span><span class="n">cargo_version</span><span class="p">(</span><span class="n">sys</span><span class="o">.</span><span class="n">stdin</span><span class="o">.</span><span class="n">read</span><span class="p">())</span> <span class="ow">or</span> <span class="s2">""</span><span class="p">)</span>
+        <span class="k">return</span> <span class="mi">0</span>
     <span class="k">if</span> <span class="n">argv</span><span class="p">[:</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="p">[</span><span class="s2">"--file"</span><span class="p">]:</span>
         <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">argv</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">3</span><span class="p">:</span>
             <span class="nb">print</span><span class="p">(</span><span class="vm">__doc__</span><span class="p">,</span> <span class="n">file</span><span class="o">=</span><span class="n">sys</span><span class="o">.</span><span class="n">stderr</span><span class="p">)</span>
             <span class="k">return</span> <span class="mi">2</span>
         <span class="n">_</span><span class="p">,</span> <span class="n">path</span><span class="p">,</span> <span class="n">version</span> <span class="o">=</span> <span class="n">argv</span>
         <span class="k">try</span><span class="p">:</span>
-            <span class="n">version_sync</span><span class="o">.</span><span class="n">set_json_version</span><span class="p">(</span><span class="n">Path</span><span class="p">(</span><span class="n">path</span><span class="p">),</span> <span class="n">version</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">Path</span><span class="p">(</span><span class="n">path</span><span class="p">)</span><span class="o">.</span><span class="n">name</span> <span class="o">==</span> <span class="s2">"Cargo.toml"</span><span class="p">:</span>
+                <span class="n">version_sync</span><span class="o">.</span><span class="n">set_cargo_version</span><span class="p">(</span><span class="n">Path</span><span class="p">(</span><span class="n">path</span><span class="p">),</span> <span class="n">version</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">version_sync</span><span class="o">.</span><span class="n">set_json_version</span><span class="p">(</span><span class="n">Path</span><span class="p">(</span><span class="n">path</span><span class="p">),</span> <span class="n">version</span><span class="p">)</span>
         <span class="k">except</span> <span class="p">(</span><span class="ne">ValueError</span><span class="p">,</span> <span class="ne">OSError</span><span class="p">)</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
             <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"::error::Version sync failed: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span> <span class="n">file</span><span class="o">=</span><span class="n">sys</span><span class="o">.</span><span class="n">stderr</span><span class="p">)</span>
             <span class="k">return</span> <span class="mi">1</span>
@@ -377,7 +386,7 @@
       
     </aside>
   </div>
-</div><script src="../../../_static/documentation_options.js?v=63a2d599"></script>
+</div><script src="../../../_static/documentation_options.js?v=c1d524de"></script>
     <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../../_static/scripts/furo.js?v=46bd48cc"></script>

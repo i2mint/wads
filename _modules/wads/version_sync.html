@@ -311,8 +311,12 @@
 <span class="sd">previous release's number with newer code. :func:`npm_publish_refusal` refuses</span>
 <span class="sd">that publish (see its docstring).</span>
 
-<span class="sd">Only ``package.json`` is supported: a Rust crate usually keeps its own version</span>
-<span class="sd">line. This module imports only the standard library (and ``wads.ci_config``, which</span>
+<span class="sd">``package.json`` (npm) and ``Cargo.toml`` (a crate that ships with the Python package, as a</span>
+<span class="sd">maturin binding crate does) are supported. A Cargo manifest's version is ``[package].version``,</span>
+<span class="sd">or ``[workspace.package].version`` when the crate inherits it; the ``Cargo.lock`` beside it</span>
+<span class="sd">follows (the crates that take the version: the manifest's own, and the workspace members that inherit it), so</span>
+<span class="sd">``cargo build --locked`` still passes. A crate that has its own release line on crates.io</span>
+<span class="sd">should not be listed. This module imports only the standard library (and ``wads.ci_config``, which</span>
 <span class="sd">does too), because the CI scripts load it by path from the wads checkout</span>
 <span class="sd">(``wads/scripts/_checkout_import.py``).</span>
 <span class="sd">"""</span>
@@ -325,7 +329,7 @@
 <span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Mapping</span><span class="p">,</span> <span class="n">Sequence</span>
 
 <span class="c1">#: Manifest file names ``[tool.wads.ci.version].sync`` may list.</span>
-<span class="n">SYNCABLE_MANIFESTS</span> <span class="o">=</span> <span class="p">(</span><span class="s2">"package.json"</span><span class="p">,)</span>
+<span class="n">SYNCABLE_MANIFESTS</span> <span class="o">=</span> <span class="p">(</span><span class="s2">"package.json"</span><span class="p">,</span> <span class="s2">"Cargo.toml"</span><span class="p">)</span>
 <span class="c1">#: The lockfile npm keeps beside a ``package.json``; its own version fields follow.</span>
 <span class="n">NPM_LOCKFILE</span> <span class="o">=</span> <span class="s2">"package-lock.json"</span>
 <span class="c1">#: A semver version, the only kind npm accepts (PEP 440 forms like ``1.0rc1`` are not).</span>
@@ -345,10 +349,10 @@
 <span class="sd">    ['ts/package.json']</span>
 <span class="sd">    &gt;&gt;&gt; sync_files({})</span>
 <span class="sd">    []</span>
-<span class="sd">    &gt;&gt;&gt; sync_files({"tool": {"wads": {"ci": {"version": {"sync": ["rust/core/Cargo.toml"]}}}}})</span>
+<span class="sd">    &gt;&gt;&gt; sync_files({"tool": {"wads": {"ci": {"version": {"sync": ["rust/core/setup.py"]}}}}})</span>
 <span class="sd">    Traceback (most recent call last):</span>
 <span class="sd">      ...</span>
-<span class="sd">    ValueError: [tool.wads.ci.version].sync: 'rust/core/Cargo.toml' is not one of ('package.json',); a Rust crate keeps its own version line.</span>
+<span class="sd">    ValueError: [tool.wads.ci.version].sync: 'rust/core/setup.py' is not one of ('package.json', 'Cargo.toml').</span>
 <span class="sd">    """</span>
     <span class="n">table</span> <span class="o">=</span> <span class="n">pyproject_data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"tool"</span><span class="p">,</span> <span class="p">{})</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"wads"</span><span class="p">,</span> <span class="p">{})</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"ci"</span><span class="p">,</span> <span class="p">{})</span>
     <span class="n">files</span> <span class="o">=</span> <span class="n">table</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"version"</span><span class="p">,</span> <span class="p">{})</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"sync"</span><span class="p">,</span> <span class="p">[])</span>
@@ -363,8 +367,7 @@
             <span class="p">)</span>
         <span class="k">if</span> <span class="n">posix</span><span class="o">.</span><span class="n">name</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">SYNCABLE_MANIFESTS</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
-                <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">_TABLE</span><span class="si">}</span><span class="s2">.sync: </span><span class="si">{</span><span class="n">path</span><span class="si">!r}</span><span class="s2"> is not one of </span><span class="si">{</span><span class="n">SYNCABLE_MANIFESTS</span><span class="si">}</span><span class="s2">; "</span>
-                <span class="s2">"a Rust crate keeps its own version line."</span>
+                <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">_TABLE</span><span class="si">}</span><span class="s2">.sync: </span><span class="si">{</span><span class="n">path</span><span class="si">!r}</span><span class="s2"> is not one of </span><span class="si">{</span><span class="n">SYNCABLE_MANIFESTS</span><span class="si">}</span><span class="s2">."</span>
             <span class="p">)</span>
     <span class="k">return</span> <span class="p">[</span><span class="nb">str</span><span class="p">(</span><span class="n">p</span><span class="p">)</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">files</span><span class="p">]</span></div>
 
@@ -372,6 +375,163 @@
 
 <span class="k">def</span><span class="w"> </span><span class="nf">_read_json</span><span class="p">(</span><span class="n">path</span><span class="p">:</span> <span class="n">Path</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
     <span class="k">return</span> <span class="n">json</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">_read_text</span><span class="p">(</span><span class="n">path</span><span class="p">))</span>
+
+
+<span class="c1"># --- Cargo.toml ----------------------------------------------------------------------</span>
+
+<span class="n">_TABLE_HEADER</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="sa">r</span><span class="s2">"^\s*\[+\s*([^\]]*?)\s*\]+\s*(?:#.*)?$"</span><span class="p">)</span>
+<span class="n">_VERSION_LINE</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="sa">r</span><span class="s1">'^(\s*version\s*=\s*)(["</span><span class="se">\'</span><span class="s1">])([^"</span><span class="se">\'</span><span class="s1">]*)\2'</span><span class="p">)</span>
+<span class="n">_VERSION_TABLES</span> <span class="o">=</span> <span class="p">(</span><span class="s2">"workspace.package"</span><span class="p">,</span> <span class="s2">"package"</span><span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_cargo_version_line</span><span class="p">(</span><span class="n">lines</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">str</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="s2">"tuple[int, str] | None"</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""``(line index, version)`` of the manifest's own version line, else ``None``.</span>
+
+<span class="sd">    ``[workspace.package]`` wins over ``[package]``: a member that inherits its version</span>
+<span class="sd">    (``version.workspace = true``) has no literal one, and the workspace table holds it.</span>
+
+<span class="sd">    &gt;&gt;&gt; _cargo_version_line(['[package]', 'name = "a"', 'version = "0.1.0"'])</span>
+<span class="sd">    (2, '0.1.0')</span>
+<span class="sd">    &gt;&gt;&gt; _cargo_version_line(['[package]', 'version.workspace = true', '[workspace.package]', "version = '1.0.0'"])</span>
+<span class="sd">    (3, '1.0.0')</span>
+<span class="sd">    &gt;&gt;&gt; _cargo_version_line(['[dependencies]', 'version = "1"']) is None</span>
+<span class="sd">    True</span>
+<span class="sd">    """</span>
+    <span class="n">found</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="n">table</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">line</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">lines</span><span class="p">):</span>
+        <span class="n">header</span> <span class="o">=</span> <span class="n">_TABLE_HEADER</span><span class="o">.</span><span class="n">match</span><span class="p">(</span><span class="n">line</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">header</span><span class="p">:</span>
+            <span class="n">table</span> <span class="o">=</span> <span class="n">header</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+            <span class="k">continue</span>
+        <span class="n">m</span> <span class="o">=</span> <span class="n">_VERSION_LINE</span><span class="o">.</span><span class="n">match</span><span class="p">(</span><span class="n">line</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">m</span> <span class="ow">and</span> <span class="n">table</span> <span class="ow">in</span> <span class="n">_VERSION_TABLES</span> <span class="ow">and</span> <span class="n">table</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">found</span><span class="p">:</span>
+            <span class="n">found</span><span class="p">[</span><span class="n">table</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">m</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">3</span><span class="p">))</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">found</span><span class="p">)</span> <span class="o">==</span> <span class="mi">2</span> <span class="ow">and</span> <span class="n">found</span><span class="p">[</span><span class="s2">"package"</span><span class="p">][</span><span class="mi">1</span><span class="p">]</span> <span class="o">!=</span> <span class="n">found</span><span class="p">[</span><span class="s2">"workspace.package"</span><span class="p">][</span><span class="mi">1</span><span class="p">]:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+            <span class="s2">"[package] and [workspace.package] both declare a version, and they differ: "</span>
+            <span class="s2">"cannot tell which one to sync"</span>
+        <span class="p">)</span>
+    <span class="k">for</span> <span class="n">table</span> <span class="ow">in</span> <span class="n">_VERSION_TABLES</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">table</span> <span class="ow">in</span> <span class="n">found</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">found</span><span class="p">[</span><span class="n">table</span><span class="p">]</span>
+    <span class="k">return</span> <span class="kc">None</span>
+
+
+<div class="viewcode-block" id="cargo_version">
+<a class="viewcode-back" href="../../_autosummary/wads.version_sync.html#wads.version_sync.cargo_version">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">cargo_version</span><span class="p">(</span><span class="n">text</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">"str | None"</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""The version a ``Cargo.toml``'s text declares (see :func:`_cargo_version_line`)."""</span>
+    <span class="n">hit</span> <span class="o">=</span> <span class="n">_cargo_version_line</span><span class="p">(</span><span class="n">text</span><span class="o">.</span><span class="n">splitlines</span><span class="p">())</span>
+    <span class="k">return</span> <span class="n">hit</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="k">if</span> <span class="n">hit</span> <span class="k">else</span> <span class="kc">None</span></div>
+
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_crate_name</span><span class="p">(</span><span class="n">text</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">"str | None"</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""The ``[package].name`` of a manifest's text."""</span>
+    <span class="n">table</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">text</span><span class="o">.</span><span class="n">splitlines</span><span class="p">():</span>
+        <span class="n">header</span> <span class="o">=</span> <span class="n">_TABLE_HEADER</span><span class="o">.</span><span class="n">match</span><span class="p">(</span><span class="n">line</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">header</span><span class="p">:</span>
+            <span class="n">table</span> <span class="o">=</span> <span class="n">header</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">table</span> <span class="o">==</span> <span class="s2">"package"</span><span class="p">:</span>
+            <span class="n">m</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">match</span><span class="p">(</span><span class="sa">r</span><span class="s1">'\s*name\s*=\s*["</span><span class="se">\'</span><span class="s1">]([^"</span><span class="se">\'</span><span class="s1">]+)["</span><span class="se">\'</span><span class="s1">]'</span><span class="p">,</span> <span class="n">line</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">m</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">m</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+    <span class="k">return</span> <span class="kc">None</span>
+
+
+<span class="n">_INHERITS</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span>
+    <span class="sa">r</span><span class="s2">"(?m)^\s*version\s*(\.\s*workspace\s*=\s*true|=\s*\{\s*workspace\s*=\s*true\s*\})"</span>
+<span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_synced_crate_names</span><span class="p">(</span><span class="n">manifest</span><span class="p">:</span> <span class="n">Path</span><span class="p">,</span> <span class="n">text</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">set</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""The crates whose version this manifest's version line sets.</span>
+
+<span class="sd">    The manifest's own ``[package]`` crate, and, for ``[workspace.package]``, every</span>
+<span class="sd">    ``members`` crate that inherits it (``version.workspace = true``). Path</span>
+<span class="sd">    dependencies and members with a version of their own are left alone.</span>
+<span class="sd">    """</span>
+    <span class="n">names</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
+    <span class="n">own</span> <span class="o">=</span> <span class="n">_crate_name</span><span class="p">(</span><span class="n">text</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">own</span><span class="p">:</span>
+        <span class="n">names</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">own</span><span class="p">)</span>
+    <span class="n">m</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="sa">r</span><span class="s2">"(?ms)^\s*members\s*=\s*\[(.*?)\]"</span><span class="p">,</span> <span class="n">text</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">pattern</span> <span class="ow">in</span> <span class="n">re</span><span class="o">.</span><span class="n">findall</span><span class="p">(</span><span class="sa">r</span><span class="s1">'["</span><span class="se">\'</span><span class="s1">]([^"</span><span class="se">\'</span><span class="s1">]+)["</span><span class="se">\'</span><span class="s1">]'</span><span class="p">,</span> <span class="n">m</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">1</span><span class="p">))</span> <span class="k">if</span> <span class="n">m</span> <span class="k">else</span> <span class="p">[]:</span>
+        <span class="k">for</span> <span class="n">member</span> <span class="ow">in</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">manifest</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">glob</span><span class="p">(</span><span class="n">pattern</span><span class="p">)):</span>
+            <span class="n">member_toml</span> <span class="o">=</span> <span class="n">member</span> <span class="o">/</span> <span class="s2">"Cargo.toml"</span>
+            <span class="k">if</span> <span class="n">member_toml</span><span class="o">.</span><span class="n">is_file</span><span class="p">():</span>
+                <span class="n">member_text</span> <span class="o">=</span> <span class="n">_read_text</span><span class="p">(</span><span class="n">member_toml</span><span class="p">)</span>
+                <span class="n">name</span> <span class="o">=</span> <span class="n">_crate_name</span><span class="p">(</span><span class="n">member_text</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">name</span> <span class="ow">and</span> <span class="n">_INHERITS</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="n">member_text</span><span class="p">):</span>
+                    <span class="n">names</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">names</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_set_cargo_lock_version</span><span class="p">(</span><span class="n">lock</span><span class="p">:</span> <span class="n">Path</span><span class="p">,</span> <span class="n">names</span><span class="p">:</span> <span class="nb">set</span><span class="p">,</span> <span class="n">new</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Set ``new`` as the version of the crates ``names`` in ``lock``."""</span>
+    <span class="n">text</span> <span class="o">=</span> <span class="n">_read_text</span><span class="p">(</span><span class="n">lock</span><span class="p">)</span>
+    <span class="n">blocks</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="sa">r</span><span class="s2">"(?m)^(?=\[\[package\]\])"</span><span class="p">,</span> <span class="n">text</span><span class="p">)</span>
+    <span class="n">changed</span> <span class="o">=</span> <span class="kc">False</span>
+    <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">block</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">blocks</span><span class="p">):</span>
+        <span class="n">name</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="sa">r</span><span class="s1">'(?m)^name\s*=\s*"([^"]+)"'</span><span class="p">,</span> <span class="n">block</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="n">block</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">"[[package]]"</span><span class="p">)</span> <span class="ow">and</span> <span class="n">name</span> <span class="ow">and</span> <span class="n">name</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span> <span class="ow">in</span> <span class="n">names</span><span class="p">):</span>
+            <span class="k">continue</span>
+        <span class="n">fixed</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span><span class="sa">r</span><span class="s1">'(?m)^(version\s*=\s*")[^"]*"'</span><span class="p">,</span> <span class="sa">rf</span><span class="s1">'\g&lt;1&gt;</span><span class="si">{</span><span class="n">new</span><span class="si">}</span><span class="s1">"'</span><span class="p">,</span> <span class="n">block</span><span class="p">,</span> <span class="n">count</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+        <span class="n">changed</span> <span class="o">|=</span> <span class="n">fixed</span> <span class="o">!=</span> <span class="n">block</span>
+        <span class="n">blocks</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">fixed</span>
+    <span class="k">if</span> <span class="n">changed</span><span class="p">:</span>
+        <span class="n">lock</span><span class="o">.</span><span class="n">write_bytes</span><span class="p">(</span><span class="s2">""</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">blocks</span><span class="p">)</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s2">"utf-8"</span><span class="p">))</span>
+    <span class="k">return</span> <span class="n">changed</span>
+
+
+<div class="viewcode-block" id="set_cargo_version">
+<a class="viewcode-back" href="../../_autosummary/wads.version_sync.html#wads.version_sync.set_cargo_version">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">set_cargo_version</span><span class="p">(</span><span class="n">path</span><span class="p">:</span> <span class="n">Path</span><span class="p">,</span> <span class="n">version</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="n">Path</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">"""Write ``version`` into a ``Cargo.toml`` (and the ``Cargo.lock`` beside it).</span>
+
+<span class="sd">    Returns the files written. Only the version line changes, in the file's own layout.</span>
+
+<span class="sd">    &gt;&gt;&gt; import tempfile</span>
+<span class="sd">    &gt;&gt;&gt; d = Path(tempfile.mkdtemp())</span>
+<span class="sd">    &gt;&gt;&gt; _ = (d / "Cargo.toml").write_text('[package]\\nname = "a"\\nversion = "0.1.0"\\n')</span>
+<span class="sd">    &gt;&gt;&gt; _ = (d / "Cargo.lock").write_text('[[package]]\\nname = "a"\\nversion = "0.1.0"\\n\\n[[package]]\\nname = "dep"\\nversion = "0.1.0"\\nsource = "registry+x"\\n')</span>
+<span class="sd">    &gt;&gt;&gt; [p.name for p in set_cargo_version(d / "Cargo.toml", "0.2.0")]</span>
+<span class="sd">    ['Cargo.toml', 'Cargo.lock']</span>
+<span class="sd">    &gt;&gt;&gt; (d / "Cargo.toml").read_text()</span>
+<span class="sd">    '[package]\\nname = "a"\\nversion = "0.2.0"\\n'</span>
+<span class="sd">    &gt;&gt;&gt; (d / "Cargo.lock").read_text().count('0.2.0'), (d / "Cargo.lock").read_text().count('0.1.0')</span>
+<span class="sd">    (1, 1)</span>
+<span class="sd">    """</span>
+    <span class="n">path</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">SEMVER</span><span class="o">.</span><span class="n">match</span><span class="p">(</span><span class="n">version</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">"version </span><span class="si">{</span><span class="n">version</span><span class="si">!r}</span><span class="s2"> is not semver; cannot write it into </span><span class="si">{</span><span class="n">path</span><span class="si">}</span><span class="s2">"</span>
+        <span class="p">)</span>
+    <span class="n">text</span> <span class="o">=</span> <span class="n">_read_text</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
+    <span class="n">lines</span> <span class="o">=</span> <span class="n">text</span><span class="o">.</span><span class="n">splitlines</span><span class="p">(</span><span class="n">keepends</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="n">hit</span> <span class="o">=</span> <span class="n">_cargo_version_line</span><span class="p">([</span><span class="n">line</span><span class="o">.</span><span class="n">rstrip</span><span class="p">(</span><span class="s2">"</span><span class="se">\r\n</span><span class="s2">"</span><span class="p">)</span> <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">lines</span><span class="p">])</span>
+    <span class="k">if</span> <span class="n">hit</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">path</span><span class="si">}</span><span class="s2"> has no literal [package] or [workspace.package] version"</span>
+        <span class="p">)</span>
+    <span class="n">index</span><span class="p">,</span> <span class="n">old</span> <span class="o">=</span> <span class="n">hit</span>
+    <span class="n">lines</span><span class="p">[</span><span class="n">index</span><span class="p">]</span> <span class="o">=</span> <span class="n">_VERSION_LINE</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span>
+        <span class="k">lambda</span> <span class="n">m</span><span class="p">:</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">m</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span><span class="si">}{</span><span class="n">m</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span><span class="si">}{</span><span class="n">version</span><span class="si">}{</span><span class="n">m</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span>
+        <span class="n">lines</span><span class="p">[</span><span class="n">index</span><span class="p">],</span>
+        <span class="n">count</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">path</span><span class="o">.</span><span class="n">write_bytes</span><span class="p">(</span><span class="s2">""</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">lines</span><span class="p">)</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s2">"utf-8"</span><span class="p">))</span>
+    <span class="n">written</span> <span class="o">=</span> <span class="p">[</span><span class="n">path</span><span class="p">]</span>
+    <span class="n">lock</span> <span class="o">=</span> <span class="n">path</span><span class="o">.</span><span class="n">with_name</span><span class="p">(</span><span class="s2">"Cargo.lock"</span><span class="p">)</span>
+    <span class="c1"># Even when the manifest is already at ``version``: a replayed bump can leave the lock behind.</span>
+    <span class="k">if</span> <span class="n">lock</span><span class="o">.</span><span class="n">is_file</span><span class="p">()</span> <span class="ow">and</span> <span class="n">_set_cargo_lock_version</span><span class="p">(</span>
+        <span class="n">lock</span><span class="p">,</span> <span class="n">_synced_crate_names</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="n">text</span><span class="p">),</span> <span class="n">version</span>
+    <span class="p">):</span>
+        <span class="n">written</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">lock</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">written</span></div>
+
 
 
 <span class="c1">#: How npm reads a JSON file's layout (``json-parse-even-better-errors``): the line</span>
@@ -440,7 +600,7 @@
 <div class="viewcode-block" id="set_manifest_version">
 <a class="viewcode-back" href="../../_autosummary/wads.version_sync.html#wads.version_sync.set_manifest_version">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">set_manifest_version</span><span class="p">(</span><span class="n">manifest</span><span class="p">:</span> <span class="n">Path</span><span class="p">,</span> <span class="n">version</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="n">Path</span><span class="p">]:</span>
-<span class="w">    </span><span class="sd">"""Write ``version`` into ``manifest`` and the npm lockfile beside it.</span>
+<span class="w">    </span><span class="sd">"""Write ``version`` into ``manifest`` and the lockfile beside it (npm or Cargo).</span>
 
 <span class="sd">    Returns the files written. Refuses a version npm would reject, before writing.</span>
 
@@ -455,6 +615,8 @@
 <span class="sd">      "version": "0.0.2"</span>
 <span class="sd">    }</span>
 <span class="sd">    """</span>
+    <span class="k">if</span> <span class="n">Path</span><span class="p">(</span><span class="n">manifest</span><span class="p">)</span><span class="o">.</span><span class="n">name</span> <span class="o">==</span> <span class="s2">"Cargo.toml"</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">set_cargo_version</span><span class="p">(</span><span class="n">manifest</span><span class="p">,</span> <span class="n">version</span><span class="p">)</span>
     <span class="k">if</span> <span class="ow">not</span> <span class="n">SEMVER</span><span class="o">.</span><span class="n">match</span><span class="p">(</span><span class="n">version</span><span class="p">):</span>
         <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
             <span class="sa">f</span><span class="s2">"version </span><span class="si">{</span><span class="n">version</span><span class="si">!r}</span><span class="s2"> is not semver, which npm requires; "</span>
@@ -497,7 +659,7 @@
 <span class="sd">    &gt;&gt;&gt; static_project_version({"project": {"dynamic": ["version"]}})</span>
 <span class="sd">    Traceback (most recent call last):</span>
 <span class="sd">      ...</span>
-<span class="sd">    ValueError: [tool.wads.ci.version].sync needs a static [project].version in pyproject.toml, and this project's version is dynamic. Make it static, or remove the sync key (and keep the npm version by hand).</span>
+<span class="sd">    ValueError: [tool.wads.ci.version].sync needs a static [project].version in pyproject.toml, and this project's version is dynamic. Make it static, or remove the sync key (and keep those versions by hand).</span>
 <span class="sd">    """</span>
     <span class="n">project</span> <span class="o">=</span> <span class="n">pyproject_data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"project"</span><span class="p">,</span> <span class="p">{})</span>
     <span class="n">version</span> <span class="o">=</span> <span class="n">project</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"version"</span><span class="p">)</span>
@@ -512,7 +674,7 @@
     <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
         <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">_TABLE</span><span class="si">}</span><span class="s2">.sync needs a static [project].version in pyproject.toml, "</span>
         <span class="sa">f</span><span class="s2">"and this project's version is </span><span class="si">{</span><span class="n">where</span><span class="si">}</span><span class="s2">. Make it static, or remove the "</span>
-        <span class="s2">"sync key (and keep the npm version by hand)."</span>
+        <span class="s2">"sync key (and keep those versions by hand)."</span>
     <span class="p">)</span></div>
 
 
@@ -531,7 +693,12 @@
     <span class="n">out</span> <span class="o">=</span> <span class="p">[]</span>
     <span class="k">for</span> <span class="n">rel</span> <span class="ow">in</span> <span class="n">files</span><span class="p">:</span>
         <span class="n">manifest</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">repo_dir</span><span class="p">)</span> <span class="o">/</span> <span class="n">rel</span>
-        <span class="n">found</span> <span class="o">=</span> <span class="n">_read_json</span><span class="p">(</span><span class="n">manifest</span><span class="p">)</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"version"</span><span class="p">)</span> <span class="k">if</span> <span class="n">manifest</span><span class="o">.</span><span class="n">is_file</span><span class="p">()</span> <span class="k">else</span> <span class="kc">None</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">manifest</span><span class="o">.</span><span class="n">is_file</span><span class="p">():</span>
+            <span class="n">found</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="k">elif</span> <span class="n">manifest</span><span class="o">.</span><span class="n">name</span> <span class="o">==</span> <span class="s2">"Cargo.toml"</span><span class="p">:</span>
+            <span class="n">found</span> <span class="o">=</span> <span class="n">cargo_version</span><span class="p">(</span><span class="n">_read_text</span><span class="p">(</span><span class="n">manifest</span><span class="p">))</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">found</span> <span class="o">=</span> <span class="n">_read_json</span><span class="p">(</span><span class="n">manifest</span><span class="p">)</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"version"</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">found</span> <span class="o">!=</span> <span class="n">expected</span><span class="p">:</span>
             <span class="n">out</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">rel</span><span class="p">,</span> <span class="n">found</span><span class="p">,</span> <span class="n">expected</span><span class="p">))</span>
     <span class="k">return</span> <span class="n">out</span></div>
@@ -708,7 +875,11 @@
 <span class="sd">    True</span>
 <span class="sd">    """</span>
     <span class="n">directory</span> <span class="o">=</span> <span class="n">_posix_dir</span><span class="p">(</span><span class="n">package_dir</span><span class="p">)</span>
-    <span class="n">synced</span> <span class="o">=</span> <span class="p">[</span><span class="n">f</span> <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">sync_files</span><span class="p">(</span><span class="n">pyproject_data</span><span class="p">)</span> <span class="k">if</span> <span class="n">_inside</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">directory</span><span class="p">)]</span>
+    <span class="n">synced</span> <span class="o">=</span> <span class="p">[</span>
+        <span class="n">f</span>
+        <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">sync_files</span><span class="p">(</span><span class="n">pyproject_data</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">_inside</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">directory</span><span class="p">)</span> <span class="ow">and</span> <span class="n">PurePosixPath</span><span class="p">(</span><span class="n">f</span><span class="p">)</span><span class="o">.</span><span class="n">name</span> <span class="o">==</span> <span class="s2">"package.json"</span>
+    <span class="p">]</span>
     <span class="k">if</span> <span class="ow">not</span> <span class="n">synced</span> <span class="ow">or</span> <span class="ow">not</span> <span class="n">pypi_release_expected</span><span class="p">(</span><span class="n">pyproject_data</span><span class="p">,</span> <span class="n">subject</span><span class="p">):</span>
         <span class="k">return</span> <span class="kc">None</span>
     <span class="c1"># At the repo root nothing is outside the npm package, and everything ships</span>
@@ -778,7 +949,7 @@
       
     </aside>
   </div>
-</div><script src="../../_static/documentation_options.js?v=63a2d599"></script>
+</div><script src="../../_static/documentation_options.js?v=c1d524de"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/scripts/furo.js?v=46bd48cc"></script>

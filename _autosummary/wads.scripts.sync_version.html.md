@@ -4,7 +4,7 @@ Write the release version into the manifests `[tool.wads.ci.version].sync` lists
 
 Run by the `sync-version` action in uv-ci’s publish jobs, right after the version
 bump, so the bump commit carries every manifest (i2mint/wads#210). The `--file`
-form writes one `package.json` or `package-lock.json`; the `git-commit`
+form writes one `package.json`, `package-lock.json` or `Cargo.toml` (with its `Cargo.lock`); the `git-commit`
 action’s push-back conflict resolver uses it to put this run’s version on top of
 upstream’s file.
 

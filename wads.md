@@ -1,4 +1,4 @@
-> built 2026-11-21 22:40 UTC from 2366aed (master) · wads 0.2.97. Details: build_info.json
+> built 2026-11-21 22:58 UTC from bb3ae61 (master) · wads 0.2.98. Details: build_info.json
 
 # index.html.md
 
@@ -8362,7 +8362,7 @@ Write the release version into the manifests `[tool.wads.ci.version].sync` lists
 
 Run by the `sync-version` action in uv-ci’s publish jobs, right after the version
 bump, so the bump commit carries every manifest (i2mint/wads#210). The `--file`
-form writes one `package.json` or `package-lock.json`; the `git-commit`
+form writes one `package.json`, `package-lock.json` or `Cargo.toml` (with its `Cargo.lock`); the `git-commit`
 action’s push-back conflict resolver uses it to put this run’s version on top of
 upstream’s file.
 
@@ -9536,8 +9536,12 @@ bump commit of the Python release the same push cuts, so it would carry the
 previous release’s number with newer code. [`npm_publish_refusal()`](_autosummary/wads.version_sync.html.md#wads.version_sync.npm_publish_refusal) refuses
 that publish (see its docstring).
 
-Only `package.json` is supported: a Rust crate usually keeps its own version
-line. This module imports only the standard library (and `wads.ci_config`, which
+`package.json` (npm) and `Cargo.toml` (a crate that ships with the Python package, as a
+maturin binding crate does) are supported. A Cargo manifest’s version is `[package].version`,
+or `[workspace.package].version` when the crate inherits it; the `Cargo.lock` beside it
+follows (the crates that take the version: the manifest’s own, and the workspace members that inherit it), so
+`cargo build --locked` still passes. A crate that has its own release line on crates.io
+should not be listed. This module imports only the standard library (and `wads.ci_config`, which
 does too), because the CI scripts load it by path from the wads checkout
 (`wads/scripts/_checkout_import.py`).
 
@@ -9552,11 +9556,13 @@ does too), because the CI scripts load it by path from the wads checkout
 
 | [`caller_workflow_path`](_autosummary/wads.version_sync.html.md#wads.version_sync.caller_workflow_path)(workflow_ref)              | The repo-relative workflow file in `github.workflow_ref`; `None` if there is none.   |
 |--------------------------------------------------------------------------------------------------|--------------------------------------------------------------------------------------|
+| [`cargo_version`](_autosummary/wads.version_sync.html.md#wads.version_sync.cargo_version)(text)                             | The version a `Cargo.toml`'s text declares (see `_cargo_version_line()`).            |
 | [`check_versions_agree`](_autosummary/wads.version_sync.html.md#wads.version_sync.check_versions_agree)(repo_dir, pyproject_data)  | Raise `ValueError` naming every listed manifest whose version differs.               |
 | [`npm_publish_refusal`](_autosummary/wads.version_sync.html.md#wads.version_sync.npm_publish_refusal)(pyproject_data, ...[, ...]) | Why npm-ci must not publish `package_dir` from this push, or `None` when it may.     |
 | [`pypi_release_expected`](_autosummary/wads.version_sync.html.md#wads.version_sync.pypi_release_expected)(pyproject_data, subject)  | Whether uv-ci's publish job releases to PyPI for a push with this commit `subject`.  |
+| [`set_cargo_version`](_autosummary/wads.version_sync.html.md#wads.version_sync.set_cargo_version)(path, version)                | Write `version` into a `Cargo.toml` (and the `Cargo.lock` beside it).                |
 | [`set_json_version`](_autosummary/wads.version_sync.html.md#wads.version_sync.set_json_version)(path, version)                 | Write `version` into one `package.json` or `package-lock.json`, as npm would.        |
-| [`set_manifest_version`](_autosummary/wads.version_sync.html.md#wads.version_sync.set_manifest_version)(manifest, version)         | Write `version` into `manifest` and the npm lockfile beside it.                      |
+| [`set_manifest_version`](_autosummary/wads.version_sync.html.md#wads.version_sync.set_manifest_version)(manifest, version)         | Write `version` into `manifest` and the lockfile beside it (npm or Cargo).           |
 | [`static_project_version`](_autosummary/wads.version_sync.html.md#wads.version_sync.static_project_version)(pyproject_data)          | `[project].version`, which `sync` needs: CI bumps and copies that line.              |
 | [`sync_files`](_autosummary/wads.version_sync.html.md#wads.version_sync.sync_files)(pyproject_data)                      | The manifests `[tool.wads.ci.version].sync` lists, validated.                        |
 | [`sync_version`](_autosummary/wads.version_sync.html.md#wads.version_sync.sync_version)(repo_dir, files, version)          | Write `version` into every listed manifest under `repo_dir`.                         |
@@ -9570,7 +9576,7 @@ The lockfile npm keeps beside a `package.json`; its own version fields follow.
 
 A semver version, the only kind npm accepts (PEP 440 forms like `1.0rc1` are not).
 
-### wads.version_sync.SYNCABLE_MANIFESTS *= ('package.json',)*
+### wads.version_sync.SYNCABLE_MANIFESTS *= ('package.json', 'Cargo.toml')*
 
 Manifest file names `[tool.wads.ci.version].sync` may list.
 
@@ -9587,6 +9593,13 @@ In a reusable workflow, `github.workflow_ref` names the *caller’s* file
 >>> caller_workflow_path("") is None
 True
 ```
+
+* **Return type:**
+  [`str`](https://docs.python.org/3/builtins/stdtypes.html#str) | [`None`](https://docs.python.org/3/builtins/constants.html#None)
+
+### wads.version_sync.cargo_version(text)
+
+The version a `Cargo.toml`’s text declares (see `_cargo_version_line()`).
 
 * **Return type:**
   [`str`](https://docs.python.org/3/builtins/stdtypes.html#str) | [`None`](https://docs.python.org/3/builtins/constants.html#None)
@@ -9654,6 +9667,28 @@ False
 * **Return type:**
   [`bool`](https://docs.python.org/3/builtins/functions.html#bool)
 
+### wads.version_sync.set_cargo_version(path, version)
+
+Write `version` into a `Cargo.toml` (and the `Cargo.lock` beside it).
+
+Returns the files written. Only the version line changes, in the file’s own layout.
+
+```pycon
+>>> import tempfile
+>>> d = Path(tempfile.mkdtemp())
+>>> _ = (d / "Cargo.toml").write_text('[package]\nname = "a"\nversion = "0.1.0"\n')
+>>> _ = (d / "Cargo.lock").write_text('[[package]]\nname = "a"\nversion = "0.1.0"\n\n[[package]]\nname = "dep"\nversion = "0.1.0"\nsource = "registry+x"\n')
+>>> [p.name for p in set_cargo_version(d / "Cargo.toml", "0.2.0")]
+['Cargo.toml', 'Cargo.lock']
+>>> (d / "Cargo.toml").read_text()
+'[package]\nname = "a"\nversion = "0.2.0"\n'
+>>> (d / "Cargo.lock").read_text().count('0.2.0'), (d / "Cargo.lock").read_text().count('0.1.0')
+(1, 1)
+```
+
+* **Return type:**
+  [`list`](https://docs.python.org/3/builtins/stdtypes.html#list)[[`Path`](https://docs.python.org/3/library/pathlib.html#pathlib.Path)]
+
 ### wads.version_sync.set_json_version(path, version)
 
 Write `version` into one `package.json` or `package-lock.json`, as npm would.
@@ -9668,7 +9703,7 @@ and by the git-commit action’s push-back conflict resolver.
 
 ### wads.version_sync.set_manifest_version(manifest, version)
 
-Write `version` into `manifest` and the npm lockfile beside it.
+Write `version` into `manifest` and the lockfile beside it (npm or Cargo).
 
 Returns the files written. Refuses a version npm would reject, before writing.
 
@@ -9698,7 +9733,7 @@ Returns the files written. Refuses a version npm would reject, before writing.
 >>> static_project_version({"project": {"dynamic": ["version"]}})
 Traceback (most recent call last):
   ...
-ValueError: [tool.wads.ci.version].sync needs a static [project].version in pyproject.toml, and this project's version is dynamic. Make it static, or remove the sync key (and keep the npm version by hand).
+ValueError: [tool.wads.ci.version].sync needs a static [project].version in pyproject.toml, and this project's version is dynamic. Make it static, or remove the sync key (and keep those versions by hand).
 ```
 
 * **Return type:**
@@ -9713,10 +9748,10 @@ The manifests `[tool.wads.ci.version].sync` lists, validated.
 ['ts/package.json']
 >>> sync_files({})
 []
->>> sync_files({"tool": {"wads": {"ci": {"version": {"sync": ["rust/core/Cargo.toml"]}}}}})
+>>> sync_files({"tool": {"wads": {"ci": {"version": {"sync": ["rust/core/setup.py"]}}}}})
 Traceback (most recent call last):
   ...
-ValueError: [tool.wads.ci.version].sync: 'rust/core/Cargo.toml' is not one of ('package.json',); a Rust crate keeps its own version line.
+ValueError: [tool.wads.ci.version].sync: 'rust/core/setup.py' is not one of ('package.json', 'Cargo.toml').
 ```
 
 * **Return type:**
@@ -9871,7 +9906,7 @@ cannot be removed is not reported.
 
 # About this build
 
-This documentation was built on **2026-11-21 22:40 UTC** from commit <a href="https://github.com/i2mint/wads/commit/2366aed81c38133b0e229353fb1997cc194f671a"><code>2366aed</code></a> on branch <code>master</code>, for **wads 0.2.97** (from <code>pyproject.toml</code>).
+This documentation was built on **2026-11-21 22:58 UTC** from commit <a href="https://github.com/i2mint/wads/commit/bb3ae614f260a41cbeb4966f8ecd505eb632ce33"><code>bb3ae61</code></a> on branch <code>master</code>, for **wads 0.2.98** (from <code>pyproject.toml</code>).
 
 #### NOTE
 Nothing suggests a mismatch: the tree was clean at the commit above, and the documented version is the one on PyPI.
@@ -9880,7 +9915,7 @@ Nothing suggests a mismatch: the tree was clean at the commit above, and the doc
 
 |                     |                                                                                                                                                    |
 |---------------------|----------------------------------------------------------------------------------------------------------------------------------------------------|
-| Commit              | <a href="https://github.com/i2mint/wads/commit/2366aed81c38133b0e229353fb1997cc194f671a"><code>2366aed81c38133b0e229353fb1997cc194f671a</code></a> |
+| Commit              | <a href="https://github.com/i2mint/wads/commit/bb3ae614f260a41cbeb4966f8ecd505eb632ce33"><code>bb3ae614f260a41cbeb4966f8ecd505eb632ce33</code></a> |
 | Branch              | <code>master</code>                                                                                                                                |
 | Tags at this commit | none                                                                                                                                               |
 | Working tree        | clean                                                                                                                                              |
@@ -9891,9 +9926,9 @@ Nothing suggests a mismatch: the tree was clean at the commit above, and the doc
 |              |                                                                                            |
 |--------------|--------------------------------------------------------------------------------------------|
 | Repository   | <code>i2mint/wads</code>                                                                   |
-| Run          | <a href="https://github.com/i2mint/wads/actions/runs/44957571691">44957571691</a>          |
+| Run          | <a href="https://github.com/i2mint/wads/actions/runs/44959060439">44959060439</a>          |
 | Ref          | <code>refs/heads/master</code>                                                             |
-| Event commit | <code>2366aed81c38133b0e229353fb1997cc194f671a</code> (in the history of the built commit) |
+| Event commit | <code>bb3ae614f260a41cbeb4966f8ecd505eb632ce33</code> (in the history of the built commit) |
 
 ## Tools
 
@@ -9918,13 +9953,13 @@ Nothing suggests a mismatch: the tree was clean at the commit above, and the doc
 
 ## Package on PyPI
 
-Latest release: <a href="https://pypi.org/project/wads/0.2.97/">0.2.97</a>, the same as the documented version.
+Latest release: <a href="https://pypi.org/project/wads/0.2.98/">0.2.98</a>, the same as the documented version.
 
 ## Reproduce
 
 ```bash
 git clone https://github.com/i2mint/wads && cd wads
-git checkout 2366aed81c38133b0e229353fb1997cc194f671a
+git checkout bb3ae614f260a41cbeb4966f8ecd505eb632ce33
 pip install "epythet==0.2.23"
 epythet quickstart . --ignore tests/ scrap/ examples/
 ```
