@@ -1,0 +1,29 @@
+name: "Plan subpackage releases"
+description: >-
+  Which [[tool.wads.ci.packages]] subpackages release now, at which version, and the wheel
+  matrix for them (i2mint/wads#220). Needs a checkout with full history and tags. Runs
+  stdlib-only code from this action's own checkout, never a PyPI wheel of wads.
+
+inputs:
+  project-dir:
+    description: "Repo root holding the root pyproject.toml"
+    required: false
+    default: "."
+
+outputs:
+  releases:
+    description: 'JSON list of {package, dir, tag_prefix, version}, one per subpackage that releases; [] when none.'
+    value: ${{ steps.plan.outputs.releases }}
+  wheel-matrix:
+    description: 'JSON list: the sub-wheels matrix rows (release x target, with version); [] when none.'
+    value: ${{ steps.plan.outputs.wheel-matrix }}
+
+runs:
+  using: "composite"
+  steps:
+    - name: Plan
+      id: plan
+      shell: bash
+      env:
+        PROJECT_DIR: ${{ inputs.project-dir }}
+      run: python3 -I "$GITHUB_ACTION_PATH/../../wads/scripts/plan_subpackages.py" "$PROJECT_DIR"

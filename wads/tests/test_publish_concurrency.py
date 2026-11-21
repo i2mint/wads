@@ -39,8 +39,21 @@ def test_publish_is_queued_per_repo_and_branch(workflow):
 def test_only_publish_is_serialized(workflow):
     jobs = _jobs(workflow)
     grouped = sorted(name for name, job in jobs.items() if "concurrency" in job)
-    # publish-native (#166, reusable workflow only) shares publish's queue.
-    assert grouped in (["publish"], ["publish", "publish-native"])
+    # publish-native (#166, reusable workflow only) shares publish's queue; sub-publish
+    # (#220) queues per subpackage, in a group of its own, so it never blocks the root.
+    assert grouped in (
+        ["publish"],
+        ["publish", "publish-native"],
+        ["publish", "publish-native", "sub-publish"],
+    )
     for name in grouped:
-        assert jobs[name]["concurrency"] == jobs["publish"]["concurrency"]
+        if name == "sub-publish":
+            group = jobs[name]["concurrency"]["group"]
+            assert group.startswith(jobs["publish"]["concurrency"]["group"] + "-")
+            assert (
+                "matrix.package" in group
+                and jobs[name]["concurrency"]["queue"] == "max"
+            )
+        else:
+            assert jobs[name]["concurrency"] == jobs["publish"]["concurrency"]
     assert "concurrency" not in yaml.safe_load((ROOT / workflow).read_text())

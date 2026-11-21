@@ -17,9 +17,9 @@ WORKFLOWS = {
     "inline": REPO_ROOT / "wads" / "data" / "github_ci_uv.yml",
 }
 READ_ONLY_JOBS = ("setup", "validation", "windows-validation")
-WRITING_JOBS = {"publish", "publish-native", "github-pages"}
+WRITING_JOBS = {"publish", "publish-native", "sub-publish", "github-pages"}
 #: The native (maturin) path's jobs that build, and must not push (issue #166).
-NATIVE_READ_ONLY_JOBS = ("native-version", "native-wheels")
+NATIVE_READ_ONLY_JOBS = ("native-version", "native-wheels", "sub-plan", "sub-wheels")
 
 
 def _jobs(path):

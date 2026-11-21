@@ -721,6 +721,40 @@ class TestPushBackRecovery:
             assert shown == expected.encode(), rel
         assert not (clone / ".git" / "rebase-merge").exists()
 
+    def test_a_subpackage_pyproject_bump_is_replayed_like_the_root_one(
+        self, remote_and_clone, tmp_path
+    ):
+        """sub-publish (i2mint/wads#220) bumps rust/pyproject.toml; a queued run conflicts."""
+        origin, clone = remote_and_clone
+        seed = tmp_path / "seed"
+        self._commit_files(
+            seed, {"rust/pyproject.toml": '[project]\nversion = "0.1.0"\n'}, "add rust"
+        )
+        _git("push", "origin", DEFAULT_BRANCH, cwd=seed)
+        _git("pull", "-q", "origin", DEFAULT_BRANCH, cwd=clone)
+        self._commit_files(
+            clone,
+            {"rust/pyproject.toml": '[project]\nversion = "0.1.2"\n'},
+            "**CI** rust 0.1.2 [skip ci]",
+        )
+        other = tmp_path / "earlier-release"
+        _git("clone", str(origin), str(other), cwd=tmp_path)
+        _configure(other)
+        self._commit_files(
+            other,
+            {"rust/pyproject.toml": '[project]\nversion = "0.1.1"\n'},
+            "**CI** rust 0.1.1 [skip ci]",
+        )
+        _git("push", "origin", DEFAULT_BRANCH, cwd=other)
+
+        result = run_push_step(clone)
+
+        assert result.returncode == 0, result.stdout + result.stderr
+        shown = _git(
+            "show", f"origin/{DEFAULT_BRANCH}:rust/pyproject.toml", cwd=clone
+        ).stdout
+        assert shown == '[project]\nversion = "0.1.2"\n'
+
     def test_a_dependency_merged_into_package_json_survives_the_replay(
         self, remote_and_clone, tmp_path
     ):

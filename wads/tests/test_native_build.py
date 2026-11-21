@@ -404,7 +404,9 @@ def test_publish_crates_and_the_workspace_dir():
                 "maturin": {"manifest-path": "rust/py/Cargo.toml"},
                 "wads": {
                     "ci": {
-                        "build": {"native": {"publish_crates": ["pkg-core", "pkg-util"]}}
+                        "build": {
+                            "native": {"publish_crates": ["pkg-core", "pkg-util"]}
+                        }
                     }
                 },
             }
@@ -423,7 +425,11 @@ def test_publish_crates_and_the_workspace_dir():
 
 @pytest.mark.parametrize(
     "bad",
-    [{"publish_crates": "pkg-core"}, {"publish_crates": ["a b"]}, {"publish_crates": ["a", "a"]}],
+    [
+        {"publish_crates": "pkg-core"},
+        {"publish_crates": ["a b"]},
+        {"publish_crates": ["a", "a"]},
+    ],
 )
 def test_a_bad_publish_crates_fails_setup(bad):
     with pytest.raises(ValueError, match="publish_crates"):
@@ -437,5 +443,165 @@ def test_the_crates_jobs_gate_publish_native_and_use_the_secret():
     steps = jobs["publish-crates"]["steps"]
     token = [s for s in steps if "publish-crates" in str(s.get("uses", ""))][0]
     assert token["with"]["registry-token"] == "${{ secrets.CARGO_REGISTRY_TOKEN }}"
-    dry = [s for s in jobs["crates-dry-run"]["steps"] if "publish-crates" in str(s.get("uses", ""))][0]
+    dry = [
+        s
+        for s in jobs["crates-dry-run"]["steps"]
+        if "publish-crates" in str(s.get("uses", ""))
+    ][0]
     assert dry["with"]["dry-run"] == "true" and "registry-token" not in dry["with"]
+
+
+# --- subpackages (i2mint/wads#220) ---------------------------------------------------
+
+
+def _sub_pyproject(name="pkg-rust"):
+    return {
+        "project": {"name": name, "version": "0.1.0"},
+        "build-system": {"build-backend": "maturin"},
+        "tool": {"maturin": {"module-name": "pkg_rust._core"}},
+    }
+
+
+def _root_with(*entries):
+    return {"tool": {"wads": {"ci": {"packages": list(entries)}}}}
+
+
+def test_subpackages_none_by_default():
+    from wads.subpackages import subpackage_configs
+
+    assert subpackage_configs({}, read_pyproject=lambda d: _sub_pyproject()) == []
+
+
+def test_subpackage_wheel_matrix_rows_carry_what_the_job_needs():
+    from wads.subpackages import subpackage_configs
+
+    (pkg,) = subpackage_configs(
+        _root_with({"dir": "rust", "tag_prefix": "pkg-rust-v"}),
+        read_pyproject=lambda d: _sub_pyproject(),
+    )
+    rows = pkg.wheel_matrix()
+    assert [r["name"] for r in rows] == list(DFLT_NATIVE_TARGETS)
+    assert {r["dir"] for r in rows} == {"rust"} and {r["package"] for r in rows} == {
+        "pkg-rust"
+    }
+    assert rows[0]["smoke_import"] == "pkg_rust._core"
+
+
+@pytest.mark.parametrize(
+    "entry, message",
+    [
+        ({}, "dir must be"),
+        ({"dir": "."}, "not the root"),
+        ({"dir": "../x"}, "inside the repo"),
+        ({"dir": "rust", "release": "weekly"}, "release must be"),
+        ({"dir": "rust", "oops": 1}, "unknown key"),
+        ({"dir": "rust", "tag_prefix": "a b"}, "bad tag_prefix"),
+    ],
+)
+def test_subpackage_entry_errors_are_loud(entry, message):
+    from wads.subpackages import subpackage_configs
+
+    with pytest.raises(ValueError, match=message):
+        subpackage_configs(_root_with(entry), read_pyproject=lambda d: _sub_pyproject())
+
+
+def test_subpackage_must_be_native_and_unique():
+    from wads.subpackages import subpackage_configs
+
+    with pytest.raises(ValueError, match="no native path"):
+        subpackage_configs(
+            _root_with({"dir": "x"}),
+            read_pyproject=lambda d: {"project": {"name": "p"}},
+        )
+    with pytest.raises(ValueError, match="duplicate"):
+        subpackage_configs(
+            _root_with(
+                {"dir": "a", "tag_prefix": "t-"}, {"dir": "b", "tag_prefix": "t-"}
+            ),
+            read_pyproject=lambda d: _sub_pyproject(),
+        )
+
+
+def test_read_ci_config_exports_subpackages(tmp_path, monkeypatch):
+    (tmp_path / "rust").mkdir()
+    (tmp_path / "rust" / "pyproject.toml").write_text(
+        '[project]\nname = "pkg-rust"\nversion = "0.1.0"\n'
+        '[build-system]\nbuild-backend = "maturin"\n'
+    )
+    (tmp_path / "pyproject.toml").write_text(
+        '[project]\nname = "pkg"\nversion = "0.1.0"\n'
+        '[[tool.wads.ci.packages]]\ndir = "rust"\ntag_prefix = "pkg-rust-v"\n'
+    )
+    out = tmp_path / "out.txt"
+    monkeypatch.setenv("GITHUB_OUTPUT", str(out))
+    monkeypatch.setenv("GITHUB_ENV", str(tmp_path / "env.txt"))
+    read_and_export_ci_config(str(tmp_path))
+    line = next(l for l in out.read_text().splitlines() if l.startswith("subpackages="))
+    assert json.loads(line.split("=", 1)[1]) == [
+        {
+            "name": "pkg-rust",
+            "dir": "rust",
+            "release": "on-change",
+            "tag_prefix": "pkg-rust-v",
+        }
+    ]
+    # the root is not native: the root native path stays off
+    assert "native=false" in out.read_text()
+
+
+def test_plan_subpackages_against_a_real_git_repo(tmp_path):
+    """on-change: untagged releases; tagged and untouched does not; touched does."""
+    from wads.scripts.plan_subpackages import plan
+
+    def git(*a):
+        subprocess.run(
+            [
+                "git",
+                "-C",
+                str(tmp_path),
+                "-c",
+                "user.name=t",
+                "-c",
+                "user.email=t@t",
+                *a,
+            ],
+            check=True,
+            capture_output=True,
+        )
+
+    (tmp_path / "rust").mkdir()
+    (tmp_path / "rust" / "pyproject.toml").write_text(
+        '[project]\nname = "pkg-rust"\nversion = "0.1.0"\n[build-system]\nbuild-backend = "maturin"\n'
+    )
+    (tmp_path / "pyproject.toml").write_text(
+        '[project]\nname = "pkg"\nversion = "1.0.0"\n[[tool.wads.ci.packages]]\ndir = "rust"\ntag_prefix = "r-v"\n'
+    )
+    git("init", "-q")
+    git("add", ".")
+    git("commit", "-qm", "one")
+    releases, matrix = plan(tmp_path)
+    assert [(r["package"], r["version"]) for r in releases] == [("pkg-rust", "0.1.0")]
+    assert {row["version"] for row in matrix} == {"0.1.0"}
+    git("tag", "r-v0.1.0")
+    (tmp_path / "README.md").write_text("root-only change")
+    git("add", ".")
+    git("commit", "-qm", "two")
+    assert plan(tmp_path) == ([], [])
+    (tmp_path / "rust" / "lib.rs").write_text("// changed")
+    git("add", ".")
+    git("commit", "-qm", "three")
+    releases, _ = plan(tmp_path)
+    assert [r["version"] for r in releases] == ["0.1.1"]
+
+
+def test_uv_ci_subpackage_jobs_are_gated_on_the_setup_output():
+    jobs = yaml.safe_load(UV_CI.read_text())["jobs"]
+    for name in ("sub-plan",):
+        assert "needs.setup.outputs.subpackages != '[]'" in jobs[name]["if"]
+    # the chain: plan -> wheels -> publish; the root jobs do not wait on any of it
+    assert "sub-plan" in jobs["sub-wheels"]["needs"]
+    assert {"sub-plan", "sub-wheels"} <= set(jobs["sub-publish"]["needs"])
+    for root in ("publish", "publish-native", "native-wheels"):
+        assert not {"sub-plan", "sub-wheels", "sub-publish"} & set(jobs[root]["needs"])
+    # the root's wheel collector (wheels-*) never picks up a subpackage's wheels
+    assert "artifact-prefix: subwheels-" in UV_CI.read_text()
