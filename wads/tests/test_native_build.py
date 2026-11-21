@@ -91,6 +91,8 @@ def test_the_table_form_sets_targets_args_and_imports():
         "smoke_import": "pkg._core",
         "manifest_path": "Cargo.toml",
         "cargo_test_args": ["-p", "pkg-core"],
+        "publish_crates": [],
+        "crates_dir": ".",
     }
 
 
@@ -262,6 +264,7 @@ def test_the_wheels_gate_the_native_release():
         "validation",
         "native-version",
         "native-wheels",
+        "publish-crates",
     ]
     assert jobs["native-wheels"]["needs"] == ["setup", "native-version"]
     assert "native-wheels" not in jobs["publish"]["needs"]
@@ -388,3 +391,51 @@ def test_the_selftest_builds_populate_s_scaffold_with_a_lockfile():
     # The lockfile exists before any build, and the builds use --locked.
     assert "test -f Cargo.lock || cargo generate-lockfile" in scaffold
     assert "--locked" in DFLT_MATURIN_ARGS
+
+
+def test_publish_crates_and_the_workspace_dir():
+    nb = native_build_config(
+        _with_native(
+            {"publish_crates": ["pkg-core", "pkg-util"]},
+            project={"name": "pkg"},
+        )
+        | {
+            "tool": {
+                "maturin": {"manifest-path": "rust/py/Cargo.toml"},
+                "wads": {
+                    "ci": {
+                        "build": {"native": {"publish_crates": ["pkg-core", "pkg-util"]}}
+                    }
+                },
+            }
+        }
+    )
+    assert nb.options()["publish_crates"] == ["pkg-core", "pkg-util"]
+    assert nb.options()["crates_dir"] == "rust/py"
+    nb = native_build_config(
+        _with_native(
+            {"publish_crates": ["pkg-core"], "crates_dir": "rust"},
+            project={"name": "pkg"},
+        )
+    )
+    assert nb.options()["crates_dir"] == "rust"
+
+
+@pytest.mark.parametrize(
+    "bad",
+    [{"publish_crates": "pkg-core"}, {"publish_crates": ["a b"]}, {"publish_crates": ["a", "a"]}],
+)
+def test_a_bad_publish_crates_fails_setup(bad):
+    with pytest.raises(ValueError, match="publish_crates"):
+        native_build_config(_with_native(bad, project={"name": "pkg"}))
+
+
+def test_the_crates_jobs_gate_publish_native_and_use_the_secret():
+    jobs = _jobs()
+    assert jobs["publish-crates"]["needs"] == ["setup", "validation", "crates-dry-run"]
+    assert "publish-crates" not in jobs["publish"]["needs"]
+    steps = jobs["publish-crates"]["steps"]
+    token = [s for s in steps if "publish-crates" in str(s.get("uses", ""))][0]
+    assert token["with"]["registry-token"] == "${{ secrets.CARGO_REGISTRY_TOKEN }}"
+    dry = [s for s in jobs["crates-dry-run"]["steps"] if "publish-crates" in str(s.get("uses", ""))][0]
+    assert dry["with"]["dry-run"] == "true" and "registry-token" not in dry["with"]

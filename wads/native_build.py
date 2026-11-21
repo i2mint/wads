@@ -18,6 +18,13 @@ table for the details::
     maturin_args = ["--release", "--locked"]
     smoke_import = "mypkg._core"                  # default: [tool.maturin].module-name
     cargo_test_args = ["-p", "mypkg-core"]        # default: derived from cargo metadata
+    publish_crates = ["mypkg-core"]               # crates.io, in publish order; default: none
+    crates_dir = "rust"                           # the Cargo workspace; default: the manifest's dir
+
+``publish_crates`` adds a ``crates-dry-run`` job (``cargo publish --dry-run``, on every run) and
+a ``publish-crates`` job on release (``cargo publish --locked``, skipping a crate version that is
+already on crates.io, token from the ``CARGO_REGISTRY_TOKEN`` secret) that ``publish-native`` waits
+for: crates.io, then PyPI. A crate keeps its own ``Cargo.toml`` version; bump it by hand.
 
 A target is a name from :data:`NATIVE_TARGETS` or a table with the same keys (``name``,
 ``runner``, ``target``, and optionally ``manylinux``, ``python_arch``, ``smoke``), for a
@@ -29,6 +36,7 @@ from __future__ import annotations
 
 import re
 from dataclasses import asdict, dataclass, field
+from pathlib import PurePosixPath
 from typing import Optional
 
 #: Build backends with a native path. The value is the backend's ``build-backend`` string.
@@ -82,6 +90,10 @@ class NativeBuild:
     manifest_path: str = "Cargo.toml"
     #: ``None``: derive from cargo metadata (every crate but the binding one).
     cargo_test_args: Optional[tuple] = None
+    #: Crates to publish to crates.io, in publish order (dependencies first). Empty: none.
+    publish_crates: tuple = ()
+    #: The Cargo workspace the crates are published from; ``""``: the manifest's directory.
+    crates_dir: str = ""
 
     def matrix(self) -> list:
         """The ``native-wheels`` job's ``matrix.include``."""
@@ -96,6 +108,9 @@ class NativeBuild:
             "cargo_test_args": (
                 None if self.cargo_test_args is None else list(self.cargo_test_args)
             ),
+            "publish_crates": list(self.publish_crates),
+            "crates_dir": self.crates_dir
+            or (str(PurePosixPath(self.manifest_path).parent)),
         }
 
 
@@ -196,12 +211,47 @@ def native_build_config(pyproject: dict) -> Optional[NativeBuild]:
                 if cargo_test is None
                 else _str_tuple(cargo_test, key="cargo_test_args")
             ),
+            publish_crates=_crate_names(table.get("publish_crates", [])),
+            crates_dir=(
+                _non_blank_str(table["crates_dir"], key="crates_dir")
+                if "crates_dir" in table
+                else ""
+            ),
         )
     except ValueError as e:
         raise ValueError(f"[tool.wads.ci.build].native: {e}") from None
 
 
-_TABLE_KEYS = {"backend", "targets", "maturin_args", "smoke_import", "cargo_test_args"}
+_TABLE_KEYS = {
+    "backend",
+    "targets",
+    "maturin_args",
+    "smoke_import",
+    "cargo_test_args",
+    "publish_crates",
+    "crates_dir",
+}
+
+_CRATE_NAME_RE = re.compile(r"[A-Za-z][A-Za-z0-9_-]*")
+
+
+def _crate_names(value) -> tuple:
+    """Crate names for ``publish_crates``: a list of valid, distinct crate names.
+
+    >>> _crate_names(["a-core", "a"])
+    ('a-core', 'a')
+    >>> _crate_names(["a b"])
+    Traceback (most recent call last):
+      ...
+    ValueError: publish_crates: invalid crate name 'a b'
+    """
+    names = _str_tuple(value, key="publish_crates")
+    for name in names:
+        if not _CRATE_NAME_RE.fullmatch(name):
+            raise ValueError(f"publish_crates: invalid crate name {name!r}")
+    if len(set(names)) != len(names):
+        raise ValueError(f"publish_crates: duplicate names in {list(names)}")
+    return names
 
 
 def _targets(value) -> tuple:
