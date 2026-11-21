@@ -1044,7 +1044,7 @@ def test_cargo_version_is_synced_with_its_lockfile_and_agreement_is_checked(tmp_
 
     (tmp_path / "rust").mkdir()
     (tmp_path / "rust" / "Cargo.toml").write_text(
-        '[workspace.package]\nversion = "0.1.0"  # shared\n[workspace.dependencies]\nserde = { version = "1" }\n'
+        '[package]\nname = "a"\nversion.workspace = true\n[workspace.package]\nversion = "0.1.0"  # shared\n[workspace.dependencies]\nserde = { version = "1" }\n'
     )
     (tmp_path / "rust" / "Cargo.lock").write_text(
         '[[package]]\nname = "a"\nversion = "0.1.0"\n\n'
@@ -1057,8 +1057,37 @@ def test_cargo_version_is_synced_with_its_lockfile_and_agreement_is_checked(tmp_
     check_versions_agree(tmp_path, data)
     written = sync_version(tmp_path, ["rust/Cargo.toml"], "0.2.0")
     assert [p.name for p in written] == ["Cargo.toml", "Cargo.lock"]
-    assert (tmp_path / "rust" / "Cargo.toml").read_text().splitlines()[1] == 'version = "0.2.0"  # shared'
+    assert (tmp_path / "rust" / "Cargo.toml").read_text().splitlines()[4] == 'version = "0.2.0"  # shared'
     lock = (tmp_path / "rust" / "Cargo.lock").read_text()
     assert lock.count('"0.2.0"') == 1 and 'source = "registry+x"' in lock and lock.count('"0.1.0"') == 1
     with pytest.raises(ValueError, match="disagree"):
         check_versions_agree(tmp_path, data)  # file now 0.2.0, pyproject 0.1.0
+
+
+def test_cargo_lock_follows_only_the_crates_that_take_the_version(tmp_path):
+    """A member with its own version and a vendored path dep at the same number stay put."""
+    from wads.version_sync import set_cargo_version
+
+    (tmp_path / "crates" / "core").mkdir(parents=True)
+    (tmp_path / "crates" / "own").mkdir()
+    (tmp_path / "Cargo.toml").write_text(
+        '[workspace]\nmembers = ["crates/*"]\n[workspace.package]\nversion = "0.1.0"\n'
+    )
+    (tmp_path / "crates" / "core" / "Cargo.toml").write_text(
+        '[package]\nname = "core-x"\nversion.workspace = true\n'
+    )
+    (tmp_path / "crates" / "own" / "Cargo.toml").write_text(
+        '[package]\nname = "own-x"\nversion = "0.1.0"\n'
+    )
+    pkg = lambda n: f'[[package]]\nname = "{n}"\nversion = "0.1.0"\n\n'
+    (tmp_path / "Cargo.lock").write_text(pkg("core-x") + pkg("own-x") + pkg("vendored"))
+    set_cargo_version(tmp_path / "Cargo.toml", "0.2.0")
+    lock = (tmp_path / "Cargo.lock").read_text()
+    assert lock.count("0.2.0") == 1 and 'name = "core-x"\nversion = "0.2.0"' in lock
+
+
+def test_both_version_tables_that_differ_are_refused():
+    from wads.version_sync import cargo_version
+
+    with pytest.raises(ValueError, match="both declare a version"):
+        cargo_version('[package]\nversion = "0.1.0"\n[workspace.package]\nversion = "0.2.0"\n')

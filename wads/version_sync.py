@@ -22,7 +22,7 @@ that publish (see its docstring).
 ``package.json`` (npm) and ``Cargo.toml`` (a crate that ships with the Python package, as a
 maturin binding crate does) are supported. A Cargo manifest's version is ``[package].version``,
 or ``[workspace.package].version`` when the crate inherits it; the ``Cargo.lock`` beside it
-follows (its workspace crates, which have no registry ``source``, at the old version), so
+follows (the crates that take the version: the manifest's own, and the workspace members that inherit it), so
 ``cargo build --locked`` still passes. A crate that has its own release line on crates.io
 should not be listed. This module imports only the standard library (and ``wads.ci_config``, which
 does too), because the CI scripts load it by path from the wads checkout
@@ -112,6 +112,11 @@ def _cargo_version_line(lines: Sequence[str]) -> "tuple[int, str] | None":
         m = _VERSION_LINE.match(line)
         if m and table in _VERSION_TABLES and table not in found:
             found[table] = (i, m.group(3))
+    if len(found) == 2 and found["package"][1] != found["workspace.package"][1]:
+        raise ValueError(
+            "[package] and [workspace.package] both declare a version, and they differ: "
+            "cannot tell which one to sync"
+        )
     for table in _VERSION_TABLES:
         if table in found:
             return found[table]
@@ -124,20 +129,58 @@ def cargo_version(text: str) -> "str | None":
     return hit[1] if hit else None
 
 
-def _set_cargo_lock_version(lock: Path, old: str, new: str) -> bool:
-    """Move the workspace crates (no registry ``source``) from ``old`` to ``new`` in ``lock``."""
+def _crate_name(text: str) -> "str | None":
+    """The ``[package].name`` of a manifest's text."""
+    table = None
+    for line in text.splitlines():
+        header = _TABLE_HEADER.match(line)
+        if header:
+            table = header.group(1)
+        elif table == "package":
+            m = re.match(r'\s*name\s*=\s*["\']([^"\']+)["\']', line)
+            if m:
+                return m.group(1)
+    return None
+
+
+_INHERITS = re.compile(
+    r"(?m)^\s*version\s*(\.\s*workspace\s*=\s*true|=\s*\{\s*workspace\s*=\s*true\s*\})"
+)
+
+
+def _synced_crate_names(manifest: Path, text: str) -> set:
+    """The crates whose version this manifest's version line sets.
+
+    The manifest's own ``[package]`` crate, and, for ``[workspace.package]``, every
+    ``members`` crate that inherits it (``version.workspace = true``). Path
+    dependencies and members with a version of their own are left alone.
+    """
+    names = set()
+    own = _crate_name(text)
+    if own:
+        names.add(own)
+    m = re.search(r"(?ms)^\s*members\s*=\s*\[(.*?)\]", text)
+    for pattern in re.findall(r'["\']([^"\']+)["\']', m.group(1)) if m else []:
+        for member in sorted(manifest.parent.glob(pattern)):
+            member_toml = member / "Cargo.toml"
+            if member_toml.is_file():
+                member_text = _read_text(member_toml)
+                name = _crate_name(member_text)
+                if name and _INHERITS.search(member_text):
+                    names.add(name)
+    return names
+
+
+def _set_cargo_lock_version(lock: Path, names: set, new: str) -> bool:
+    """Set ``new`` as the version of the crates ``names`` in ``lock``."""
     text = _read_text(lock)
     blocks = re.split(r"(?m)^(?=\[\[package\]\])", text)
     changed = False
     for i, block in enumerate(blocks):
-        if not block.startswith("[[package]]") or re.search(r"(?m)^source\s*=", block):
+        name = re.search(r'(?m)^name\s*=\s*"([^"]+)"', block)
+        if not (block.startswith("[[package]]") and name and name.group(1) in names):
             continue
-        fixed = re.sub(
-            r'(?m)^(version\s*=\s*")' + re.escape(old) + '"',
-            rf'\g<1>{new}"',
-            block,
-            count=1,
-        )
+        fixed = re.sub(r'(?m)^(version\s*=\s*")[^"]*"', rf'\g<1>{new}"', block, count=1)
         changed |= fixed != block
         blocks[i] = fixed
     if changed:
@@ -182,10 +225,9 @@ def set_cargo_version(path: Path, version: str) -> list[Path]:
     path.write_bytes("".join(lines).encode("utf-8"))
     written = [path]
     lock = path.with_name("Cargo.lock")
-    if (
-        old != version
-        and lock.is_file()
-        and _set_cargo_lock_version(lock, old, version)
+    # Even when the manifest is already at ``version``: a replayed bump can leave the lock behind.
+    if lock.is_file() and _set_cargo_lock_version(
+        lock, _synced_crate_names(path, text), version
     ):
         written.append(lock)
     return written
@@ -305,7 +347,7 @@ def static_project_version(pyproject_data: Mapping) -> str:
     >>> static_project_version({"project": {"dynamic": ["version"]}})
     Traceback (most recent call last):
       ...
-    ValueError: [tool.wads.ci.version].sync needs a static [project].version in pyproject.toml, and this project's version is dynamic. Make it static, or remove the sync key (and keep the npm version by hand).
+    ValueError: [tool.wads.ci.version].sync needs a static [project].version in pyproject.toml, and this project's version is dynamic. Make it static, or remove the sync key (and keep those versions by hand).
     """
     project = pyproject_data.get("project", {})
     version = project.get("version")
@@ -320,7 +362,7 @@ def static_project_version(pyproject_data: Mapping) -> str:
     raise ValueError(
         f"{_TABLE}.sync needs a static [project].version in pyproject.toml, "
         f"and this project's version is {where}. Make it static, or remove the "
-        "sync key (and keep the npm version by hand)."
+        "sync key (and keep those versions by hand)."
     )
 
 
@@ -506,7 +548,11 @@ def npm_publish_refusal(
     True
     """
     directory = _posix_dir(package_dir)
-    synced = [f for f in sync_files(pyproject_data) if _inside(f, directory)]
+    synced = [
+        f
+        for f in sync_files(pyproject_data)
+        if _inside(f, directory) and PurePosixPath(f).name == "package.json"
+    ]
     if not synced or not pypi_release_expected(pyproject_data, subject):
         return None
     # At the repo root nothing is outside the npm package, and everything ships

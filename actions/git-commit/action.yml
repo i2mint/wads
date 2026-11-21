@@ -271,7 +271,25 @@ runs:
                   Cargo.lock|*/Cargo.lock)
                     # Derived from the manifest: take upstream's; the manifest's
                     # replay below rewrites the crates' versions in it.
-                    git checkout --ours -- "$path" && git add -- "$path"
+                    if ! git checkout --ours -- "$path" 2>/dev/null; then
+                      git rebase --abort || true
+                      echo "::error::'$path' was deleted or renamed on 'origin/$branch' while this run bumped its manifest. Resolve by hand."
+                      exit 1
+                    fi
+                    git add -- "$path"
+                    # A lock-only conflict (the manifest merged cleanly): rewrite the
+                    # lock for the manifest's version, which is this run's.
+                    toml="$(dirname "$path")/Cargo.toml"
+                    case " $conflicted " in
+                      *" $toml "*) ;;
+                      *)
+                        if [ -f "$toml" ]; then
+                          lock_version=$(python3 -I "$GITHUB_ACTION_PATH/../../wads/scripts/sync_version.py" --read-version Cargo.toml < "$toml")
+                          [ -n "$lock_version" ] && python3 -I "$GITHUB_ACTION_PATH/../../wads/scripts/sync_version.py" --file "$toml" "$lock_version" || true
+                          git add -- "$path"
+                        fi
+                        ;;
+                    esac
                     continue
                     ;;
                 esac
