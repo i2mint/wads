@@ -214,6 +214,15 @@ runs:
                     only_version_files=0
                   fi
                   ;;
+                # A Cargo manifest synced the same way (#210); its lockfile follows it.
+                Cargo.toml|*/Cargo.toml)
+                  ours_bump=$(git show ":3:$path" 2>/dev/null | python3 -I "$GITHUB_ACTION_PATH/../../wads/scripts/sync_version.py" --read-version Cargo.toml)
+                  base_version=$(git show ":1:$path" 2>/dev/null | python3 -I "$GITHUB_ACTION_PATH/../../wads/scripts/sync_version.py" --read-version Cargo.toml)
+                  if [ -z "$ours_bump" ] || [ "$ours_bump" = "$base_version" ]; then
+                    only_version_files=0
+                  fi
+                  ;;
+                Cargo.lock|*/Cargo.lock) ;;
                 *) only_version_files=0 ;;
               esac
             done
@@ -252,9 +261,38 @@ runs:
                 case "$1" in *.json) return 0 ;; *) return 1 ;; esac
               }
               file_version() {
-                if is_json "$1"; then json_version; else project_version "$1"; fi
+                case "$1" in
+                  Cargo.toml|*/Cargo.toml) python3 -I "$GITHUB_ACTION_PATH/../../wads/scripts/sync_version.py" --read-version Cargo.toml ;;
+                  *) if is_json "$1"; then json_version; else project_version "$1"; fi ;;
+                esac
               }
               for path in $conflicted; do
+                case "$path" in
+                  Cargo.lock|*/Cargo.lock)
+                    # Derived from the manifest: take upstream's; the manifest's
+                    # replay below rewrites the crates' versions in it.
+                    if ! git checkout --ours -- "$path" 2>/dev/null; then
+                      git rebase --abort || true
+                      echo "::error::'$path' was deleted or renamed on 'origin/$branch' while this run bumped its manifest. Resolve by hand."
+                      exit 1
+                    fi
+                    git add -- "$path"
+                    # A lock-only conflict (the manifest merged cleanly): rewrite the
+                    # lock for the manifest's version, which is this run's.
+                    toml="$(dirname "$path")/Cargo.toml"
+                    case " $conflicted " in
+                      *" $toml "*) ;;
+                      *)
+                        if [ -f "$toml" ]; then
+                          lock_version=$(python3 -I "$GITHUB_ACTION_PATH/../../wads/scripts/sync_version.py" --read-version Cargo.toml < "$toml")
+                          [ -n "$lock_version" ] && python3 -I "$GITHUB_ACTION_PATH/../../wads/scripts/sync_version.py" --file "$toml" "$lock_version" || true
+                          git add -- "$path"
+                        fi
+                        ;;
+                    esac
+                    continue
+                    ;;
+                esac
                 new_version=$(git show ":3:$path" 2>/dev/null | file_version "$path" || true)
                 if ! git checkout --ours -- "$path" 2>/dev/null; then
                   # Modify/delete conflict: upstream removed the file, so there
@@ -291,6 +329,19 @@ runs:
                       # No fixed version-field syntax to target safely; skip --
                       # the next publish run's own bump step corrects it, and
                       # skipping never loses data (unlike the old --theirs).
+                      ;;
+                    Cargo.toml|*/Cargo.toml)
+                      sync_script="$GITHUB_ACTION_PATH/../../wads/scripts/sync_version.py"
+                      python3 -I "$sync_script" --file "$path" "$new_version" || true
+                      # The lockfile beside it was rewritten too: stage it with the manifest.
+                      lock="$(dirname "$path")/Cargo.lock"
+                      [ -f "$lock" ] && git add -- "$lock"
+                      landed=$(python3 -I "$sync_script" --read-version Cargo.toml < "$path")
+                      if [ "$landed" != "$new_version" ]; then
+                        git rebase --abort || true
+                        echo "::error::Could not write version $new_version (just released) into '$path' on top of 'origin/$branch' (found '${landed:-no version}'). Resolve by hand."
+                        exit 1
+                      fi
                       ;;
                     *.json)
                       # Upstream's file, with this run's version in its version

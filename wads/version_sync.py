@@ -19,8 +19,12 @@ bump commit of the Python release the same push cuts, so it would carry the
 previous release's number with newer code. :func:`npm_publish_refusal` refuses
 that publish (see its docstring).
 
-Only ``package.json`` is supported: a Rust crate usually keeps its own version
-line. This module imports only the standard library (and ``wads.ci_config``, which
+``package.json`` (npm) and ``Cargo.toml`` (a crate that ships with the Python package, as a
+maturin binding crate does) are supported. A Cargo manifest's version is ``[package].version``,
+or ``[workspace.package].version`` when the crate inherits it; the ``Cargo.lock`` beside it
+follows (the crates that take the version: the manifest's own, and the workspace members that inherit it), so
+``cargo build --locked`` still passes. A crate that has its own release line on crates.io
+should not be listed. This module imports only the standard library (and ``wads.ci_config``, which
 does too), because the CI scripts load it by path from the wads checkout
 (``wads/scripts/_checkout_import.py``).
 """
@@ -33,7 +37,7 @@ from pathlib import Path, PurePosixPath
 from typing import Mapping, Sequence
 
 #: Manifest file names ``[tool.wads.ci.version].sync`` may list.
-SYNCABLE_MANIFESTS = ("package.json",)
+SYNCABLE_MANIFESTS = ("package.json", "Cargo.toml")
 #: The lockfile npm keeps beside a ``package.json``; its own version fields follow.
 NPM_LOCKFILE = "package-lock.json"
 #: A semver version, the only kind npm accepts (PEP 440 forms like ``1.0rc1`` are not).
@@ -51,10 +55,10 @@ def sync_files(pyproject_data: Mapping) -> list[str]:
     ['ts/package.json']
     >>> sync_files({})
     []
-    >>> sync_files({"tool": {"wads": {"ci": {"version": {"sync": ["rust/core/Cargo.toml"]}}}}})
+    >>> sync_files({"tool": {"wads": {"ci": {"version": {"sync": ["rust/core/setup.py"]}}}}})
     Traceback (most recent call last):
       ...
-    ValueError: [tool.wads.ci.version].sync: 'rust/core/Cargo.toml' is not one of ('package.json',); a Rust crate keeps its own version line.
+    ValueError: [tool.wads.ci.version].sync: 'rust/core/setup.py' is not one of ('package.json', 'Cargo.toml').
     """
     table = pyproject_data.get("tool", {}).get("wads", {}).get("ci", {})
     files = table.get("version", {}).get("sync", [])
@@ -69,14 +73,164 @@ def sync_files(pyproject_data: Mapping) -> list[str]:
             )
         if posix.name not in SYNCABLE_MANIFESTS:
             raise ValueError(
-                f"{_TABLE}.sync: {path!r} is not one of {SYNCABLE_MANIFESTS}; "
-                "a Rust crate keeps its own version line."
+                f"{_TABLE}.sync: {path!r} is not one of {SYNCABLE_MANIFESTS}."
             )
     return [str(p) for p in files]
 
 
 def _read_json(path: Path) -> dict:
     return json.loads(_read_text(path))
+
+
+# --- Cargo.toml ----------------------------------------------------------------------
+
+_TABLE_HEADER = re.compile(r"^\s*\[+\s*([^\]]*?)\s*\]+\s*(?:#.*)?$")
+_VERSION_LINE = re.compile(r'^(\s*version\s*=\s*)(["\'])([^"\']*)\2')
+_VERSION_TABLES = ("workspace.package", "package")
+
+
+def _cargo_version_line(lines: Sequence[str]) -> "tuple[int, str] | None":
+    """``(line index, version)`` of the manifest's own version line, else ``None``.
+
+    ``[workspace.package]`` wins over ``[package]``: a member that inherits its version
+    (``version.workspace = true``) has no literal one, and the workspace table holds it.
+
+    >>> _cargo_version_line(['[package]', 'name = "a"', 'version = "0.1.0"'])
+    (2, '0.1.0')
+    >>> _cargo_version_line(['[package]', 'version.workspace = true', '[workspace.package]', "version = '1.0.0'"])
+    (3, '1.0.0')
+    >>> _cargo_version_line(['[dependencies]', 'version = "1"']) is None
+    True
+    """
+    found = {}
+    table = None
+    for i, line in enumerate(lines):
+        header = _TABLE_HEADER.match(line)
+        if header:
+            table = header.group(1)
+            continue
+        m = _VERSION_LINE.match(line)
+        if m and table in _VERSION_TABLES and table not in found:
+            found[table] = (i, m.group(3))
+    if len(found) == 2 and found["package"][1] != found["workspace.package"][1]:
+        raise ValueError(
+            "[package] and [workspace.package] both declare a version, and they differ: "
+            "cannot tell which one to sync"
+        )
+    for table in _VERSION_TABLES:
+        if table in found:
+            return found[table]
+    return None
+
+
+def cargo_version(text: str) -> "str | None":
+    """The version a ``Cargo.toml``'s text declares (see :func:`_cargo_version_line`)."""
+    hit = _cargo_version_line(text.splitlines())
+    return hit[1] if hit else None
+
+
+def _crate_name(text: str) -> "str | None":
+    """The ``[package].name`` of a manifest's text."""
+    table = None
+    for line in text.splitlines():
+        header = _TABLE_HEADER.match(line)
+        if header:
+            table = header.group(1)
+        elif table == "package":
+            m = re.match(r'\s*name\s*=\s*["\']([^"\']+)["\']', line)
+            if m:
+                return m.group(1)
+    return None
+
+
+_INHERITS = re.compile(
+    r"(?m)^\s*version\s*(\.\s*workspace\s*=\s*true|=\s*\{\s*workspace\s*=\s*true\s*\})"
+)
+
+
+def _synced_crate_names(manifest: Path, text: str) -> set:
+    """The crates whose version this manifest's version line sets.
+
+    The manifest's own ``[package]`` crate, and, for ``[workspace.package]``, every
+    ``members`` crate that inherits it (``version.workspace = true``). Path
+    dependencies and members with a version of their own are left alone.
+    """
+    names = set()
+    own = _crate_name(text)
+    if own:
+        names.add(own)
+    m = re.search(r"(?ms)^\s*members\s*=\s*\[(.*?)\]", text)
+    for pattern in re.findall(r'["\']([^"\']+)["\']', m.group(1)) if m else []:
+        for member in sorted(manifest.parent.glob(pattern)):
+            member_toml = member / "Cargo.toml"
+            if member_toml.is_file():
+                member_text = _read_text(member_toml)
+                name = _crate_name(member_text)
+                if name and _INHERITS.search(member_text):
+                    names.add(name)
+    return names
+
+
+def _set_cargo_lock_version(lock: Path, names: set, new: str) -> bool:
+    """Set ``new`` as the version of the crates ``names`` in ``lock``."""
+    text = _read_text(lock)
+    blocks = re.split(r"(?m)^(?=\[\[package\]\])", text)
+    changed = False
+    for i, block in enumerate(blocks):
+        name = re.search(r'(?m)^name\s*=\s*"([^"]+)"', block)
+        if not (block.startswith("[[package]]") and name and name.group(1) in names):
+            continue
+        fixed = re.sub(r'(?m)^(version\s*=\s*")[^"]*"', rf'\g<1>{new}"', block, count=1)
+        changed |= fixed != block
+        blocks[i] = fixed
+    if changed:
+        lock.write_bytes("".join(blocks).encode("utf-8"))
+    return changed
+
+
+def set_cargo_version(path: Path, version: str) -> list[Path]:
+    """Write ``version`` into a ``Cargo.toml`` (and the ``Cargo.lock`` beside it).
+
+    Returns the files written. Only the version line changes, in the file's own layout.
+
+    >>> import tempfile
+    >>> d = Path(tempfile.mkdtemp())
+    >>> _ = (d / "Cargo.toml").write_text('[package]\\nname = "a"\\nversion = "0.1.0"\\n')
+    >>> _ = (d / "Cargo.lock").write_text('[[package]]\\nname = "a"\\nversion = "0.1.0"\\n\\n[[package]]\\nname = "dep"\\nversion = "0.1.0"\\nsource = "registry+x"\\n')
+    >>> [p.name for p in set_cargo_version(d / "Cargo.toml", "0.2.0")]
+    ['Cargo.toml', 'Cargo.lock']
+    >>> (d / "Cargo.toml").read_text()
+    '[package]\\nname = "a"\\nversion = "0.2.0"\\n'
+    >>> (d / "Cargo.lock").read_text().count('0.2.0'), (d / "Cargo.lock").read_text().count('0.1.0')
+    (1, 1)
+    """
+    path = Path(path)
+    if not SEMVER.match(version):
+        raise ValueError(
+            f"version {version!r} is not semver; cannot write it into {path}"
+        )
+    text = _read_text(path)
+    lines = text.splitlines(keepends=True)
+    hit = _cargo_version_line([line.rstrip("\r\n") for line in lines])
+    if hit is None:
+        raise ValueError(
+            f"{path} has no literal [package] or [workspace.package] version"
+        )
+    index, old = hit
+    lines[index] = _VERSION_LINE.sub(
+        lambda m: f"{m.group(1)}{m.group(2)}{version}{m.group(2)}",
+        lines[index],
+        count=1,
+    )
+    path.write_bytes("".join(lines).encode("utf-8"))
+    written = [path]
+    lock = path.with_name("Cargo.lock")
+    # Even when the manifest is already at ``version``: a replayed bump can leave the lock behind.
+    if lock.is_file() and _set_cargo_lock_version(
+        lock, _synced_crate_names(path, text), version
+    ):
+        written.append(lock)
+    return written
 
 
 #: How npm reads a JSON file's layout (``json-parse-even-better-errors``): the line
@@ -140,7 +294,7 @@ def set_json_version(path: Path, version: str) -> None:
 
 
 def set_manifest_version(manifest: Path, version: str) -> list[Path]:
-    """Write ``version`` into ``manifest`` and the npm lockfile beside it.
+    """Write ``version`` into ``manifest`` and the lockfile beside it (npm or Cargo).
 
     Returns the files written. Refuses a version npm would reject, before writing.
 
@@ -155,6 +309,8 @@ def set_manifest_version(manifest: Path, version: str) -> list[Path]:
       "version": "0.0.2"
     }
     """
+    if Path(manifest).name == "Cargo.toml":
+        return set_cargo_version(manifest, version)
     if not SEMVER.match(version):
         raise ValueError(
             f"version {version!r} is not semver, which npm requires; "
@@ -191,7 +347,7 @@ def static_project_version(pyproject_data: Mapping) -> str:
     >>> static_project_version({"project": {"dynamic": ["version"]}})
     Traceback (most recent call last):
       ...
-    ValueError: [tool.wads.ci.version].sync needs a static [project].version in pyproject.toml, and this project's version is dynamic. Make it static, or remove the sync key (and keep the npm version by hand).
+    ValueError: [tool.wads.ci.version].sync needs a static [project].version in pyproject.toml, and this project's version is dynamic. Make it static, or remove the sync key (and keep those versions by hand).
     """
     project = pyproject_data.get("project", {})
     version = project.get("version")
@@ -206,7 +362,7 @@ def static_project_version(pyproject_data: Mapping) -> str:
     raise ValueError(
         f"{_TABLE}.sync needs a static [project].version in pyproject.toml, "
         f"and this project's version is {where}. Make it static, or remove the "
-        "sync key (and keep the npm version by hand)."
+        "sync key (and keep those versions by hand)."
     )
 
 
@@ -222,7 +378,12 @@ def version_mismatches(repo_dir, pyproject_data: Mapping) -> list[tuple]:
     out = []
     for rel in files:
         manifest = Path(repo_dir) / rel
-        found = _read_json(manifest).get("version") if manifest.is_file() else None
+        if not manifest.is_file():
+            found = None
+        elif manifest.name == "Cargo.toml":
+            found = cargo_version(_read_text(manifest))
+        else:
+            found = _read_json(manifest).get("version")
         if found != expected:
             out.append((rel, found, expected))
     return out
@@ -387,7 +548,11 @@ def npm_publish_refusal(
     True
     """
     directory = _posix_dir(package_dir)
-    synced = [f for f in sync_files(pyproject_data) if _inside(f, directory)]
+    synced = [
+        f
+        for f in sync_files(pyproject_data)
+        if _inside(f, directory) and PurePosixPath(f).name == "package.json"
+    ]
     if not synced or not pypi_release_expected(pyproject_data, subject):
         return None
     # At the repo root nothing is outside the npm package, and everything ships
