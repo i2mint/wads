@@ -23,6 +23,7 @@ smoke_import = "mypkg._core"                  # default: [tool.maturin].module-n
 cargo_test_args = ["-p", "mypkg-core"]        # default: derived from cargo metadata
 publish_crates = ["mypkg-core"]               # crates.io, in publish order; default: none
 crates_dir = "rust"                           # the Cargo workspace; default: the manifest's dir
+deny = false                                  # skip `cargo deny check`; default "auto" (when deny.toml exists)
 ```
 
 `publish_crates` adds a `crates-dry-run` job (`cargo publish --dry-run`, on every run) and
@@ -65,7 +66,7 @@ build per platform covers every supported CPython.
 * **Type:**
   The default wheel matrix
 
-### *class* wads.native_build.NativeBuild(backend, targets=tuple(), maturin_args=('--release', '--locked'), smoke_import='', manifest_path='Cargo.toml', cargo_test_args=None, publish_crates=(), crates_dir='')
+### *class* wads.native_build.NativeBuild(backend, targets=tuple(), maturin_args=('--release', '--locked'), smoke_import='', manifest_path='Cargo.toml', cargo_test_args=None, publish_crates=(), crates_dir='', deny='auto')
 
 Bases: [`object`](https://docs.python.org/3/builtins/functions.html#object)
 
@@ -84,6 +85,14 @@ the manifest’s directory.
 
 * **Type:**
   The Cargo workspace the crates are published from; `""`
+
+#### deny *: [str](https://docs.python.org/3/builtins/stdtypes.html#str)* *= 'auto'*
+
+`"auto"` (when the workspace has a
+deny.toml) or `"false"` (#223).
+
+* **Type:**
+  `cargo deny check` in the Rust checks
 
 #### manifest_path *: [str](https://docs.python.org/3/builtins/stdtypes.html#str)* *= 'Cargo.toml'*
 

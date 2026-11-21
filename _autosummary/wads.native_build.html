@@ -319,6 +319,7 @@ table for the details:</p>
 <span class="n">cargo_test_args</span> <span class="o">=</span> <span class="p">[</span><span class="s2">"-p"</span><span class="p">,</span> <span class="s2">"mypkg-core"</span><span class="p">]</span>        <span class="c1"># default: derived from cargo metadata</span>
 <span class="n">publish_crates</span> <span class="o">=</span> <span class="p">[</span><span class="s2">"mypkg-core"</span><span class="p">]</span>               <span class="c1"># crates.io, in publish order; default: none</span>
 <span class="n">crates_dir</span> <span class="o">=</span> <span class="s2">"rust"</span>                           <span class="c1"># the Cargo workspace; default: the manifest's dir</span>
+<span class="n">deny</span> <span class="o">=</span> <span class="n">false</span>                                  <span class="c1"># skip `cargo deny check`; default "auto" (when deny.toml exists)</span>
 </pre></div>
 </div>
 <p><code class="docutils literal notranslate"><span class="pre">publish_crates</span></code> adds a <code class="docutils literal notranslate"><span class="pre">crates-dry-run</span></code> job (<code class="docutils literal notranslate"><span class="pre">cargo</span> <span class="pre">publish</span> <span class="pre">--dry-run</span></code>, on every run) and
@@ -388,7 +389,7 @@ build per platform covers every supported CPython.</p>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="wads.native_build.NativeBuild">
-<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">wads.native_build.</span></span><span class="sig-name descname"><span class="pre">NativeBuild</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">backend</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">targets</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">tuple()</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">maturin_args</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">('--release',</span> <span class="pre">'--locked')</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">smoke_import</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">manifest_path</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'Cargo.toml'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cargo_test_args</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">publish_crates</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">()</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">crates_dir</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/wads/native_build.html#NativeBuild"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#wads.native_build.NativeBuild" title="Link to this definition">¶</a></dt>
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">wads.native_build.</span></span><span class="sig-name descname"><span class="pre">NativeBuild</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">backend</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">targets</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">tuple()</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">maturin_args</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">('--release',</span> <span class="pre">'--locked')</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">smoke_import</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">manifest_path</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'Cargo.toml'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cargo_test_args</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">publish_crates</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">()</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">crates_dir</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">deny</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'auto'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/wads/native_build.html#NativeBuild"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#wads.native_build.NativeBuild" title="Link to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/builtins/functions.html#object" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
 <p>The resolved native-build settings of one repo.</p>
 <dl class="field-list simple">
@@ -411,6 +412,18 @@ build per platform covers every supported CPython.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>The Cargo workspace the crates are published from; <code class="docutils literal notranslate"><span class="pre">&quot;&quot;</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="wads.native_build.NativeBuild.deny">
+<span class="sig-name descname"><span class="pre">deny</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><span class="pre">str</span></a></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'auto'</span></span><a class="headerlink" href="#wads.native_build.NativeBuild.deny" title="Link to this definition">¶</a></dt>
+<dd><p><code class="docutils literal notranslate"><span class="pre">&quot;auto&quot;</span></code> (when the workspace has a
+deny.toml) or <code class="docutils literal notranslate"><span class="pre">&quot;false&quot;</span></code> (#223).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><code class="docutils literal notranslate"><span class="pre">cargo</span> <span class="pre">deny</span> <span class="pre">check</span></code> in the Rust checks</p>
 </dd>
 </dl>
 </dd></dl>
@@ -576,6 +589,7 @@ something else.</p>
 <li><a class="reference internal" href="#wads.native_build.NativeBuild"><code class="docutils literal notranslate"><span class="pre">NativeBuild</span></code></a><ul>
 <li><a class="reference internal" href="#wads.native_build.NativeBuild.cargo_test_args"><code class="docutils literal notranslate"><span class="pre">NativeBuild.cargo_test_args</span></code></a></li>
 <li><a class="reference internal" href="#wads.native_build.NativeBuild.crates_dir"><code class="docutils literal notranslate"><span class="pre">NativeBuild.crates_dir</span></code></a></li>
+<li><a class="reference internal" href="#wads.native_build.NativeBuild.deny"><code class="docutils literal notranslate"><span class="pre">NativeBuild.deny</span></code></a></li>
 <li><a class="reference internal" href="#wads.native_build.NativeBuild.manifest_path"><code class="docutils literal notranslate"><span class="pre">NativeBuild.manifest_path</span></code></a></li>
 <li><a class="reference internal" href="#wads.native_build.NativeBuild.matrix"><code class="docutils literal notranslate"><span class="pre">NativeBuild.matrix()</span></code></a></li>
 <li><a class="reference internal" href="#wads.native_build.NativeBuild.options"><code class="docutils literal notranslate"><span class="pre">NativeBuild.options()</span></code></a></li>
@@ -596,7 +610,7 @@ something else.</p>
       
     </aside>
   </div>
-</div><script src="../_static/documentation_options.js?v=c1d524de"></script>
+</div><script src="../_static/documentation_options.js?v=689550b8"></script>
     <script src="../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../_static/scripts/furo.js?v=46bd48cc"></script>

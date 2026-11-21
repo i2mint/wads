@@ -343,7 +343,7 @@ The `Artifact` list a native backend writes for `project_name`.
 
 ```pycon
 >>> sorted(a.target for a in native_artifacts("maturin", "fast_thing"))[:3]
-['Cargo.toml', 'clippy.toml', 'fast_thing/__init__.py']
+['Cargo.toml', 'clippy.toml', 'deny.toml']
 ```
 
 * **Return type:**

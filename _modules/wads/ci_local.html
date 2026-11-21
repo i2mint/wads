@@ -883,6 +883,27 @@
         <span class="n">result</span> <span class="o">=</span> <span class="n">ctx</span><span class="o">.</span><span class="n">run</span><span class="p">([</span><span class="s2">"cargo"</span><span class="p">,</span> <span class="s2">"test"</span><span class="p">,</span> <span class="o">*</span><span class="n">manifest</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">])</span>
         <span class="k">return</span> <span class="sa">f</span><span class="s2">"exit </span><span class="si">{</span><span class="n">result</span><span class="o">.</span><span class="n">returncode</span><span class="si">}</span><span class="s2">"</span> <span class="k">if</span> <span class="n">result</span><span class="o">.</span><span class="n">returncode</span> <span class="k">else</span> <span class="kc">None</span>
 
+    <span class="k">def</span><span class="w"> </span><span class="nf">cargo_deny</span><span class="p">(</span><span class="n">ctx</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">native</span><span class="o">.</span><span class="n">deny</span> <span class="o">==</span> <span class="s2">"false"</span><span class="p">:</span>
+            <span class="n">ctx</span><span class="o">.</span><span class="n">notes</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">"deny = false: cargo deny skipped"</span><span class="p">)</span>
+            <span class="k">return</span> <span class="kc">None</span>
+        <span class="c1"># Mirrors the rust-checks action: only when the workspace has a deny.toml.</span>
+        <span class="n">meta</span> <span class="o">=</span> <span class="n">ctx</span><span class="o">.</span><span class="n">run</span><span class="p">(</span>
+            <span class="p">[</span><span class="s2">"cargo"</span><span class="p">,</span> <span class="s2">"metadata"</span><span class="p">,</span> <span class="o">*</span><span class="n">manifest</span><span class="p">,</span> <span class="s2">"--no-deps"</span><span class="p">,</span> <span class="s2">"--format-version"</span><span class="p">,</span> <span class="s2">"1"</span><span class="p">],</span>
+            <span class="n">capture</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="k">if</span> <span class="n">meta</span><span class="o">.</span><span class="n">returncode</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">return</span> <span class="sa">f</span><span class="s2">"cargo metadata failed (exit </span><span class="si">{</span><span class="n">meta</span><span class="o">.</span><span class="n">returncode</span><span class="si">}</span><span class="s2">)"</span>
+        <span class="n">root</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">meta</span><span class="o">.</span><span class="n">stdout</span><span class="p">)</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"workspace_root"</span><span class="p">)</span>
+        <span class="n">config</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">root</span><span class="p">)</span> <span class="o">/</span> <span class="s2">"deny.toml"</span> <span class="k">if</span> <span class="n">root</span> <span class="k">else</span> <span class="kc">None</span>
+        <span class="k">if</span> <span class="n">config</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="ow">not</span> <span class="n">config</span><span class="o">.</span><span class="n">is_file</span><span class="p">():</span>
+            <span class="n">ctx</span><span class="o">.</span><span class="n">notes</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">"no deny.toml: cargo deny skipped"</span><span class="p">)</span>
+            <span class="k">return</span> <span class="kc">None</span>
+        <span class="k">if</span> <span class="n">shutil</span><span class="o">.</span><span class="n">which</span><span class="p">(</span><span class="s2">"cargo-deny"</span><span class="p">)</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="s2">"deny.toml present but cargo-deny is not installed (cargo install cargo-deny --locked); CI would enforce it"</span>
+        <span class="n">result</span> <span class="o">=</span> <span class="n">ctx</span><span class="o">.</span><span class="n">run</span><span class="p">([</span><span class="s2">"cargo"</span><span class="p">,</span> <span class="s2">"deny"</span><span class="p">,</span> <span class="o">*</span><span class="n">manifest</span><span class="p">,</span> <span class="s2">"check"</span><span class="p">,</span> <span class="s2">"--config"</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">config</span><span class="p">)])</span>
+        <span class="k">return</span> <span class="sa">f</span><span class="s2">"exit </span><span class="si">{</span><span class="n">result</span><span class="o">.</span><span class="n">returncode</span><span class="si">}</span><span class="s2">"</span> <span class="k">if</span> <span class="n">result</span><span class="o">.</span><span class="n">returncode</span> <span class="k">else</span> <span class="kc">None</span>
+
     <span class="n">manifest</span> <span class="o">=</span> <span class="p">(</span><span class="s2">"--manifest-path"</span><span class="p">,</span> <span class="n">native</span><span class="o">.</span><span class="n">manifest_path</span><span class="p">)</span>
     <span class="k">return</span> <span class="p">[</span>
         <span class="n">Step</span><span class="p">(</span><span class="s2">"rust: fmt"</span><span class="p">,</span> <span class="p">(</span><span class="s2">"cargo"</span><span class="p">,</span> <span class="s2">"fmt"</span><span class="p">,</span> <span class="s2">"--all"</span><span class="p">,</span> <span class="s2">"--check"</span><span class="p">,</span> <span class="o">*</span><span class="n">manifest</span><span class="p">)),</span>
@@ -895,6 +916,11 @@
             <span class="s2">"rust: test"</span><span class="p">,</span>
             <span class="n">check</span><span class="o">=</span><span class="n">cargo_test</span><span class="p">,</span>
             <span class="n">description</span><span class="o">=</span><span class="s2">"cargo test on the pure-Rust crates (not the binding one)"</span><span class="p">,</span>
+        <span class="p">),</span>
+        <span class="n">Step</span><span class="p">(</span>
+            <span class="s2">"rust: deny"</span><span class="p">,</span>
+            <span class="n">check</span><span class="o">=</span><span class="n">cargo_deny</span><span class="p">,</span>
+            <span class="n">description</span><span class="o">=</span><span class="s2">"cargo deny check (licences, advisories) when the workspace has a deny.toml"</span><span class="p">,</span>
         <span class="p">),</span>
     <span class="p">]</span>
 
@@ -1684,7 +1710,7 @@
       
     </aside>
   </div>
-</div><script src="../../_static/documentation_options.js?v=c1d524de"></script>
+</div><script src="../../_static/documentation_options.js?v=689550b8"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/scripts/furo.js?v=46bd48cc"></script>

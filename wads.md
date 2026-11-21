@@ -1,4 +1,4 @@
-> built 2026-11-21 22:58 UTC from bb3ae61 (master) · wads 0.2.98. Details: build_info.json
+> built 2026-11-21 23:14 UTC from 14bc52d (master) · wads 0.2.99. Details: build_info.json
 
 # index.html.md
 
@@ -5409,6 +5409,7 @@ smoke_import = "mypkg._core"                  # default: [tool.maturin].module-n
 cargo_test_args = ["-p", "mypkg-core"]        # default: derived from cargo metadata
 publish_crates = ["mypkg-core"]               # crates.io, in publish order; default: none
 crates_dir = "rust"                           # the Cargo workspace; default: the manifest's dir
+deny = false                                  # skip `cargo deny check`; default "auto" (when deny.toml exists)
 ```
 
 `publish_crates` adds a `crates-dry-run` job (`cargo publish --dry-run`, on every run) and
@@ -5451,7 +5452,7 @@ build per platform covers every supported CPython.
 * **Type:**
   The default wheel matrix
 
-### *class* wads.native_build.NativeBuild(backend, targets=tuple(), maturin_args=('--release', '--locked'), smoke_import='', manifest_path='Cargo.toml', cargo_test_args=None, publish_crates=(), crates_dir='')
+### *class* wads.native_build.NativeBuild(backend, targets=tuple(), maturin_args=('--release', '--locked'), smoke_import='', manifest_path='Cargo.toml', cargo_test_args=None, publish_crates=(), crates_dir='', deny='auto')
 
 Bases: [`object`](https://docs.python.org/3/builtins/functions.html#object)
 
@@ -5470,6 +5471,14 @@ the manifest’s directory.
 
 * **Type:**
   The Cargo workspace the crates are published from; `""`
+
+#### deny *: [str](https://docs.python.org/3/builtins/stdtypes.html#str)* *= 'auto'*
+
+`"auto"` (when the workspace has a
+deny.toml) or `"false"` (#223).
+
+* **Type:**
+  `cargo deny check` in the Rust checks
 
 #### manifest_path *: [str](https://docs.python.org/3/builtins/stdtypes.html#str)* *= 'Cargo.toml'*
 
@@ -7149,7 +7158,7 @@ The `Artifact` list a native backend writes for `project_name`.
 
 ```pycon
 >>> sorted(a.target for a in native_artifacts("maturin", "fast_thing"))[:3]
-['Cargo.toml', 'clippy.toml', 'fast_thing/__init__.py']
+['Cargo.toml', 'clippy.toml', 'deny.toml']
 ```
 
 * **Return type:**
@@ -9906,7 +9915,7 @@ cannot be removed is not reported.
 
 # About this build
 
-This documentation was built on **2026-11-21 22:58 UTC** from commit <a href="https://github.com/i2mint/wads/commit/bb3ae614f260a41cbeb4966f8ecd505eb632ce33"><code>bb3ae61</code></a> on branch <code>master</code>, for **wads 0.2.98** (from <code>pyproject.toml</code>).
+This documentation was built on **2026-11-21 23:14 UTC** from commit <a href="https://github.com/i2mint/wads/commit/14bc52d77714b3d4408be11a2411ca0c424336a4"><code>14bc52d</code></a> on branch <code>master</code>, for **wads 0.2.99** (from <code>pyproject.toml</code>).
 
 #### NOTE
 Nothing suggests a mismatch: the tree was clean at the commit above, and the documented version is the one on PyPI.
@@ -9915,7 +9924,7 @@ Nothing suggests a mismatch: the tree was clean at the commit above, and the doc
 
 |                     |                                                                                                                                                    |
 |---------------------|----------------------------------------------------------------------------------------------------------------------------------------------------|
-| Commit              | <a href="https://github.com/i2mint/wads/commit/bb3ae614f260a41cbeb4966f8ecd505eb632ce33"><code>bb3ae614f260a41cbeb4966f8ecd505eb632ce33</code></a> |
+| Commit              | <a href="https://github.com/i2mint/wads/commit/14bc52d77714b3d4408be11a2411ca0c424336a4"><code>14bc52d77714b3d4408be11a2411ca0c424336a4</code></a> |
 | Branch              | <code>master</code>                                                                                                                                |
 | Tags at this commit | none                                                                                                                                               |
 | Working tree        | clean                                                                                                                                              |
@@ -9926,9 +9935,9 @@ Nothing suggests a mismatch: the tree was clean at the commit above, and the doc
 |              |                                                                                            |
 |--------------|--------------------------------------------------------------------------------------------|
 | Repository   | <code>i2mint/wads</code>                                                                   |
-| Run          | <a href="https://github.com/i2mint/wads/actions/runs/44959060439">44959060439</a>          |
+| Run          | <a href="https://github.com/i2mint/wads/actions/runs/44960426582">44960426582</a>          |
 | Ref          | <code>refs/heads/master</code>                                                             |
-| Event commit | <code>bb3ae614f260a41cbeb4966f8ecd505eb632ce33</code> (in the history of the built commit) |
+| Event commit | <code>14bc52d77714b3d4408be11a2411ca0c424336a4</code> (in the history of the built commit) |
 
 ## Tools
 
@@ -9953,13 +9962,13 @@ Nothing suggests a mismatch: the tree was clean at the commit above, and the doc
 
 ## Package on PyPI
 
-Latest release: <a href="https://pypi.org/project/wads/0.2.98/">0.2.98</a>, the same as the documented version.
+Latest release: <a href="https://pypi.org/project/wads/0.2.99/">0.2.99</a>, the same as the documented version.
 
 ## Reproduce
 
 ```bash
 git clone https://github.com/i2mint/wads && cd wads
-git checkout bb3ae614f260a41cbeb4966f8ecd505eb632ce33
+git checkout 14bc52d77714b3d4408be11a2411ca0c424336a4
 pip install "epythet==0.2.23"
 epythet quickstart . --ignore tests/ scrap/ examples/
 ```

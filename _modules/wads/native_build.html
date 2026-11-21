@@ -312,6 +312,7 @@
 <span class="sd">    cargo_test_args = ["-p", "mypkg-core"]        # default: derived from cargo metadata</span>
 <span class="sd">    publish_crates = ["mypkg-core"]               # crates.io, in publish order; default: none</span>
 <span class="sd">    crates_dir = "rust"                           # the Cargo workspace; default: the manifest's dir</span>
+<span class="sd">    deny = false                                  # skip `cargo deny check`; default "auto" (when deny.toml exists)</span>
 
 <span class="sd">``publish_crates`` adds a ``crates-dry-run`` job (``cargo publish --dry-run``, on every run) and</span>
 <span class="sd">a ``publish-crates`` job on release (``cargo publish --locked``, skipping a crate version that is</span>
@@ -391,6 +392,9 @@
     <span class="n">publish_crates</span><span class="p">:</span> <span class="nb">tuple</span> <span class="o">=</span> <span class="p">()</span>
     <span class="c1">#: The Cargo workspace the crates are published from; ``""``: the manifest's directory.</span>
     <span class="n">crates_dir</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">""</span>
+    <span class="c1">#: ``cargo deny check`` in the Rust checks: ``"auto"`` (when the workspace has a</span>
+    <span class="c1">#: deny.toml) or ``"false"`` (#223).</span>
+    <span class="n">deny</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"auto"</span>
 
 <div class="viewcode-block" id="NativeBuild.matrix">
 <a class="viewcode-back" href="../../_autosummary/wads.native_build.html#wads.native_build.NativeBuild.matrix">[docs]</a>
@@ -410,6 +414,7 @@
             <span class="s2">"cargo_test_args"</span><span class="p">:</span> <span class="p">(</span>
                 <span class="kc">None</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">cargo_test_args</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">cargo_test_args</span><span class="p">)</span>
             <span class="p">),</span>
+            <span class="s2">"deny"</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">deny</span><span class="p">,</span>
             <span class="s2">"publish_crates"</span><span class="p">:</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">publish_crates</span><span class="p">),</span>
             <span class="s2">"crates_dir"</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">crates_dir</span>
             <span class="ow">or</span> <span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">PurePosixPath</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">manifest_path</span><span class="p">)</span><span class="o">.</span><span class="n">parent</span><span class="p">)),</span>
@@ -517,6 +522,7 @@
                 <span class="k">if</span> <span class="n">cargo_test</span> <span class="ow">is</span> <span class="kc">None</span>
                 <span class="k">else</span> <span class="n">_str_tuple</span><span class="p">(</span><span class="n">cargo_test</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="s2">"cargo_test_args"</span><span class="p">)</span>
             <span class="p">),</span>
+            <span class="n">deny</span><span class="o">=</span><span class="n">_deny_mode</span><span class="p">(</span><span class="n">table</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"deny"</span><span class="p">,</span> <span class="s2">"auto"</span><span class="p">)),</span>
             <span class="n">publish_crates</span><span class="o">=</span><span class="n">_crate_names</span><span class="p">(</span><span class="n">table</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"publish_crates"</span><span class="p">,</span> <span class="p">[])),</span>
             <span class="n">crates_dir</span><span class="o">=</span><span class="p">(</span>
                 <span class="n">_non_blank_str</span><span class="p">(</span><span class="n">table</span><span class="p">[</span><span class="s2">"crates_dir"</span><span class="p">],</span> <span class="n">key</span><span class="o">=</span><span class="s2">"crates_dir"</span><span class="p">)</span>
@@ -537,9 +543,23 @@
     <span class="s2">"cargo_test_args"</span><span class="p">,</span>
     <span class="s2">"publish_crates"</span><span class="p">,</span>
     <span class="s2">"crates_dir"</span><span class="p">,</span>
+    <span class="s2">"deny"</span><span class="p">,</span>
 <span class="p">}</span>
 
 <span class="n">_CRATE_NAME_RE</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="sa">r</span><span class="s2">"[A-Za-z][A-Za-z0-9_-]*"</span><span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_deny_mode</span><span class="p">(</span><span class="n">value</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""``deny``: ``"auto"``, or ``false``/``"false"`` to skip ``cargo deny``.</span>
+
+<span class="sd">    &gt;&gt;&gt; _deny_mode(False), _deny_mode("auto")</span>
+<span class="sd">    ('false', 'auto')</span>
+<span class="sd">    """</span>
+    <span class="k">if</span> <span class="n">value</span> <span class="ow">is</span> <span class="kc">False</span> <span class="ow">or</span> <span class="n">value</span> <span class="o">==</span> <span class="s2">"false"</span><span class="p">:</span>
+        <span class="k">return</span> <span class="s2">"false"</span>
+    <span class="k">if</span> <span class="n">value</span> <span class="o">==</span> <span class="s2">"auto"</span><span class="p">:</span>
+        <span class="k">return</span> <span class="s2">"auto"</span>
+    <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s1">'deny must be "auto" or false, got </span><span class="si">{</span><span class="n">value</span><span class="si">!r}</span><span class="s1">'</span><span class="p">)</span>
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">_crate_names</span><span class="p">(</span><span class="n">value</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">:</span>
@@ -635,7 +655,7 @@
       
     </aside>
   </div>
-</div><script src="../../_static/documentation_options.js?v=c1d524de"></script>
+</div><script src="../../_static/documentation_options.js?v=689550b8"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/scripts/furo.js?v=46bd48cc"></script>
