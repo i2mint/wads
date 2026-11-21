@@ -21,7 +21,14 @@ targets = ["linux-x86_64", "macos-arm64"]     # names from NATIVE_TARGETS, or ta
 maturin_args = ["--release", "--locked"]
 smoke_import = "mypkg._core"                  # default: [tool.maturin].module-name
 cargo_test_args = ["-p", "mypkg-core"]        # default: derived from cargo metadata
+publish_crates = ["mypkg-core"]               # crates.io, in publish order; default: none
+crates_dir = "rust"                           # the Cargo workspace; default: the manifest's dir
 ```
+
+`publish_crates` adds a `crates-dry-run` job (`cargo publish --dry-run`, on every run) and
+a `publish-crates` job on release (`cargo publish --locked`, skipping a crate version that is
+already on crates.io, token from the `CARGO_REGISTRY_TOKEN` secret) that `publish-native` waits
+for: crates.io, then PyPI. A crate keeps its own `Cargo.toml` version; bump it by hand.
 
 A target is a name from [`NATIVE_TARGETS`](#wads.native_build.NATIVE_TARGETS) or a table with the same keys (`name`,
 `runner`, `target`, and optionally `manylinux`, `python_arch`, `smoke`), for a
@@ -58,7 +65,7 @@ build per platform covers every supported CPython.
 * **Type:**
   The default wheel matrix
 
-### *class* wads.native_build.NativeBuild(backend, targets=tuple(), maturin_args=('--release', '--locked'), smoke_import='', manifest_path='Cargo.toml', cargo_test_args=None)
+### *class* wads.native_build.NativeBuild(backend, targets=tuple(), maturin_args=('--release', '--locked'), smoke_import='', manifest_path='Cargo.toml', cargo_test_args=None, publish_crates=(), crates_dir='')
 
 Bases: [`object`](https://docs.python.org/3/builtins/functions.html#object)
 
@@ -70,6 +77,13 @@ derive from cargo metadata (every crate but the binding one).
 
 * **Type:**
   `None`
+
+#### crates_dir *: [str](https://docs.python.org/3/builtins/stdtypes.html#str)* *= ''*
+
+the manifest’s directory.
+
+* **Type:**
+  The Cargo workspace the crates are published from; `""`
 
 #### manifest_path *: [str](https://docs.python.org/3/builtins/stdtypes.html#str)* *= 'Cargo.toml'*
 
@@ -89,6 +103,13 @@ Everything but the matrix, as the setup job’s `native-options` output.
 
 * **Return type:**
   [`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict)
+
+#### publish_crates *: [tuple](https://docs.python.org/3/builtins/stdtypes.html#tuple)* *= ()*
+
+none.
+
+* **Type:**
+  Crates to publish to crates.io, in publish order (dependencies first). Empty
 
 ### *class* wads.native_build.NativeTarget(name, runner, target, manylinux='', python_arch='', smoke=True)
 

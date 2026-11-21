@@ -314,8 +314,14 @@ table for the details:</p>
 <span class="n">maturin_args</span> <span class="o">=</span> <span class="p">[</span><span class="s2">"--release"</span><span class="p">,</span> <span class="s2">"--locked"</span><span class="p">]</span>
 <span class="n">smoke_import</span> <span class="o">=</span> <span class="s2">"mypkg._core"</span>                  <span class="c1"># default: [tool.maturin].module-name</span>
 <span class="n">cargo_test_args</span> <span class="o">=</span> <span class="p">[</span><span class="s2">"-p"</span><span class="p">,</span> <span class="s2">"mypkg-core"</span><span class="p">]</span>        <span class="c1"># default: derived from cargo metadata</span>
+<span class="n">publish_crates</span> <span class="o">=</span> <span class="p">[</span><span class="s2">"mypkg-core"</span><span class="p">]</span>               <span class="c1"># crates.io, in publish order; default: none</span>
+<span class="n">crates_dir</span> <span class="o">=</span> <span class="s2">"rust"</span>                           <span class="c1"># the Cargo workspace; default: the manifest's dir</span>
 </pre></div>
 </div>
+<p><code class="docutils literal notranslate"><span class="pre">publish_crates</span></code> adds a <code class="docutils literal notranslate"><span class="pre">crates-dry-run</span></code> job (<code class="docutils literal notranslate"><span class="pre">cargo</span> <span class="pre">publish</span> <span class="pre">--dry-run</span></code>, on every run) and
+a <code class="docutils literal notranslate"><span class="pre">publish-crates</span></code> job on release (<code class="docutils literal notranslate"><span class="pre">cargo</span> <span class="pre">publish</span> <span class="pre">--locked</span></code>, skipping a crate version that is
+already on crates.io, token from the <code class="docutils literal notranslate"><span class="pre">CARGO_REGISTRY_TOKEN</span></code> secret) that <code class="docutils literal notranslate"><span class="pre">publish-native</span></code> waits
+for: crates.io, then PyPI. A crate keeps its own <code class="docutils literal notranslate"><span class="pre">Cargo.toml</span></code> version; bump it by hand.</p>
 <p>A target is a name from <a class="reference internal" href="#wads.native_build.NATIVE_TARGETS" title="wads.native_build.NATIVE_TARGETS"><code class="xref py py-data docutils literal notranslate"><span class="pre">NATIVE_TARGETS</span></code></a> or a table with the same keys (<code class="docutils literal notranslate"><span class="pre">name</span></code>,
 <code class="docutils literal notranslate"><span class="pre">runner</span></code>, <code class="docutils literal notranslate"><span class="pre">target</span></code>, and optionally <code class="docutils literal notranslate"><span class="pre">manylinux</span></code>, <code class="docutils literal notranslate"><span class="pre">python_arch</span></code>, <code class="docutils literal notranslate"><span class="pre">smoke</span></code>), for a
 platform the registry lacks (musllinux, Windows on ARM). Everything here is standard
@@ -379,7 +385,7 @@ build per platform covers every supported CPython.</p>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="wads.native_build.NativeBuild">
-<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">wads.native_build.</span></span><span class="sig-name descname"><span class="pre">NativeBuild</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">backend</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">targets</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">tuple()</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">maturin_args</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">('--release',</span> <span class="pre">'--locked')</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">smoke_import</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">manifest_path</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'Cargo.toml'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cargo_test_args</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/wads/native_build.html#NativeBuild"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#wads.native_build.NativeBuild" title="Link to this definition">¶</a></dt>
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">wads.native_build.</span></span><span class="sig-name descname"><span class="pre">NativeBuild</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">backend</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">targets</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">tuple()</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">maturin_args</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">('--release',</span> <span class="pre">'--locked')</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">smoke_import</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">manifest_path</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'Cargo.toml'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cargo_test_args</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">publish_crates</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">()</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">crates_dir</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/wads/native_build.html#NativeBuild"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#wads.native_build.NativeBuild" title="Link to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/builtins/functions.html#object" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
 <p>The resolved native-build settings of one repo.</p>
 <dl class="field-list simple">
@@ -391,6 +397,17 @@ build per platform covers every supported CPython.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type<span class="colon">:</span></dt>
 <dd class="field-odd"><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="wads.native_build.NativeBuild.crates_dir">
+<span class="sig-name descname"><span class="pre">crates_dir</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><span class="pre">str</span></a></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">''</span></span><a class="headerlink" href="#wads.native_build.NativeBuild.crates_dir" title="Link to this definition">¶</a></dt>
+<dd><p>the manifest’s directory.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>The Cargo workspace the crates are published from; <code class="docutils literal notranslate"><span class="pre">&quot;&quot;</span></code></p>
 </dd>
 </dl>
 </dd></dl>
@@ -420,6 +437,17 @@ workspace from it.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#dict" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code></a></span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="wads.native_build.NativeBuild.publish_crates">
+<span class="sig-name descname"><span class="pre">publish_crates</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#tuple" title="(in Python v3.15)"><span class="pre">tuple</span></a></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">()</span></span><a class="headerlink" href="#wads.native_build.NativeBuild.publish_crates" title="Link to this definition">¶</a></dt>
+<dd><p>none.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Crates to publish to crates.io, in publish order (dependencies first). Empty</p>
 </dd>
 </dl>
 </dd></dl>
@@ -544,9 +572,11 @@ something else.</p>
 <li><a class="reference internal" href="#wads.native_build.NATIVE_TARGETS"><code class="docutils literal notranslate"><span class="pre">NATIVE_TARGETS</span></code></a></li>
 <li><a class="reference internal" href="#wads.native_build.NativeBuild"><code class="docutils literal notranslate"><span class="pre">NativeBuild</span></code></a><ul>
 <li><a class="reference internal" href="#wads.native_build.NativeBuild.cargo_test_args"><code class="docutils literal notranslate"><span class="pre">NativeBuild.cargo_test_args</span></code></a></li>
+<li><a class="reference internal" href="#wads.native_build.NativeBuild.crates_dir"><code class="docutils literal notranslate"><span class="pre">NativeBuild.crates_dir</span></code></a></li>
 <li><a class="reference internal" href="#wads.native_build.NativeBuild.manifest_path"><code class="docutils literal notranslate"><span class="pre">NativeBuild.manifest_path</span></code></a></li>
 <li><a class="reference internal" href="#wads.native_build.NativeBuild.matrix"><code class="docutils literal notranslate"><span class="pre">NativeBuild.matrix()</span></code></a></li>
 <li><a class="reference internal" href="#wads.native_build.NativeBuild.options"><code class="docutils literal notranslate"><span class="pre">NativeBuild.options()</span></code></a></li>
+<li><a class="reference internal" href="#wads.native_build.NativeBuild.publish_crates"><code class="docutils literal notranslate"><span class="pre">NativeBuild.publish_crates</span></code></a></li>
 </ul>
 </li>
 <li><a class="reference internal" href="#wads.native_build.NativeTarget"><code class="docutils literal notranslate"><span class="pre">NativeTarget</span></code></a></li>
@@ -563,7 +593,7 @@ something else.</p>
       
     </aside>
   </div>
-</div><script src="../_static/documentation_options.js?v=ea533b14"></script>
+</div><script src="../_static/documentation_options.js?v=cae2a1ff"></script>
     <script src="../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../_static/scripts/furo.js?v=46bd48cc"></script>

@@ -307,6 +307,13 @@
 <span class="sd">    maturin_args = ["--release", "--locked"]</span>
 <span class="sd">    smoke_import = "mypkg._core"                  # default: [tool.maturin].module-name</span>
 <span class="sd">    cargo_test_args = ["-p", "mypkg-core"]        # default: derived from cargo metadata</span>
+<span class="sd">    publish_crates = ["mypkg-core"]               # crates.io, in publish order; default: none</span>
+<span class="sd">    crates_dir = "rust"                           # the Cargo workspace; default: the manifest's dir</span>
+
+<span class="sd">``publish_crates`` adds a ``crates-dry-run`` job (``cargo publish --dry-run``, on every run) and</span>
+<span class="sd">a ``publish-crates`` job on release (``cargo publish --locked``, skipping a crate version that is</span>
+<span class="sd">already on crates.io, token from the ``CARGO_REGISTRY_TOKEN`` secret) that ``publish-native`` waits</span>
+<span class="sd">for: crates.io, then PyPI. A crate keeps its own ``Cargo.toml`` version; bump it by hand.</span>
 
 <span class="sd">A target is a name from :data:`NATIVE_TARGETS` or a table with the same keys (``name``,</span>
 <span class="sd">``runner``, ``target``, and optionally ``manylinux``, ``python_arch``, ``smoke``), for a</span>
@@ -318,6 +325,7 @@
 
 <span class="kn">import</span><span class="w"> </span><span class="nn">re</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">dataclasses</span><span class="w"> </span><span class="kn">import</span> <span class="n">asdict</span><span class="p">,</span> <span class="n">dataclass</span><span class="p">,</span> <span class="n">field</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">PurePosixPath</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Optional</span>
 
 <span class="c1">#: Build backends with a native path. The value is the backend's ``build-backend`` string.</span>
@@ -376,6 +384,10 @@
     <span class="n">manifest_path</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"Cargo.toml"</span>
     <span class="c1">#: ``None``: derive from cargo metadata (every crate but the binding one).</span>
     <span class="n">cargo_test_args</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">tuple</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="c1">#: Crates to publish to crates.io, in publish order (dependencies first). Empty: none.</span>
+    <span class="n">publish_crates</span><span class="p">:</span> <span class="nb">tuple</span> <span class="o">=</span> <span class="p">()</span>
+    <span class="c1">#: The Cargo workspace the crates are published from; ``""``: the manifest's directory.</span>
+    <span class="n">crates_dir</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">""</span>
 
 <div class="viewcode-block" id="NativeBuild.matrix">
 <a class="viewcode-back" href="../../_autosummary/wads.native_build.html#wads.native_build.NativeBuild.matrix">[docs]</a>
@@ -395,6 +407,9 @@
             <span class="s2">"cargo_test_args"</span><span class="p">:</span> <span class="p">(</span>
                 <span class="kc">None</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">cargo_test_args</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">cargo_test_args</span><span class="p">)</span>
             <span class="p">),</span>
+            <span class="s2">"publish_crates"</span><span class="p">:</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">publish_crates</span><span class="p">),</span>
+            <span class="s2">"crates_dir"</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">crates_dir</span>
+            <span class="ow">or</span> <span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">PurePosixPath</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">manifest_path</span><span class="p">)</span><span class="o">.</span><span class="n">parent</span><span class="p">)),</span>
         <span class="p">}</span></div>
 </div>
 
@@ -499,13 +514,48 @@
                 <span class="k">if</span> <span class="n">cargo_test</span> <span class="ow">is</span> <span class="kc">None</span>
                 <span class="k">else</span> <span class="n">_str_tuple</span><span class="p">(</span><span class="n">cargo_test</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="s2">"cargo_test_args"</span><span class="p">)</span>
             <span class="p">),</span>
+            <span class="n">publish_crates</span><span class="o">=</span><span class="n">_crate_names</span><span class="p">(</span><span class="n">table</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"publish_crates"</span><span class="p">,</span> <span class="p">[])),</span>
+            <span class="n">crates_dir</span><span class="o">=</span><span class="p">(</span>
+                <span class="n">_non_blank_str</span><span class="p">(</span><span class="n">table</span><span class="p">[</span><span class="s2">"crates_dir"</span><span class="p">],</span> <span class="n">key</span><span class="o">=</span><span class="s2">"crates_dir"</span><span class="p">)</span>
+                <span class="k">if</span> <span class="s2">"crates_dir"</span> <span class="ow">in</span> <span class="n">table</span>
+                <span class="k">else</span> <span class="s2">""</span>
+            <span class="p">),</span>
         <span class="p">)</span>
     <span class="k">except</span> <span class="ne">ValueError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
         <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"[tool.wads.ci.build].native: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="kc">None</span></div>
 
 
 
-<span class="n">_TABLE_KEYS</span> <span class="o">=</span> <span class="p">{</span><span class="s2">"backend"</span><span class="p">,</span> <span class="s2">"targets"</span><span class="p">,</span> <span class="s2">"maturin_args"</span><span class="p">,</span> <span class="s2">"smoke_import"</span><span class="p">,</span> <span class="s2">"cargo_test_args"</span><span class="p">}</span>
+<span class="n">_TABLE_KEYS</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s2">"backend"</span><span class="p">,</span>
+    <span class="s2">"targets"</span><span class="p">,</span>
+    <span class="s2">"maturin_args"</span><span class="p">,</span>
+    <span class="s2">"smoke_import"</span><span class="p">,</span>
+    <span class="s2">"cargo_test_args"</span><span class="p">,</span>
+    <span class="s2">"publish_crates"</span><span class="p">,</span>
+    <span class="s2">"crates_dir"</span><span class="p">,</span>
+<span class="p">}</span>
+
+<span class="n">_CRATE_NAME_RE</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="sa">r</span><span class="s2">"[A-Za-z][A-Za-z0-9_-]*"</span><span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_crate_names</span><span class="p">(</span><span class="n">value</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Crate names for ``publish_crates``: a list of valid, distinct crate names.</span>
+
+<span class="sd">    &gt;&gt;&gt; _crate_names(["a-core", "a"])</span>
+<span class="sd">    ('a-core', 'a')</span>
+<span class="sd">    &gt;&gt;&gt; _crate_names(["a b"])</span>
+<span class="sd">    Traceback (most recent call last):</span>
+<span class="sd">      ...</span>
+<span class="sd">    ValueError: publish_crates: invalid crate name 'a b'</span>
+<span class="sd">    """</span>
+    <span class="n">names</span> <span class="o">=</span> <span class="n">_str_tuple</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="s2">"publish_crates"</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">names</span><span class="p">:</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">_CRATE_NAME_RE</span><span class="o">.</span><span class="n">fullmatch</span><span class="p">(</span><span class="n">name</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"publish_crates: invalid crate name </span><span class="si">{</span><span class="n">name</span><span class="si">!r}</span><span class="s2">"</span><span class="p">)</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">names</span><span class="p">))</span> <span class="o">!=</span> <span class="nb">len</span><span class="p">(</span><span class="n">names</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"publish_crates: duplicate names in </span><span class="si">{</span><span class="nb">list</span><span class="p">(</span><span class="n">names</span><span class="p">)</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">names</span>
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">_targets</span><span class="p">(</span><span class="n">value</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">:</span>
@@ -582,7 +632,7 @@
       
     </aside>
   </div>
-</div><script src="../../_static/documentation_options.js?v=ea533b14"></script>
+</div><script src="../../_static/documentation_options.js?v=cae2a1ff"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/scripts/furo.js?v=46bd48cc"></script>
