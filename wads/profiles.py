@@ -937,7 +937,7 @@ def native_artifacts(
     ``skip`` names template paths to leave out.
 
     >>> sorted(a.target for a in native_artifacts("maturin", "fast_thing"))[:3]
-    ['Cargo.toml', 'clippy.toml', 'fast_thing/__init__.py']
+    ['Cargo.toml', 'clippy.toml', 'deny.toml']
     """
     profile = get_native_profile(backend)
     names = native_names(project_name, license=license, backend=backend)
