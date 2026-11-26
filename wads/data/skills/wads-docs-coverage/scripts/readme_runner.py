@@ -217,7 +217,9 @@ def run_exec_block(block, globs, display_name, timeout):
     """Run a plain script block via exec into the shared globals."""
     pseudo_file = f"{display_name}:block-{block['index']}"
     try:
-        code = compile(block["body"], pseudo_file, "exec")
+        # dont_inherit: this module has `from __future__ import annotations`; README
+        # code must run as a user's would (real, not string, annotations).
+        code = compile(block["body"], pseudo_file, "exec", dont_inherit=True)
     except SyntaxError as exc:
         abs_line = block["body_line"] + (exc.lineno or 1) - 1
         return "FAIL", f"SyntaxError: {exc.msg} (README line {abs_line})"
