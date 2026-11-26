@@ -740,8 +740,11 @@ def audit_git(repo, rep):
 
 
 _RE_OWNER_URL = re.compile(
-    r"(?:github\.com/(?P<o1>[\w.-]+)/(?P<n1>[\w.-]+)"
-    r"|(?P<o2>[\w-]+)\.github\.io/(?P<n2>[\w.-]+))",
+    r"(?:(?<![\w.-])github\.com/(?P<o1>[\w.-]+)/(?P<n1>[\w.-]+)"
+    r"|(?<![\w-])(?P<o2>[\w-]+)\.github\.io/(?P<n2>[\w.-]+)"
+    r"|raw\.githubusercontent\.com/(?P<o3>[\w.-]+)/(?P<n3>[\w.-]+)"
+    r"|codecov\.io/gh/(?P<o4>[\w.-]+)/(?P<n4>[\w.-]+)"
+    r"|img\.shields\.io/github/[\w-]+/(?P<o5>[\w.-]+)/(?P<n5>[\w.-]+))",
     re.IGNORECASE,
 )
 
@@ -763,14 +766,15 @@ def owner_mismatched_urls(text, repo_slug):
     owner, name = (part.lower() for part in repo_slug.split("/", 1))
     found = []
     for m in _RE_OWNER_URL.finditer(text or ""):
-        o = (m.group("o1") or m.group("o2")).lower()
-        n = (m.group("n1") or m.group("n2")).lower()
+        groups = [(m.group(f"o{i}"), m.group(f"n{i}")) for i in range(1, 6)]
+        o, n = next((o, n) for o, n in groups if o)
+        o, n = o.lower(), n.rstrip(".").lower()
         n = n[: -len(".git")] if n.endswith(".git") else n
         if n == name and o != owner:
             url = m.group(0).rstrip(".")
             if url.lower().endswith(".git"):
                 url = url[: -len(".git")]
-            if url not in found:
+            if url.lower() not in {u.lower() for u in found}:
                 found.append(url)
     return found
 

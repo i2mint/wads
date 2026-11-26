@@ -41,3 +41,21 @@ def test_matching_owner_and_unrelated_links_are_quiet(tmp_path):
         "see https://github.com/other/unrelated",
     )
     assert not any("owner other" in x for x in _summaries(repo))
+
+
+def test_badges_codecov_raw_and_sentence_end():
+    text = (
+        "![](https://img.shields.io/github/license/old/pkg) "
+        "https://codecov.io/gh/old/pkg https://raw.githubusercontent.com/old/pkg/x "
+        "see github.com/Old/pkg. mygithub.com/old/pkg"
+    )
+    found = ra.owner_mismatched_urls(text, "new/pkg")
+    assert len(found) == 4 and not any(f.startswith("mygithub") for f in found)
+
+
+def test_long_letter_run_is_fast():
+    import time
+
+    t = time.time()
+    ra.owner_mismatched_urls("A" * 40000, "new/pkg")
+    assert time.time() - t < 1

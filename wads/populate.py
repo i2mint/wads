@@ -506,7 +506,12 @@ def populate_pkg_dir(
     kwargs = {k: v for k, v in kwargs.items() if v is not None}
     # configs = dict(name=name, **configs, **kwargs, **args_defaults)
     # configs = dict(name=name, **args_defaults, **configs, **kwargs)
-    configs = dict(ChainMap(dict(name=name), kwargs, configs, args_defaults))
+    # Owner: an explicit root_url wins, then the git remote (so a transferred repo
+    # gets its new owner), then the defaults_from org config.
+    from_remote = {} if "root_url" in kwargs else _root_url_from_git_remote(pkg_dir)
+    configs = dict(
+        ChainMap(dict(name=name), kwargs, from_remote, configs, args_defaults)
+    )
 
     kwargs["description-file"] = kwargs.pop("description_file", "")
 
@@ -1259,6 +1264,20 @@ def _push_paths(workflow_text: str):
 
 
 _unknown_version_control_system = object()
+
+
+def _root_url_from_git_remote(pkg_dir) -> dict:
+    """``{"root_url": "https://host/owner/"}`` from ``pkg_dir``'s origin, else ``{}``.
+
+    >>> _root_url_from_git_remote('/nonexistent-dir')
+    {}
+    """
+    from wads.migration import git_remote_https_url
+
+    remote = git_remote_https_url(pkg_dir)
+    if not remote or remote.count("/") < 4:  # https://host/owner/repo
+        return {}
+    return {"root_url": remote.rsplit("/", 1)[0] + "/"}
 
 
 def _ensure_url_from_url_root_and_name(configs: dict):
