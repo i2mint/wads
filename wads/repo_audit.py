@@ -897,9 +897,6 @@ def audit_github(repo_slug, rep, project, docs_enabled):
         )
 
 
-PRIVATE_CLASSIFIER = "Private :: Do Not Upload"
-
-
 def audit_pypi(rep, project):
     name = project.get("name")
     local = project.get("version")
