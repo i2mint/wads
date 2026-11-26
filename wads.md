@@ -1,4 +1,4 @@
-> built 2026-11-26 14:47 UTC from 30dabda (master) · wads 0.2.100. Details: build_info.json
+> built 2026-11-26 14:56 UTC from e3b6060 (master) · wads 0.2.101. Details: build_info.json
 
 # index.html.md
 
@@ -5039,11 +5039,13 @@ True
 | [`dropped_infra_ci_env_vars`](_autosummary/wads.migration.html.md#wads.migration.dropped_infra_ci_env_vars)(ci_text)                | The `{ENV_VAR: SECRET_NAME}` entries [`extract_ci_env_vars()`](_autosummary/wads.migration.html.md#wads.migration.extract_ci_env_vars) drops. |
 | [`extract_ci_env_vars`](_autosummary/wads.migration.html.md#wads.migration.extract_ci_env_vars)(ci_text)                      | Extract secret-backed env vars from a CI workflow's `env:` blocks.                                                 |
 | [`extract_ci_variable_env_vars`](_autosummary/wads.migration.html.md#wads.migration.extract_ci_variable_env_vars)(ci_text)             | `{ENV_VAR: VARIABLE_NAME}` for `env:` entries read from `${{ vars.X }}`.                                           |
+| [`git_remote_https_url`](_autosummary/wads.migration.html.md#wads.migration.git_remote_https_url)(project_dir)                 | The `origin` remote of *project_dir* as an `https://` URL, or `None`.                                              |
 | [`main`](_autosummary/wads.migration.html.md#wads.migration.main)()                                            | CLI entry point for wads migration tools.                                                                          |
 | [`migrate_ci_to_stub`](_autosummary/wads.migration.html.md#wads.migration.migrate_ci_to_stub)([old_ci, pin, transport, ...]) | Return the SSOT stub CI workflow that calls i2mint/wads's reusable uv-ci.                                          |
 | [`migrate_ci_to_uv`](_autosummary/wads.migration.html.md#wads.migration.migrate_ci_to_uv)(old_ci, \*[, defaults])          | Migrate a CI workflow (old or 2025 format) to the uv-based template.                                               |
 | [`migrate_github_ci_old_to_new`](_autosummary/wads.migration.html.md#wads.migration.migrate_github_ci_old_to_new)(old_ci[, defaults])  | Migrate old GitHub CI script to new 2025 format.                                                                   |
 | [`migrate_setuptools_to_hatching`](_autosummary/wads.migration.html.md#wads.migration.migrate_setuptools_to_hatching)(setup_cfg[, ...])  | Migrate setup.cfg to pyproject.toml format using hatching.                                                         |
+| [`stale_docsrc`](_autosummary/wads.migration.html.md#wads.migration.stale_docsrc)(project_dir)                         | Return `docsrc/` if its `conf.py` (old wads template) reads `setup.cfg`.                                           |
 
 ### Exceptions
 
@@ -5198,6 +5200,18 @@ True
 
 * **Return type:**
   [`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict)
+
+### wads.migration.git_remote_https_url(project_dir)
+
+The `origin` remote of *project_dir* as an `https://` URL, or `None`.
+
+```pycon
+>>> git_remote_https_url(None) is None
+True
+```
+
+* **Return type:**
+  [`Optional`](https://docs.python.org/3/library/typing.html#typing.Optional)[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str)]
 
 ### wads.migration.main()
 
@@ -5380,6 +5394,22 @@ True
 >>> 'name = "test"' in result
 True
 ```
+
+### wads.migration.stale_docsrc(project_dir)
+
+Return `docsrc/` if its `conf.py` (old wads template) reads `setup.cfg`.
+
+Migration removes `setup.cfg`, so such a conf.py makes the docs job fail with
+`FileNotFoundError: setup.cfg`; epythet regenerates a working `docsrc` once
+the directory is gone.
+
+```pycon
+>>> stale_docsrc('/nonexistent-dir') is None
+True
+```
+
+* **Return type:**
+  [`Optional`](https://docs.python.org/3/library/typing.html#typing.Optional)[[`Path`](https://docs.python.org/3/library/pathlib.html#pathlib.Path)]
 
 
 # _autosummary/wads.native_build.html.md
@@ -9915,7 +9945,7 @@ cannot be removed is not reported.
 
 # About this build
 
-This documentation was built on **2026-11-26 14:47 UTC** from commit <a href="https://github.com/i2mint/wads/commit/30dabda12eae2dfc5c8d9b67d6490f93cf49baf9"><code>30dabda</code></a> on branch <code>master</code>, for **wads 0.2.100** (from <code>pyproject.toml</code>).
+This documentation was built on **2026-11-26 14:56 UTC** from commit <a href="https://github.com/i2mint/wads/commit/e3b60600415d530068f6dd53325892096a1a41cb"><code>e3b6060</code></a> on branch <code>master</code>, for **wads 0.2.101** (from <code>pyproject.toml</code>).
 
 #### NOTE
 Nothing suggests a mismatch: the tree was clean at the commit above, and the documented version is the one on PyPI.
@@ -9924,7 +9954,7 @@ Nothing suggests a mismatch: the tree was clean at the commit above, and the doc
 
 |                     |                                                                                                                                                    |
 |---------------------|----------------------------------------------------------------------------------------------------------------------------------------------------|
-| Commit              | <a href="https://github.com/i2mint/wads/commit/30dabda12eae2dfc5c8d9b67d6490f93cf49baf9"><code>30dabda12eae2dfc5c8d9b67d6490f93cf49baf9</code></a> |
+| Commit              | <a href="https://github.com/i2mint/wads/commit/e3b60600415d530068f6dd53325892096a1a41cb"><code>e3b60600415d530068f6dd53325892096a1a41cb</code></a> |
 | Branch              | <code>master</code>                                                                                                                                |
 | Tags at this commit | none                                                                                                                                               |
 | Working tree        | clean                                                                                                                                              |
@@ -9935,9 +9965,9 @@ Nothing suggests a mismatch: the tree was clean at the commit above, and the doc
 |              |                                                                                            |
 |--------------|--------------------------------------------------------------------------------------------|
 | Repository   | <code>i2mint/wads</code>                                                                   |
-| Run          | <a href="https://github.com/i2mint/wads/actions/runs/45841772902">45841772902</a>          |
+| Run          | <a href="https://github.com/i2mint/wads/actions/runs/45843347431">45843347431</a>          |
 | Ref          | <code>refs/heads/master</code>                                                             |
-| Event commit | <code>30dabda12eae2dfc5c8d9b67d6490f93cf49baf9</code> (in the history of the built commit) |
+| Event commit | <code>e3b60600415d530068f6dd53325892096a1a41cb</code> (in the history of the built commit) |
 
 ## Tools
 
@@ -9962,13 +9992,13 @@ Nothing suggests a mismatch: the tree was clean at the commit above, and the doc
 
 ## Package on PyPI
 
-Latest release: <a href="https://pypi.org/project/wads/0.2.100/">0.2.100</a>, the same as the documented version.
+Latest release: <a href="https://pypi.org/project/wads/0.2.101/">0.2.101</a>, the same as the documented version.
 
 ## Reproduce
 
 ```bash
 git clone https://github.com/i2mint/wads && cd wads
-git checkout 30dabda12eae2dfc5c8d9b67d6490f93cf49baf9
+git checkout e3b60600415d530068f6dd53325892096a1a41cb
 pip install "epythet==0.2.25"
 epythet quickstart . --ignore tests/ scrap/ examples/
 ```

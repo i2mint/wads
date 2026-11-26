@@ -811,6 +811,112 @@
     <span class="k">return</span> <span class="kc">None</span>
 
 
+<span class="n">_OLD_CONF_READS_SETUP_CFG</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="sa">r</span><span class="s2">"/\s*['</span><span class="se">\"</span><span class="s2">]setup\.cfg['</span><span class="se">\"</span><span class="s2">]"</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="git_remote_https_url">
+<a class="viewcode-back" href="../../_autosummary/wads.migration.html#wads.migration.git_remote_https_url">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">git_remote_https_url</span><span class="p">(</span><span class="n">project_dir</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Path</span><span class="p">,</span> <span class="kc">None</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">"""The ``origin`` remote of *project_dir* as an ``https://`` URL, or ``None``.</span>
+
+<span class="sd">    &gt;&gt;&gt; git_remote_https_url(None) is None</span>
+<span class="sd">    True</span>
+<span class="sd">    """</span>
+    <span class="k">if</span> <span class="n">project_dir</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">return</span> <span class="kc">None</span>
+    <span class="kn">import</span><span class="w"> </span><span class="nn">subprocess</span>
+
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">top</span> <span class="o">=</span> <span class="n">subprocess</span><span class="o">.</span><span class="n">run</span><span class="p">(</span>
+            <span class="p">[</span><span class="s2">"git"</span><span class="p">,</span> <span class="s2">"-C"</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">project_dir</span><span class="p">),</span> <span class="s2">"rev-parse"</span><span class="p">,</span> <span class="s2">"--show-toplevel"</span><span class="p">],</span>
+            <span class="n">capture_output</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+            <span class="n">text</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+            <span class="n">timeout</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="c1"># Only the project's own repo: git would otherwise walk up to a parent repo.</span>
+        <span class="k">if</span> <span class="p">(</span>
+            <span class="n">top</span><span class="o">.</span><span class="n">returncode</span> <span class="o">!=</span> <span class="mi">0</span>
+            <span class="ow">or</span> <span class="n">Path</span><span class="p">(</span><span class="n">top</span><span class="o">.</span><span class="n">stdout</span><span class="o">.</span><span class="n">strip</span><span class="p">())</span><span class="o">.</span><span class="n">resolve</span><span class="p">()</span> <span class="o">!=</span> <span class="n">Path</span><span class="p">(</span><span class="n">project_dir</span><span class="p">)</span><span class="o">.</span><span class="n">resolve</span><span class="p">()</span>
+        <span class="p">):</span>
+            <span class="k">return</span> <span class="kc">None</span>
+        <span class="n">out</span> <span class="o">=</span> <span class="n">subprocess</span><span class="o">.</span><span class="n">run</span><span class="p">(</span>
+            <span class="p">[</span><span class="s2">"git"</span><span class="p">,</span> <span class="s2">"-C"</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">project_dir</span><span class="p">),</span> <span class="s2">"remote"</span><span class="p">,</span> <span class="s2">"get-url"</span><span class="p">,</span> <span class="s2">"origin"</span><span class="p">],</span>
+            <span class="n">capture_output</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+            <span class="n">text</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+            <span class="n">timeout</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span>
+        <span class="p">)</span>
+    <span class="k">except</span> <span class="p">(</span><span class="ne">OSError</span><span class="p">,</span> <span class="n">subprocess</span><span class="o">.</span><span class="n">SubprocessError</span><span class="p">):</span>
+        <span class="k">return</span> <span class="kc">None</span>
+    <span class="n">url</span> <span class="o">=</span> <span class="n">out</span><span class="o">.</span><span class="n">stdout</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span> <span class="k">if</span> <span class="n">out</span><span class="o">.</span><span class="n">returncode</span> <span class="o">==</span> <span class="mi">0</span> <span class="k">else</span> <span class="s2">""</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">url</span><span class="p">:</span>
+        <span class="k">return</span> <span class="kc">None</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">urllib.parse</span><span class="w"> </span><span class="kn">import</span> <span class="n">urlsplit</span>
+
+    <span class="k">if</span> <span class="n">re</span><span class="o">.</span><span class="n">match</span><span class="p">(</span><span class="sa">r</span><span class="s2">"^[\w.-]+@[\w.-]+:(?!//)"</span><span class="p">,</span> <span class="n">url</span><span class="p">):</span>  <span class="c1"># scp-like: git@host:user/repo.git</span>
+        <span class="n">host</span><span class="p">,</span> <span class="n">path</span> <span class="o">=</span> <span class="n">url</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">"@"</span><span class="p">,</span> <span class="mi">1</span><span class="p">)[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">":"</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">parts</span> <span class="o">=</span> <span class="n">urlsplit</span><span class="p">(</span><span class="n">url</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">parts</span><span class="o">.</span><span class="n">scheme</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">"http"</span><span class="p">,</span> <span class="s2">"https"</span><span class="p">,</span> <span class="s2">"ssh"</span><span class="p">,</span> <span class="s2">"git"</span><span class="p">)</span> <span class="ow">or</span> <span class="ow">not</span> <span class="n">parts</span><span class="o">.</span><span class="n">hostname</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">None</span>
+        <span class="n">host</span><span class="p">,</span> <span class="n">path</span> <span class="o">=</span> <span class="n">parts</span><span class="o">.</span><span class="n">hostname</span><span class="p">,</span> <span class="n">parts</span><span class="o">.</span><span class="n">path</span>  <span class="c1"># drops credentials and any port</span>
+    <span class="n">path</span> <span class="o">=</span> <span class="n">path</span><span class="o">.</span><span class="n">strip</span><span class="p">(</span><span class="s2">"/"</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">path</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s2">".git"</span><span class="p">):</span>
+        <span class="n">path</span> <span class="o">=</span> <span class="n">path</span><span class="p">[:</span> <span class="o">-</span><span class="nb">len</span><span class="p">(</span><span class="s2">".git"</span><span class="p">)]</span>
+    <span class="k">return</span> <span class="sa">f</span><span class="s2">"https://</span><span class="si">{</span><span class="n">host</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="n">path</span><span class="si">}</span><span class="s2">"</span> <span class="k">if</span> <span class="n">path</span> <span class="k">else</span> <span class="kc">None</span></div>
+
+
+
+<div class="viewcode-block" id="stale_docsrc">
+<a class="viewcode-back" href="../../_autosummary/wads.migration.html#wads.migration.stale_docsrc">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">stale_docsrc</span><span class="p">(</span><span class="n">project_dir</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Path</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Path</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">"""Return ``docsrc/`` if its ``conf.py`` (old wads template) reads ``setup.cfg``.</span>
+
+<span class="sd">    Migration removes ``setup.cfg``, so such a conf.py makes the docs job fail with</span>
+<span class="sd">    ``FileNotFoundError: setup.cfg``; epythet regenerates a working ``docsrc`` once</span>
+<span class="sd">    the directory is gone.</span>
+
+<span class="sd">    &gt;&gt;&gt; stale_docsrc('/nonexistent-dir') is None</span>
+<span class="sd">    True</span>
+<span class="sd">    """</span>
+    <span class="n">conf</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">project_dir</span><span class="p">)</span> <span class="o">/</span> <span class="s2">"docsrc"</span> <span class="o">/</span> <span class="s2">"conf.py"</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">text</span> <span class="o">=</span> <span class="n">conf</span><span class="o">.</span><span class="n">read_text</span><span class="p">()</span>
+    <span class="k">except</span> <span class="ne">OSError</span><span class="p">:</span>
+        <span class="k">return</span> <span class="kc">None</span>
+    <span class="c1"># The old template builds the path ``... / "setup.cfg"``; current epythet confs only</span>
+    <span class="c1"># mention setup.cfg in a docstring and must not match.</span>
+    <span class="k">return</span> <span class="n">conf</span><span class="o">.</span><span class="n">parent</span> <span class="k">if</span> <span class="n">_OLD_CONF_READS_SETUP_CFG</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="n">text</span><span class="p">)</span> <span class="k">else</span> <span class="kc">None</span></div>
+
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_warn_stale_docsrc</span><span class="p">(</span>
+    <span class="n">project_dir</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Path</span><span class="p">],</span> <span class="o">*</span><span class="p">,</span> <span class="n">remove</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span> <span class="n">offer_flag</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Tell the user about a stale ``docsrc/``; with *remove*, ``git rm -r`` it."""</span>
+    <span class="n">docsrc</span> <span class="o">=</span> <span class="n">stale_docsrc</span><span class="p">(</span><span class="n">project_dir</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">docsrc</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">return</span>
+    <span class="k">if</span> <span class="n">remove</span><span class="p">:</span>
+        <span class="kn">import</span><span class="w"> </span><span class="nn">subprocess</span>
+
+        <span class="n">done</span> <span class="o">=</span> <span class="n">subprocess</span><span class="o">.</span><span class="n">run</span><span class="p">(</span>
+            <span class="p">[</span><span class="s2">"git"</span><span class="p">,</span> <span class="s2">"-C"</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">project_dir</span><span class="p">),</span> <span class="s2">"rm"</span><span class="p">,</span> <span class="s2">"-r"</span><span class="p">,</span> <span class="s2">"-q"</span><span class="p">,</span> <span class="s2">"docsrc"</span><span class="p">],</span>
+            <span class="n">capture_output</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+            <span class="n">text</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="k">if</span> <span class="n">done</span><span class="o">.</span><span class="n">returncode</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">"✓ Removed stale docsrc/ (epythet regenerates it in CI)"</span><span class="p">)</span>
+            <span class="k">return</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Could not git rm docsrc/: </span><span class="si">{</span><span class="n">done</span><span class="o">.</span><span class="n">stderr</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span> <span class="n">file</span><span class="o">=</span><span class="n">sys</span><span class="o">.</span><span class="n">stderr</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span>
+        <span class="sa">f</span><span class="s2">"Warning: </span><span class="si">{</span><span class="n">docsrc</span><span class="si">}</span><span class="s2">/conf.py reads setup.cfg, which migration removes, so the "</span>
+        <span class="sa">f</span><span class="s2">"docs job will fail. Remove it and let epythet regenerate it: "</span>
+        <span class="sa">f</span><span class="s2">"`git rm -r docsrc`"</span>
+        <span class="o">+</span> <span class="p">(</span><span class="s2">" (or `setup-to-pyproject --remove-stale-docsrc`)."</span> <span class="k">if</span> <span class="n">offer_flag</span> <span class="k">else</span> <span class="s2">"."</span><span class="p">),</span>
+        <span class="n">file</span><span class="o">=</span><span class="n">sys</span><span class="o">.</span><span class="n">stderr</span><span class="p">,</span>
+    <span class="p">)</span>
+
+
 <div class="viewcode-block" id="migrate_setuptools_to_hatching">
 <a class="viewcode-back" href="../../_autosummary/wads.migration.html#wads.migration.migrate_setuptools_to_hatching">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">migrate_setuptools_to_hatching</span><span class="p">(</span>
@@ -884,6 +990,25 @@
     <span class="c1"># Apply rules to extract values</span>
     <span class="n">extracted</span> <span class="o">=</span> <span class="n">_apply_rules_to_extract_values</span><span class="p">(</span><span class="n">cfg</span><span class="p">,</span> <span class="n">rules</span><span class="p">)</span>
 
+    <span class="k">if</span> <span class="p">(</span>
+        <span class="n">project_dir</span> <span class="ow">is</span> <span class="kc">None</span>
+        <span class="ow">and</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">setup_cfg</span><span class="p">,</span> <span class="p">(</span><span class="nb">str</span><span class="p">,</span> <span class="n">os</span><span class="o">.</span><span class="n">PathLike</span><span class="p">))</span>
+        <span class="ow">and</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isfile</span><span class="p">(</span><span class="n">setup_cfg</span><span class="p">)</span>
+    <span class="p">):</span>
+        <span class="n">project_dir</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">setup_cfg</span><span class="p">)</span><span class="o">.</span><span class="n">resolve</span><span class="p">()</span><span class="o">.</span><span class="n">parent</span>
+
+    <span class="c1"># url: setup.cfg url/home_page, then defaults, then the old wads ``root_url`` (an</span>
+    <span class="c1"># org root: the project URL is root_url/name), then the git remote.</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="n">extracted</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"project"</span><span class="p">,</span> <span class="p">{})</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"url"</span><span class="p">)</span> <span class="ow">or</span> <span class="n">defaults</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"url"</span><span class="p">)):</span>
+        <span class="n">name</span> <span class="o">=</span> <span class="n">extracted</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"project"</span><span class="p">,</span> <span class="p">{})</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"name"</span><span class="p">)</span> <span class="ow">or</span> <span class="n">defaults</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"name"</span><span class="p">)</span>
+        <span class="n">root_url</span> <span class="o">=</span> <span class="n">_extract_metadata_value</span><span class="p">(</span><span class="n">cfg</span><span class="p">,</span> <span class="s2">"root_url"</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">root_url</span> <span class="ow">and</span> <span class="n">name</span><span class="p">:</span>
+            <span class="n">derived</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">root_url</span><span class="o">.</span><span class="n">rstrip</span><span class="p">(</span><span class="s1">'/'</span><span class="p">)</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2">"</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">derived</span> <span class="o">=</span> <span class="n">git_remote_https_url</span><span class="p">(</span><span class="n">project_dir</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">derived</span><span class="p">:</span>
+            <span class="n">defaults</span> <span class="o">=</span> <span class="p">{</span><span class="o">**</span><span class="n">defaults</span><span class="p">,</span> <span class="s2">"url"</span><span class="p">:</span> <span class="n">derived</span><span class="p">}</span>
+
     <span class="c1"># Required placeholders in template</span>
     <span class="n">required_fields</span> <span class="o">=</span> <span class="p">{</span>
         <span class="s2">"name"</span><span class="p">:</span> <span class="n">extracted</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"project"</span><span class="p">,</span> <span class="p">{})</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"name"</span><span class="p">)</span> <span class="ow">or</span> <span class="n">defaults</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"name"</span><span class="p">),</span>
@@ -901,7 +1026,8 @@
     <span class="k">if</span> <span class="n">missing</span><span class="p">:</span>
         <span class="k">raise</span> <span class="n">MigrationError</span><span class="p">(</span>
             <span class="sa">f</span><span class="s2">"Missing required fields: </span><span class="si">{</span><span class="n">missing</span><span class="si">}</span><span class="s2">. "</span>
-            <span class="sa">f</span><span class="s2">"Provide them in setup.cfg or via the defaults parameter."</span>
+            <span class="sa">f</span><span class="s2">"Provide them in setup.cfg or via the defaults parameter "</span>
+            <span class="sa">f</span><span class="s2">"(a missing url is taken from the git remote when there is one)."</span>
         <span class="p">)</span>
 
     <span class="c1"># Parse the template as TOML (it has placeholders but is valid TOML structure)</span>
@@ -965,12 +1091,6 @@
                     <span class="n">name</span><span class="p">,</span> <span class="n">target</span> <span class="o">=</span> <span class="n">script</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">"="</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
                     <span class="n">pyproject_dict</span><span class="p">[</span><span class="s2">"project"</span><span class="p">][</span><span class="s2">"scripts"</span><span class="p">][</span><span class="n">name</span><span class="o">.</span><span class="n">strip</span><span class="p">()]</span> <span class="o">=</span> <span class="n">target</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
 
-    <span class="k">if</span> <span class="p">(</span>
-        <span class="n">project_dir</span> <span class="ow">is</span> <span class="kc">None</span>
-        <span class="ow">and</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">setup_cfg</span><span class="p">,</span> <span class="p">(</span><span class="nb">str</span><span class="p">,</span> <span class="n">os</span><span class="o">.</span><span class="n">PathLike</span><span class="p">))</span>
-        <span class="ow">and</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isfile</span><span class="p">(</span><span class="n">setup_cfg</span><span class="p">)</span>
-    <span class="p">):</span>
-        <span class="n">project_dir</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">setup_cfg</span><span class="p">)</span><span class="o">.</span><span class="n">resolve</span><span class="p">()</span><span class="o">.</span><span class="n">parent</span>
     <span class="n">testpaths</span> <span class="o">=</span> <span class="n">_testpaths_without_tests_dir</span><span class="p">(</span><span class="n">project_dir</span><span class="p">,</span> <span class="n">required_fields</span><span class="p">[</span><span class="s2">"name"</span><span class="p">])</span>
     <span class="k">if</span> <span class="n">testpaths</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
         <span class="n">ini</span> <span class="o">=</span> <span class="n">pyproject_dict</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="s2">"tool"</span><span class="p">,</span> <span class="p">{})</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="s2">"pytest"</span><span class="p">,</span> <span class="p">{})</span>
@@ -1729,6 +1849,11 @@
         <span class="n">default</span><span class="o">=</span><span class="s2">"pyproject.toml"</span><span class="p">,</span>
         <span class="n">help</span><span class="o">=</span><span class="s2">"Output file path (default: pyproject.toml)"</span><span class="p">,</span>
     <span class="p">)</span>
+    <span class="n">setup_parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
+        <span class="s2">"--remove-stale-docsrc"</span><span class="p">,</span>
+        <span class="n">action</span><span class="o">=</span><span class="s2">"store_true"</span><span class="p">,</span>
+        <span class="n">help</span><span class="o">=</span><span class="s2">"git rm a docsrc/ whose conf.py reads setup.cfg (epythet regenerates it)"</span><span class="p">,</span>
+    <span class="p">)</span>
 
     <span class="c1"># Old CI -&gt; New CI (2025)</span>
     <span class="n">ci_parser</span> <span class="o">=</span> <span class="n">subparsers</span><span class="o">.</span><span class="n">add_parser</span><span class="p">(</span>
@@ -1933,6 +2058,9 @@
                 <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">result</span><span class="p">)</span>
 
             <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"✓ Migrated </span><span class="si">{</span><span class="n">input_path</span><span class="si">}</span><span class="s2"> -&gt; </span><span class="si">{</span><span class="n">output_path</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+            <span class="n">_warn_stale_docsrc</span><span class="p">(</span>
+                <span class="n">input_path</span><span class="o">.</span><span class="n">resolve</span><span class="p">()</span><span class="o">.</span><span class="n">parent</span><span class="p">,</span> <span class="n">remove</span><span class="o">=</span><span class="n">args</span><span class="o">.</span><span class="n">remove_stale_docsrc</span>
+            <span class="p">)</span>
 
         <span class="k">elif</span> <span class="n">args</span><span class="o">.</span><span class="n">command</span> <span class="o">==</span> <span class="s2">"ci-old-to-new"</span><span class="p">:</span>
             <span class="c1"># Handle input path</span>
@@ -1984,6 +2112,9 @@
                 <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"✓ Migrated </span><span class="si">{</span><span class="n">input_path</span><span class="si">}</span><span class="s2"> -&gt; </span><span class="si">{</span><span class="n">output_path</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
             <span class="k">else</span><span class="p">:</span>
                 <span class="nb">print</span><span class="p">(</span><span class="n">result</span><span class="p">)</span>
+
+            <span class="k">if</span> <span class="n">pyproject</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">_warn_stale_docsrc</span><span class="p">(</span><span class="n">Path</span><span class="p">(</span><span class="n">pyproject</span><span class="p">)</span><span class="o">.</span><span class="n">resolve</span><span class="p">()</span><span class="o">.</span><span class="n">parent</span><span class="p">,</span> <span class="n">offer_flag</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
 
             <span class="k">if</span> <span class="n">carried</span><span class="p">:</span>
                 <span class="nb">print</span><span class="p">(</span>
@@ -2141,7 +2272,7 @@
       
     </aside>
   </div>
-</div><script src="../../_static/documentation_options.js?v=125625ed"></script>
+</div><script src="../../_static/documentation_options.js?v=bb16518b"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/scripts/furo.js?v=46bd48cc"></script>

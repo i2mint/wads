@@ -350,20 +350,26 @@ migrate_github_ci_old_to_new: Convert old CI scripts to new format</p>
 <tr class="row-odd"><td><p><a class="reference internal" href="#wads.migration.extract_ci_variable_env_vars" title="wads.migration.extract_ci_variable_env_vars"><code class="xref py py-obj docutils literal notranslate"><span class="pre">extract_ci_variable_env_vars</span></code></a>(ci_text)</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">{ENV_VAR:</span> <span class="pre">VARIABLE_NAME}</span></code> for <code class="docutils literal notranslate"><span class="pre">env:</span></code> entries read from <code class="docutils literal notranslate"><span class="pre">${{</span> <span class="pre">vars.X</span> <span class="pre">}}</span></code>.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#wads.migration.main" title="wads.migration.main"><code class="xref py py-obj docutils literal notranslate"><span class="pre">main</span></code></a>()</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#wads.migration.git_remote_https_url" title="wads.migration.git_remote_https_url"><code class="xref py py-obj docutils literal notranslate"><span class="pre">git_remote_https_url</span></code></a>(project_dir)</p></td>
+<td><p>The <code class="docutils literal notranslate"><span class="pre">origin</span></code> remote of <em>project_dir</em> as an <code class="docutils literal notranslate"><span class="pre">https://</span></code> URL, or <code class="docutils literal notranslate"><span class="pre">None</span></code>.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#wads.migration.main" title="wads.migration.main"><code class="xref py py-obj docutils literal notranslate"><span class="pre">main</span></code></a>()</p></td>
 <td><p>CLI entry point for wads migration tools.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#wads.migration.migrate_ci_to_stub" title="wads.migration.migrate_ci_to_stub"><code class="xref py py-obj docutils literal notranslate"><span class="pre">migrate_ci_to_stub</span></code></a>([old_ci, pin, transport, ...])</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#wads.migration.migrate_ci_to_stub" title="wads.migration.migrate_ci_to_stub"><code class="xref py py-obj docutils literal notranslate"><span class="pre">migrate_ci_to_stub</span></code></a>([old_ci, pin, transport, ...])</p></td>
 <td><p>Return the SSOT stub CI workflow that calls i2mint/wads's reusable uv-ci.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#wads.migration.migrate_ci_to_uv" title="wads.migration.migrate_ci_to_uv"><code class="xref py py-obj docutils literal notranslate"><span class="pre">migrate_ci_to_uv</span></code></a>(old_ci, *[, defaults])</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#wads.migration.migrate_ci_to_uv" title="wads.migration.migrate_ci_to_uv"><code class="xref py py-obj docutils literal notranslate"><span class="pre">migrate_ci_to_uv</span></code></a>(old_ci, *[, defaults])</p></td>
 <td><p>Migrate a CI workflow (old or 2025 format) to the uv-based template.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#wads.migration.migrate_github_ci_old_to_new" title="wads.migration.migrate_github_ci_old_to_new"><code class="xref py py-obj docutils literal notranslate"><span class="pre">migrate_github_ci_old_to_new</span></code></a>(old_ci[, defaults])</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#wads.migration.migrate_github_ci_old_to_new" title="wads.migration.migrate_github_ci_old_to_new"><code class="xref py py-obj docutils literal notranslate"><span class="pre">migrate_github_ci_old_to_new</span></code></a>(old_ci[, defaults])</p></td>
 <td><p>Migrate old GitHub CI script to new 2025 format.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#wads.migration.migrate_setuptools_to_hatching" title="wads.migration.migrate_setuptools_to_hatching"><code class="xref py py-obj docutils literal notranslate"><span class="pre">migrate_setuptools_to_hatching</span></code></a>(setup_cfg[, ...])</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#wads.migration.migrate_setuptools_to_hatching" title="wads.migration.migrate_setuptools_to_hatching"><code class="xref py py-obj docutils literal notranslate"><span class="pre">migrate_setuptools_to_hatching</span></code></a>(setup_cfg[, ...])</p></td>
 <td><p>Migrate setup.cfg to pyproject.toml format using hatching.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#wads.migration.stale_docsrc" title="wads.migration.stale_docsrc"><code class="xref py py-obj docutils literal notranslate"><span class="pre">stale_docsrc</span></code></a>(project_dir)</p></td>
+<td><p>Return <code class="docutils literal notranslate"><span class="pre">docsrc/</span></code> if its <code class="docutils literal notranslate"><span class="pre">conf.py</span></code> (old wads template) reads <code class="docutils literal notranslate"><span class="pre">setup.cfg</span></code>.</p></td>
 </tr>
 </tbody>
 </table>
@@ -538,6 +544,21 @@ there.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#dict" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code></a></span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="wads.migration.git_remote_https_url">
+<span class="sig-prename descclassname"><span class="pre">wads.migration.</span></span><span class="sig-name descname"><span class="pre">git_remote_https_url</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">project_dir</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/wads/migration.html#git_remote_https_url"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#wads.migration.git_remote_https_url" title="Link to this definition">¶</a></dt>
+<dd><p>The <code class="docutils literal notranslate"><span class="pre">origin</span></code> remote of <em>project_dir</em> as an <code class="docutils literal notranslate"><span class="pre">https://</span></code> URL, or <code class="docutils literal notranslate"><span class="pre">None</span></code>.</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">git_remote_https_url</span><span class="p">(</span><span class="kc">None</span><span class="p">)</span> <span class="ow">is</span> <span class="kc">None</span>
+<span class="go">True</span>
+</pre></div>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Optional" title="(in Python v3.15)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code></a>[<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>]</span></p>
 </dd>
 </dl>
 </dd></dl>
@@ -750,6 +771,24 @@ file path; <code class="docutils literal notranslate"><span class="pre">None</sp
 </div>
 </dd></dl>
 
+<dl class="py function">
+<dt class="sig sig-object py" id="wads.migration.stale_docsrc">
+<span class="sig-prename descclassname"><span class="pre">wads.migration.</span></span><span class="sig-name descname"><span class="pre">stale_docsrc</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">project_dir</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/wads/migration.html#stale_docsrc"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#wads.migration.stale_docsrc" title="Link to this definition">¶</a></dt>
+<dd><p>Return <code class="docutils literal notranslate"><span class="pre">docsrc/</span></code> if its <code class="docutils literal notranslate"><span class="pre">conf.py</span></code> (old wads template) reads <code class="docutils literal notranslate"><span class="pre">setup.cfg</span></code>.</p>
+<p>Migration removes <code class="docutils literal notranslate"><span class="pre">setup.cfg</span></code>, so such a conf.py makes the docs job fail with
+<code class="docutils literal notranslate"><span class="pre">FileNotFoundError:</span> <span class="pre">setup.cfg</span></code>; epythet regenerates a working <code class="docutils literal notranslate"><span class="pre">docsrc</span></code> once
+the directory is gone.</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">stale_docsrc</span><span class="p">(</span><span class="s1">'/nonexistent-dir'</span><span class="p">)</span> <span class="ow">is</span> <span class="kc">None</span>
+<span class="go">True</span>
+</pre></div>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Optional" title="(in Python v3.15)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/pathlib.html#pathlib.Path" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Path</span></code></a>]</span></p>
+</dd>
+</dl>
+</dd></dl>
+
 </section>
 
         </article>
@@ -810,11 +849,13 @@ file path; <code class="docutils literal notranslate"><span class="pre">None</sp
 <li><a class="reference internal" href="#wads.migration.dropped_infra_ci_env_vars"><code class="docutils literal notranslate"><span class="pre">dropped_infra_ci_env_vars()</span></code></a></li>
 <li><a class="reference internal" href="#wads.migration.extract_ci_env_vars"><code class="docutils literal notranslate"><span class="pre">extract_ci_env_vars()</span></code></a></li>
 <li><a class="reference internal" href="#wads.migration.extract_ci_variable_env_vars"><code class="docutils literal notranslate"><span class="pre">extract_ci_variable_env_vars()</span></code></a></li>
+<li><a class="reference internal" href="#wads.migration.git_remote_https_url"><code class="docutils literal notranslate"><span class="pre">git_remote_https_url()</span></code></a></li>
 <li><a class="reference internal" href="#wads.migration.main"><code class="docutils literal notranslate"><span class="pre">main()</span></code></a></li>
 <li><a class="reference internal" href="#wads.migration.migrate_ci_to_stub"><code class="docutils literal notranslate"><span class="pre">migrate_ci_to_stub()</span></code></a></li>
 <li><a class="reference internal" href="#wads.migration.migrate_ci_to_uv"><code class="docutils literal notranslate"><span class="pre">migrate_ci_to_uv()</span></code></a></li>
 <li><a class="reference internal" href="#wads.migration.migrate_github_ci_old_to_new"><code class="docutils literal notranslate"><span class="pre">migrate_github_ci_old_to_new()</span></code></a></li>
 <li><a class="reference internal" href="#wads.migration.migrate_setuptools_to_hatching"><code class="docutils literal notranslate"><span class="pre">migrate_setuptools_to_hatching()</span></code></a></li>
+<li><a class="reference internal" href="#wads.migration.stale_docsrc"><code class="docutils literal notranslate"><span class="pre">stale_docsrc()</span></code></a></li>
 </ul>
 </li>
 </ul>
@@ -826,7 +867,7 @@ file path; <code class="docutils literal notranslate"><span class="pre">None</sp
       
     </aside>
   </div>
-</div><script src="../_static/documentation_options.js?v=125625ed"></script>
+</div><script src="../_static/documentation_options.js?v=bb16518b"></script>
     <script src="../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../_static/scripts/furo.js?v=46bd48cc"></script>

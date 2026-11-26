@@ -41,11 +41,13 @@ True
 | [`dropped_infra_ci_env_vars`](#wads.migration.dropped_infra_ci_env_vars)(ci_text)                | The `{ENV_VAR: SECRET_NAME}` entries [`extract_ci_env_vars()`](#wads.migration.extract_ci_env_vars) drops. |
 | [`extract_ci_env_vars`](#wads.migration.extract_ci_env_vars)(ci_text)                      | Extract secret-backed env vars from a CI workflow's `env:` blocks.                                                 |
 | [`extract_ci_variable_env_vars`](#wads.migration.extract_ci_variable_env_vars)(ci_text)             | `{ENV_VAR: VARIABLE_NAME}` for `env:` entries read from `${{ vars.X }}`.                                           |
+| [`git_remote_https_url`](#wads.migration.git_remote_https_url)(project_dir)                 | The `origin` remote of *project_dir* as an `https://` URL, or `None`.                                              |
 | [`main`](#wads.migration.main)()                                            | CLI entry point for wads migration tools.                                                                          |
 | [`migrate_ci_to_stub`](#wads.migration.migrate_ci_to_stub)([old_ci, pin, transport, ...]) | Return the SSOT stub CI workflow that calls i2mint/wads's reusable uv-ci.                                          |
 | [`migrate_ci_to_uv`](#wads.migration.migrate_ci_to_uv)(old_ci, \*[, defaults])          | Migrate a CI workflow (old or 2025 format) to the uv-based template.                                               |
 | [`migrate_github_ci_old_to_new`](#wads.migration.migrate_github_ci_old_to_new)(old_ci[, defaults])  | Migrate old GitHub CI script to new 2025 format.                                                                   |
 | [`migrate_setuptools_to_hatching`](#wads.migration.migrate_setuptools_to_hatching)(setup_cfg[, ...])  | Migrate setup.cfg to pyproject.toml format using hatching.                                                         |
+| [`stale_docsrc`](#wads.migration.stale_docsrc)(project_dir)                         | Return `docsrc/` if its `conf.py` (old wads template) reads `setup.cfg`.                                           |
 
 ### Exceptions
 
@@ -200,6 +202,18 @@ True
 
 * **Return type:**
   [`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict)
+
+### wads.migration.git_remote_https_url(project_dir)
+
+The `origin` remote of *project_dir* as an `https://` URL, or `None`.
+
+```pycon
+>>> git_remote_https_url(None) is None
+True
+```
+
+* **Return type:**
+  [`Optional`](https://docs.python.org/3/library/typing.html#typing.Optional)[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str)]
 
 ### wads.migration.main()
 
@@ -382,3 +396,19 @@ True
 >>> 'name = "test"' in result
 True
 ```
+
+### wads.migration.stale_docsrc(project_dir)
+
+Return `docsrc/` if its `conf.py` (old wads template) reads `setup.cfg`.
+
+Migration removes `setup.cfg`, so such a conf.py makes the docs job fail with
+`FileNotFoundError: setup.cfg`; epythet regenerates a working `docsrc` once
+the directory is gone.
+
+```pycon
+>>> stale_docsrc('/nonexistent-dir') is None
+True
+```
+
+* **Return type:**
+  [`Optional`](https://docs.python.org/3/library/typing.html#typing.Optional)[[`Path`](https://docs.python.org/3/library/pathlib.html#pathlib.Path)]
