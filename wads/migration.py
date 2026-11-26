@@ -370,7 +370,7 @@ def _rule_project_description(cfg: dict) -> str:
 
 def _rule_project_url(cfg: dict) -> str:
     """Extract project URL."""
-    return _extract_metadata_value(cfg, "url", "home_page", "root_url")
+    return _extract_metadata_value(cfg, "url", "home_page")
 
 
 def _rule_project_license(cfg: dict) -> str:
@@ -513,6 +513,9 @@ def _testpaths_without_tests_dir(
     return None
 
 
+_OLD_CONF_READS_SETUP_CFG = re.compile(r"/\s*['\"]setup\.cfg['\"]")
+
+
 def git_remote_https_url(project_dir: Union[str, Path, None]) -> Optional[str]:
     """The ``origin`` remote of *project_dir* as an ``https://`` URL, or ``None``.
 
@@ -524,6 +527,18 @@ def git_remote_https_url(project_dir: Union[str, Path, None]) -> Optional[str]:
     import subprocess
 
     try:
+        top = subprocess.run(
+            ["git", "-C", str(project_dir), "rev-parse", "--show-toplevel"],
+            capture_output=True,
+            text=True,
+            timeout=10,
+        )
+        # Only the project's own repo: git would otherwise walk up to a parent repo.
+        if (
+            top.returncode != 0
+            or Path(top.stdout.strip()).resolve() != Path(project_dir).resolve()
+        ):
+            return None
         out = subprocess.run(
             ["git", "-C", str(project_dir), "remote", "get-url", "origin"],
             capture_output=True,
@@ -535,14 +550,19 @@ def git_remote_https_url(project_dir: Union[str, Path, None]) -> Optional[str]:
     url = out.stdout.strip() if out.returncode == 0 else ""
     if not url:
         return None
-    if url.startswith("git@") and ":" in url:  # git@github.com:user/repo.git
-        host, path = url[len("git@") :].split(":", 1)
-        url = f"https://{host}/{path}"
-    elif url.startswith("ssh://git@"):
-        url = "https://" + url[len("ssh://git@") :]
-    if url.endswith(".git"):
-        url = url[: -len(".git")]
-    return url if url.startswith("http") else None
+    from urllib.parse import urlsplit
+
+    if re.match(r"^[\w.-]+@[\w.-]+:(?!//)", url):  # scp-like: git@host:user/repo.git
+        host, path = url.split("@", 1)[1].split(":", 1)
+    else:
+        parts = urlsplit(url)
+        if parts.scheme not in ("http", "https", "ssh", "git") or not parts.hostname:
+            return None
+        host, path = parts.hostname, parts.path  # drops credentials and any port
+    path = path.strip("/")
+    if path.endswith(".git"):
+        path = path[: -len(".git")]
+    return f"https://{host}/{path}" if path else None
 
 
 def stale_docsrc(project_dir: Union[str, Path]) -> Optional[Path]:
@@ -560,10 +580,14 @@ def stale_docsrc(project_dir: Union[str, Path]) -> Optional[Path]:
         text = conf.read_text()
     except OSError:
         return None
-    return conf.parent if "setup.cfg" in text else None
+    # The old template builds the path ``... / "setup.cfg"``; current epythet confs only
+    # mention setup.cfg in a docstring and must not match.
+    return conf.parent if _OLD_CONF_READS_SETUP_CFG.search(text) else None
 
 
-def _warn_stale_docsrc(project_dir: Union[str, Path], *, remove: bool = False) -> None:
+def _warn_stale_docsrc(
+    project_dir: Union[str, Path], *, remove: bool = False, offer_flag: bool = True
+) -> None:
     """Tell the user about a stale ``docsrc/``; with *remove*, ``git rm -r`` it."""
     docsrc = stale_docsrc(project_dir)
     if docsrc is None:
@@ -583,7 +607,8 @@ def _warn_stale_docsrc(project_dir: Union[str, Path], *, remove: bool = False) -
     print(
         f"Warning: {docsrc}/conf.py reads setup.cfg, which migration removes, so the "
         f"docs job will fail. Remove it and let epythet regenerate it: "
-        f"`git rm -r docsrc` (or rerun with --remove-stale-docsrc).",
+        f"`git rm -r docsrc`"
+        + (" (or `setup-to-pyproject --remove-stale-docsrc`)." if offer_flag else "."),
         file=sys.stderr,
     )
 
@@ -666,11 +691,17 @@ def migrate_setuptools_to_hatching(
     ):
         project_dir = Path(setup_cfg).resolve().parent
 
-    # url: setup.cfg (url / home_page / root_url), then defaults, then the git remote
+    # url: setup.cfg url/home_page, then defaults, then the old wads ``root_url`` (an
+    # org root: the project URL is root_url/name), then the git remote.
     if not (extracted.get("project", {}).get("url") or defaults.get("url")):
-        remote = git_remote_https_url(project_dir)
-        if remote:
-            defaults = {**defaults, "url": remote}
+        name = extracted.get("project", {}).get("name") or defaults.get("name")
+        root_url = _extract_metadata_value(cfg, "root_url")
+        if root_url and name:
+            derived = f"{root_url.rstrip('/')}/{name}"
+        else:
+            derived = git_remote_https_url(project_dir)
+        if derived:
+            defaults = {**defaults, "url": derived}
 
     # Required placeholders in template
     required_fields = {
@@ -1753,7 +1784,7 @@ def main():
                 print(result)
 
             if pyproject is not None:
-                _warn_stale_docsrc(Path(pyproject).resolve().parent)
+                _warn_stale_docsrc(Path(pyproject).resolve().parent, offer_flag=False)
 
             if carried:
                 print(
