@@ -95,6 +95,11 @@ ls setup.cfg setup.py 2>/dev/null
 | `actions/setup-python` without `setup-uv` | 2025/older | outdated |
 | `setup.cfg` present | old | legacy |
 
+**Bumping `astral-sh/setup-uv` on an inline workflow:** from v6 on, `python-version:`
+no longer activates a virtual environment, so a job that runs `uv pip install`
+without `--system` can fail with `No virtual environment found` (when no `.venv` exists). Add
+`activate-environment: true` under `with:` when you bump the pin.
+
 Format migrations are **owned by the wads-migrate skill** — name it in the
 report; don't reproduce its recipes here. Before flagging inline uv as a
 defect, ask whether it's the deliberate escape valve (custom workflow edits
