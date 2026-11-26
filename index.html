@@ -313,7 +313,7 @@ gh<span class="w"> </span>skill<span class="w"> </span>install<span class="w"> <
 </pre></div>
 </div>
 <p><code class="docutils literal notranslate"><span class="pre">wads-install-skills</span> <span class="pre">--list</span></code> prints the available names. In a clone of this repo, <code class="docutils literal notranslate"><span class="pre">.claude/skills/</span></code> links every skill for Claude Code, plus the maintainer skill <code class="docutils literal notranslate"><span class="pre">wads-dev-workflow</span></code> (in <code class="docutils literal notranslate"><span class="pre">skills/</span></code>), which covers changing wads itself.</p>
-<p><strong>Project instructions.</strong> <a class="reference internal" href="#.claude/CLAUDE.md"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">.claude/CLAUDE.md</span></code></span></a> explains the architecture (pyproject as the single source of truth, the reusable workflow, the two-layer secrets model), the config sections, and the conventions.</p>
+<p><strong>Project instructions.</strong> <a class="reference external" href="https://github.com/i2mint/wads/blob/HEAD/.claude/CLAUDE.md"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">.claude/CLAUDE.md</span></code></span></a> explains the architecture (pyproject as the single source of truth, the reusable workflow, the two-layer secrets model), the config sections, and the conventions.</p>
 <p><strong>What an agent can do with wads:</strong></p>
 <ul class="simple">
 <li><p>Scaffold a package with <code class="docutils literal notranslate"><span class="pre">populate</span></code>, or a whole repo with the <code class="docutils literal notranslate"><span class="pre">setup-py-project</span></code> skill.</p></li>
@@ -985,15 +985,15 @@ genuinely has none.</p>
 <span class="n">alternatives</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[</span><span class="s2">"iodbc"</span><span class="p">]</span>
 </pre></div>
 </div>
-<p>See <a class="reference internal" href="#misc/docs/SYSTEM_DEPENDENCIES.md"><span class="xref myst">misc/docs/SYSTEM_DEPENDENCIES.md</span></a> for comprehensive examples.</p>
+<p>See <a class="reference external" href="https://github.com/i2mint/wads/blob/HEAD/misc/docs/SYSTEM_DEPENDENCIES.md"><span class="xref myst">misc/docs/SYSTEM_DEPENDENCIES.md</span></a> for comprehensive examples.</p>
 </section>
 <section id="documentation">
 <h2>Documentation<a class="headerlink" href="#documentation" title="Link to this heading">¶</a></h2>
 <ul class="simple">
-<li><p><strong><a class="reference internal" href="#misc/docs/SYSTEM_DEPENDENCIES.md"><span class="xref myst">System Dependencies Guide</span></a></strong> - <code class="docutils literal notranslate"><span class="pre">[tool.wads.ops.*]</span></code> format and examples</p></li>
-<li><p><strong><a class="reference internal" href="#misc/docs/MIGRATION.md"><span class="xref myst">Migration Guide</span></a></strong> - Migrate from setup.cfg to pyproject.toml</p></li>
-<li><p><strong><a class="reference internal" href="#misc/docs/UTILITIES.md"><span class="xref myst">Utilities Reference</span></a></strong> - CLI tools (<code class="docutils literal notranslate"><span class="pre">wads-ci-debug</span></code>, <code class="docutils literal notranslate"><span class="pre">wads-migrate</span></code>)</p></li>
-<li><p><strong><a class="reference internal" href="#.claude/CLAUDE.md"><span class="xref myst">.claude/CLAUDE.md</span></a></strong> - AI agent guide for working with this project</p></li>
+<li><p><strong><a class="reference external" href="https://github.com/i2mint/wads/blob/HEAD/misc/docs/SYSTEM_DEPENDENCIES.md"><span class="xref myst">System Dependencies Guide</span></a></strong> - <code class="docutils literal notranslate"><span class="pre">[tool.wads.ops.*]</span></code> format and examples</p></li>
+<li><p><strong><a class="reference external" href="https://github.com/i2mint/wads/blob/HEAD/misc/docs/MIGRATION.md"><span class="xref myst">Migration Guide</span></a></strong> - Migrate from setup.cfg to pyproject.toml</p></li>
+<li><p><strong><a class="reference external" href="https://github.com/i2mint/wads/blob/HEAD/misc/docs/UTILITIES.md"><span class="xref myst">Utilities Reference</span></a></strong> - CLI tools (<code class="docutils literal notranslate"><span class="pre">wads-ci-debug</span></code>, <code class="docutils literal notranslate"><span class="pre">wads-migrate</span></code>)</p></li>
+<li><p><strong><a class="reference external" href="https://github.com/i2mint/wads/blob/HEAD/.claude/CLAUDE.md"><span class="xref myst">.claude/CLAUDE.md</span></a></strong> - AI agent guide for working with this project</p></li>
 </ul>
 </section>
 <section id="troubleshooting">
@@ -1045,7 +1045,7 @@ uv<span class="w"> </span>pip<span class="w"> </span>install<span class="w"> </s
 </div>
 <p>CI tests Python 3.10 and 3.12; run 3.11 as well before merging, because a dataclass default once broke there and nowhere else (<a class="reference external" href="https://github.com/i2mint/wads/issues/100">#100</a>).</p>
 <p><strong>Build the docs</strong> with <code class="docutils literal notranslate"><span class="pre">pip</span> <span class="pre">install</span> <span class="pre">-e</span> <span class="pre">&quot;.[docs]&quot;</span></code> and then <code class="docutils literal notranslate"><span class="pre">epythet</span> <span class="pre">build</span></code>.</p>
-<p><strong>Why it is built this way.</strong> wads is a foundation package. Its reusable workflow and actions run from <code class="docutils literal notranslate"><span class="pre">&#64;master</span></code> in every wads-managed repo, and every merge to <code class="docutils literal notranslate"><span class="pre">master</span></code> publishes a release to PyPI. So changes to <code class="docutils literal notranslate"><span class="pre">.github/workflows/uv-ci.yml</span></code>, <code class="docutils literal notranslate"><span class="pre">actions/*</span></code> or the stub template are fleet-wide changes: they come with tests (the push-back script, for example, is exercised against real throwaway git repos), and the populate output is pinned by golden files. <a class="reference internal" href="#.claude/CLAUDE.md"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">.claude/CLAUDE.md</span></code></span></a> has the design rationale, and the <code class="docutils literal notranslate"><span class="pre">wads-dev-workflow</span></code> skill has the maintainer checklist.</p>
+<p><strong>Why it is built this way.</strong> wads is a foundation package. Its reusable workflow and actions run from <code class="docutils literal notranslate"><span class="pre">&#64;master</span></code> in every wads-managed repo, and every merge to <code class="docutils literal notranslate"><span class="pre">master</span></code> publishes a release to PyPI. So changes to <code class="docutils literal notranslate"><span class="pre">.github/workflows/uv-ci.yml</span></code>, <code class="docutils literal notranslate"><span class="pre">actions/*</span></code> or the stub template are fleet-wide changes: they come with tests (the push-back script, for example, is exercised against real throwaway git repos), and the populate output is pinned by golden files. <a class="reference external" href="https://github.com/i2mint/wads/blob/HEAD/.claude/CLAUDE.md"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">.claude/CLAUDE.md</span></code></span></a> has the design rationale, and the <code class="docutils literal notranslate"><span class="pre">wads-dev-workflow</span></code> skill has the maintainer checklist.</p>
 <p><strong>Contributing and questions.</strong> Open an issue or a pull request at <a class="reference external" href="https://github.com/i2mint/wads/issues">github.com/i2mint/wads</a>.</p>
 </section>
 <section id="license">
@@ -1065,7 +1065,7 @@ uv<span class="w"> </span>pip<span class="w"> </span>install<span class="w"> </s
 </section>
 </section>
 
-<p class="epythet-provenance" style="font-size:.8em;opacity:.65;margin-top:2.5em;text-align:right">built 2026-11-21 23:14 UTC from <a href="https://github.com/i2mint/wads/commit/14bc52d77714b3d4408be11a2411ca0c424336a4">14bc52d</a> (master) · wads 0.2.99 · <a href="about-this-build.html">about this build</a></p>
+<p class="epythet-provenance" style="font-size:.8em;opacity:.65;margin-top:2.5em;text-align:right">built 2026-11-26 14:47 UTC from <a href="https://github.com/i2mint/wads/commit/30dabda12eae2dfc5c8d9b67d6490f93cf49baf9">30dabda</a> (master) · wads 0.2.100 · <a href="about-this-build.html">about this build</a></p>
         </article>
       </div>
       <footer>
@@ -1169,7 +1169,7 @@ uv<span class="w"> </span>pip<span class="w"> </span>install<span class="w"> </s
       
     </aside>
   </div>
-</div><script src="_static/documentation_options.js?v=689550b8"></script>
+</div><script src="_static/documentation_options.js?v=125625ed"></script>
     <script src="_static/doctools.js?v=fd6eb6e6"></script>
     <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="_static/scripts/furo.js?v=46bd48cc"></script>

@@ -1,4 +1,4 @@
-> built 2026-11-21 23:14 UTC from 14bc52d (master) · wads 0.2.99. Details: build_info.json
+> built 2026-11-26 14:47 UTC from 30dabda (master) · wads 0.2.100. Details: build_info.json
 
 # index.html.md
 
@@ -9915,7 +9915,7 @@ cannot be removed is not reported.
 
 # About this build
 
-This documentation was built on **2026-11-21 23:14 UTC** from commit <a href="https://github.com/i2mint/wads/commit/14bc52d77714b3d4408be11a2411ca0c424336a4"><code>14bc52d</code></a> on branch <code>master</code>, for **wads 0.2.99** (from <code>pyproject.toml</code>).
+This documentation was built on **2026-11-26 14:47 UTC** from commit <a href="https://github.com/i2mint/wads/commit/30dabda12eae2dfc5c8d9b67d6490f93cf49baf9"><code>30dabda</code></a> on branch <code>master</code>, for **wads 0.2.100** (from <code>pyproject.toml</code>).
 
 #### NOTE
 Nothing suggests a mismatch: the tree was clean at the commit above, and the documented version is the one on PyPI.
@@ -9924,7 +9924,7 @@ Nothing suggests a mismatch: the tree was clean at the commit above, and the doc
 
 |                     |                                                                                                                                                    |
 |---------------------|----------------------------------------------------------------------------------------------------------------------------------------------------|
-| Commit              | <a href="https://github.com/i2mint/wads/commit/14bc52d77714b3d4408be11a2411ca0c424336a4"><code>14bc52d77714b3d4408be11a2411ca0c424336a4</code></a> |
+| Commit              | <a href="https://github.com/i2mint/wads/commit/30dabda12eae2dfc5c8d9b67d6490f93cf49baf9"><code>30dabda12eae2dfc5c8d9b67d6490f93cf49baf9</code></a> |
 | Branch              | <code>master</code>                                                                                                                                |
 | Tags at this commit | none                                                                                                                                               |
 | Working tree        | clean                                                                                                                                              |
@@ -9935,15 +9935,15 @@ Nothing suggests a mismatch: the tree was clean at the commit above, and the doc
 |              |                                                                                            |
 |--------------|--------------------------------------------------------------------------------------------|
 | Repository   | <code>i2mint/wads</code>                                                                   |
-| Run          | <a href="https://github.com/i2mint/wads/actions/runs/44960426582">44960426582</a>          |
+| Run          | <a href="https://github.com/i2mint/wads/actions/runs/45841772902">45841772902</a>          |
 | Ref          | <code>refs/heads/master</code>                                                             |
-| Event commit | <code>14bc52d77714b3d4408be11a2411ca0c424336a4</code> (in the history of the built commit) |
+| Event commit | <code>30dabda12eae2dfc5c8d9b67d6490f93cf49baf9</code> (in the history of the built commit) |
 
 ## Tools
 
 |          |         |
 |----------|---------|
-| epythet  | 0.2.23  |
+| epythet  | 0.2.25  |
 | Sphinx   | 9.1.1   |
 | docutils | 0.22.4  |
 | Python   | 3.12.16 |
@@ -9962,14 +9962,14 @@ Nothing suggests a mismatch: the tree was clean at the commit above, and the doc
 
 ## Package on PyPI
 
-Latest release: <a href="https://pypi.org/project/wads/0.2.99/">0.2.99</a>, the same as the documented version.
+Latest release: <a href="https://pypi.org/project/wads/0.2.100/">0.2.100</a>, the same as the documented version.
 
 ## Reproduce
 
 ```bash
 git clone https://github.com/i2mint/wads && cd wads
-git checkout 14bc52d77714b3d4408be11a2411ca0c424336a4
-pip install "epythet==0.2.23"
+git checkout 30dabda12eae2dfc5c8d9b67d6490f93cf49baf9
+pip install "epythet==0.2.25"
 epythet quickstart . --ignore tests/ scrap/ examples/
 ```
 
