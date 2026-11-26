@@ -1043,6 +1043,82 @@
     <span class="k">return</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">m</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="n">m</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span><span class="si">}</span><span class="s2">"</span> <span class="k">if</span> <span class="n">m</span> <span class="k">else</span> <span class="kc">None</span>
 
 
+<span class="n">_RE_OWNER_URL</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span>
+    <span class="sa">r</span><span class="s2">"(?:(?&lt;![\w.-])github\.com/(?P&lt;o1&gt;[\w.-]+)/(?P&lt;n1&gt;[\w.-]+)"</span>
+    <span class="sa">r</span><span class="s2">"|(?&lt;![\w-])(?P&lt;o2&gt;[\w-]+)\.github\.io/(?P&lt;n2&gt;[\w.-]+)"</span>
+    <span class="sa">r</span><span class="s2">"|raw\.githubusercontent\.com/(?P&lt;o3&gt;[\w.-]+)/(?P&lt;n3&gt;[\w.-]+)"</span>
+    <span class="sa">r</span><span class="s2">"|codecov\.io/gh/(?P&lt;o4&gt;[\w.-]+)/(?P&lt;n4&gt;[\w.-]+)"</span>
+    <span class="sa">r</span><span class="s2">"|img\.shields\.io/github/[\w-]+/(?P&lt;o5&gt;[\w.-]+)/(?P&lt;n5&gt;[\w.-]+))"</span><span class="p">,</span>
+    <span class="n">re</span><span class="o">.</span><span class="n">IGNORECASE</span><span class="p">,</span>
+<span class="p">)</span>
+
+
+<div class="viewcode-block" id="owner_mismatched_urls">
+<a class="viewcode-back" href="../../_autosummary/wads.repo_audit.html#wads.repo_audit.owner_mismatched_urls">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">owner_mismatched_urls</span><span class="p">(</span><span class="n">text</span><span class="p">,</span> <span class="n">repo_slug</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""GitHub / Pages URLs in *text* naming this repo under a different owner.</span>
+
+<span class="sd">    A repo transferred to another owner keeps the old one in generated URLs. Only</span>
+<span class="sd">    URLs whose repo name equals the remote's are flagged, so links to unrelated</span>
+<span class="sd">    projects are left alone.</span>
+
+<span class="sd">    &gt;&gt;&gt; owner_mismatched_urls("https://github.com/old/pkg and https://github.com/x/y", "new/pkg")</span>
+<span class="sd">    ['github.com/old/pkg']</span>
+<span class="sd">    &gt;&gt;&gt; owner_mismatched_urls("https://old.github.io/pkg/", "new/pkg")</span>
+<span class="sd">    ['old.github.io/pkg']</span>
+<span class="sd">    &gt;&gt;&gt; owner_mismatched_urls("https://github.com/new/pkg", "new/pkg")</span>
+<span class="sd">    []</span>
+<span class="sd">    """</span>
+    <span class="n">owner</span><span class="p">,</span> <span class="n">name</span> <span class="o">=</span> <span class="p">(</span><span class="n">part</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="k">for</span> <span class="n">part</span> <span class="ow">in</span> <span class="n">repo_slug</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">"/"</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span>
+    <span class="n">found</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">m</span> <span class="ow">in</span> <span class="n">_RE_OWNER_URL</span><span class="o">.</span><span class="n">finditer</span><span class="p">(</span><span class="n">text</span> <span class="ow">or</span> <span class="s2">""</span><span class="p">):</span>
+        <span class="n">groups</span> <span class="o">=</span> <span class="p">[(</span><span class="n">m</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="sa">f</span><span class="s2">"o</span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s2">"</span><span class="p">),</span> <span class="n">m</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="sa">f</span><span class="s2">"n</span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s2">"</span><span class="p">))</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">6</span><span class="p">)]</span>
+        <span class="n">o</span><span class="p">,</span> <span class="n">n</span> <span class="o">=</span> <span class="nb">next</span><span class="p">((</span><span class="n">o</span><span class="p">,</span> <span class="n">n</span><span class="p">)</span> <span class="k">for</span> <span class="n">o</span><span class="p">,</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">groups</span> <span class="k">if</span> <span class="n">o</span><span class="p">)</span>
+        <span class="n">o</span><span class="p">,</span> <span class="n">n</span> <span class="o">=</span> <span class="n">o</span><span class="o">.</span><span class="n">lower</span><span class="p">(),</span> <span class="n">n</span><span class="o">.</span><span class="n">rstrip</span><span class="p">(</span><span class="s2">"."</span><span class="p">)</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
+        <span class="n">n</span> <span class="o">=</span> <span class="n">n</span><span class="p">[:</span> <span class="o">-</span><span class="nb">len</span><span class="p">(</span><span class="s2">".git"</span><span class="p">)]</span> <span class="k">if</span> <span class="n">n</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s2">".git"</span><span class="p">)</span> <span class="k">else</span> <span class="n">n</span>
+        <span class="k">if</span> <span class="n">n</span> <span class="o">==</span> <span class="n">name</span> <span class="ow">and</span> <span class="n">o</span> <span class="o">!=</span> <span class="n">owner</span><span class="p">:</span>
+            <span class="n">url</span> <span class="o">=</span> <span class="n">m</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">rstrip</span><span class="p">(</span><span class="s2">"."</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">url</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s2">".git"</span><span class="p">):</span>
+                <span class="n">url</span> <span class="o">=</span> <span class="n">url</span><span class="p">[:</span> <span class="o">-</span><span class="nb">len</span><span class="p">(</span><span class="s2">".git"</span><span class="p">)]</span>
+            <span class="k">if</span> <span class="n">url</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">{</span><span class="n">u</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="k">for</span> <span class="n">u</span> <span class="ow">in</span> <span class="n">found</span><span class="p">}:</span>
+                <span class="n">found</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">url</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">found</span></div>
+
+
+
+<div class="viewcode-block" id="audit_url_owners">
+<a class="viewcode-back" href="../../_autosummary/wads.repo_audit.html#wads.repo_audit.audit_url_owners">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">audit_url_owners</span><span class="p">(</span><span class="n">repo</span><span class="p">,</span> <span class="n">rep</span><span class="p">,</span> <span class="n">project</span><span class="p">,</span> <span class="n">repo_slug</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Flag URLs (pyproject urls, README) whose owner differs from the git remote's."""</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">repo_slug</span><span class="p">:</span>
+        <span class="k">return</span>
+    <span class="n">urls_text</span> <span class="o">=</span> <span class="s2">"</span><span class="se">\n</span><span class="s2">"</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">v</span><span class="p">)</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="p">(</span><span class="n">project</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"urls"</span><span class="p">)</span> <span class="ow">or</span> <span class="p">{})</span><span class="o">.</span><span class="n">values</span><span class="p">())</span>
+    <span class="n">bad</span> <span class="o">=</span> <span class="n">owner_mismatched_urls</span><span class="p">(</span><span class="n">urls_text</span><span class="p">,</span> <span class="n">repo_slug</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">bad</span><span class="p">:</span>
+        <span class="n">rep</span><span class="o">.</span><span class="n">add</span><span class="p">(</span>
+            <span class="s2">"MEDIUM"</span><span class="p">,</span>
+            <span class="s2">"git"</span><span class="p">,</span>
+            <span class="sa">f</span><span class="s2">"[project.urls] name an owner other than the remote's "</span>
+            <span class="sa">f</span><span class="s2">"(</span><span class="si">{</span><span class="n">repo_slug</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">'/'</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span><span class="si">}</span><span class="s2">): </span><span class="si">{</span><span class="s1">', '</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">bad</span><span class="p">)</span><span class="si">}</span><span class="s2"> — transferred repo? "</span>
+            <span class="s2">"update the URLs"</span><span class="p">,</span>
+            <span class="s2">"wads-repo-doctor (inline)"</span><span class="p">,</span>
+        <span class="p">)</span>
+    <span class="k">for</span> <span class="n">readme</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">"README.md"</span><span class="p">,</span> <span class="s2">"README.rst"</span><span class="p">,</span> <span class="s2">"README.txt"</span><span class="p">):</span>
+        <span class="n">path</span> <span class="o">=</span> <span class="n">repo</span> <span class="o">/</span> <span class="n">readme</span>
+        <span class="k">if</span> <span class="n">path</span><span class="o">.</span><span class="n">is_file</span><span class="p">():</span>
+            <span class="n">bad</span> <span class="o">=</span> <span class="n">owner_mismatched_urls</span><span class="p">(</span><span class="n">path</span><span class="o">.</span><span class="n">read_text</span><span class="p">(</span><span class="n">errors</span><span class="o">=</span><span class="s2">"replace"</span><span class="p">),</span> <span class="n">repo_slug</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">bad</span><span class="p">:</span>
+                <span class="n">rep</span><span class="o">.</span><span class="n">add</span><span class="p">(</span>
+                    <span class="s2">"LOW"</span><span class="p">,</span>
+                    <span class="s2">"git"</span><span class="p">,</span>
+                    <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">readme</span><span class="si">}</span><span class="s2"> links this repo under an owner other than the "</span>
+                    <span class="sa">f</span><span class="s2">"remote's (</span><span class="si">{</span><span class="n">repo_slug</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">'/'</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span><span class="si">}</span><span class="s2">): </span><span class="si">{</span><span class="s1">', '</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">bad</span><span class="p">[:</span><span class="mi">3</span><span class="p">])</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span>
+                    <span class="s2">"wads-repo-doctor (inline)"</span><span class="p">,</span>
+                <span class="p">)</span>
+            <span class="k">break</span></div>
+
+
+
 <span class="k">def</span><span class="w"> </span><span class="nf">_gh_json</span><span class="p">(</span><span class="n">args</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">timeout</span><span class="o">=</span><span class="mi">25</span><span class="p">):</span>
     <span class="n">rc</span><span class="p">,</span> <span class="n">out</span> <span class="o">=</span> <span class="n">_run</span><span class="p">([</span><span class="s2">"gh"</span><span class="p">]</span> <span class="o">+</span> <span class="n">args</span><span class="p">,</span> <span class="n">timeout</span><span class="o">=</span><span class="n">timeout</span><span class="p">)</span>
     <span class="k">if</span> <span class="n">rc</span> <span class="o">!=</span> <span class="mi">0</span> <span class="ow">or</span> <span class="ow">not</span> <span class="n">out</span><span class="p">:</span>
@@ -1298,6 +1374,7 @@
     <span class="n">rep</span> <span class="o">=</span> <span class="n">Report</span><span class="p">(</span><span class="n">repo</span><span class="p">)</span>
     <span class="n">repo_slug</span> <span class="o">=</span> <span class="n">audit_git</span><span class="p">(</span><span class="n">repo</span><span class="p">,</span> <span class="n">rep</span><span class="p">)</span>
     <span class="n">project</span> <span class="o">=</span> <span class="n">audit_pyproject</span><span class="p">(</span><span class="n">repo</span><span class="p">,</span> <span class="n">rep</span><span class="p">)</span>
+    <span class="n">audit_url_owners</span><span class="p">(</span><span class="n">repo</span><span class="p">,</span> <span class="n">rep</span><span class="p">,</span> <span class="n">project</span><span class="p">,</span> <span class="n">repo_slug</span><span class="p">)</span>
     <span class="n">audit_files</span><span class="p">(</span><span class="n">repo</span><span class="p">,</span> <span class="n">rep</span><span class="p">)</span>
     <span class="n">audit_ci</span><span class="p">(</span><span class="n">repo</span><span class="p">,</span> <span class="n">rep</span><span class="p">)</span>
     <span class="n">audit_package</span><span class="p">(</span><span class="n">repo</span><span class="p">,</span> <span class="n">rep</span><span class="p">,</span> <span class="n">project</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"name"</span><span class="p">))</span>
@@ -1396,7 +1473,7 @@
       
     </aside>
   </div>
-</div><script src="../../_static/documentation_options.js?v=9ba7cb60"></script>
+</div><script src="../../_static/documentation_options.js?v=32e7bf06"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/scripts/furo.js?v=46bd48cc"></script>

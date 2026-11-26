@@ -821,7 +821,12 @@
     <span class="n">kwargs</span> <span class="o">=</span> <span class="p">{</span><span class="n">k</span><span class="p">:</span> <span class="n">v</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">items</span><span class="p">()</span> <span class="k">if</span> <span class="n">v</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">}</span>
     <span class="c1"># configs = dict(name=name, **configs, **kwargs, **args_defaults)</span>
     <span class="c1"># configs = dict(name=name, **args_defaults, **configs, **kwargs)</span>
-    <span class="n">configs</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">ChainMap</span><span class="p">(</span><span class="nb">dict</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="n">name</span><span class="p">),</span> <span class="n">kwargs</span><span class="p">,</span> <span class="n">configs</span><span class="p">,</span> <span class="n">args_defaults</span><span class="p">))</span>
+    <span class="c1"># Owner: an explicit root_url wins, then the git remote (so a transferred repo</span>
+    <span class="c1"># gets its new owner), then the defaults_from org config.</span>
+    <span class="n">from_remote</span> <span class="o">=</span> <span class="p">{}</span> <span class="k">if</span> <span class="s2">"root_url"</span> <span class="ow">in</span> <span class="n">kwargs</span> <span class="k">else</span> <span class="n">_root_url_from_git_remote</span><span class="p">(</span><span class="n">pkg_dir</span><span class="p">)</span>
+    <span class="n">configs</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span>
+        <span class="n">ChainMap</span><span class="p">(</span><span class="nb">dict</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="n">name</span><span class="p">),</span> <span class="n">kwargs</span><span class="p">,</span> <span class="n">from_remote</span><span class="p">,</span> <span class="n">configs</span><span class="p">,</span> <span class="n">args_defaults</span><span class="p">)</span>
+    <span class="p">)</span>
 
     <span class="n">kwargs</span><span class="p">[</span><span class="s2">"description-file"</span><span class="p">]</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">"description_file"</span><span class="p">,</span> <span class="s2">""</span><span class="p">)</span>
 
@@ -1577,6 +1582,20 @@
 <span class="n">_unknown_version_control_system</span> <span class="o">=</span> <span class="nb">object</span><span class="p">()</span>
 
 
+<span class="k">def</span><span class="w"> </span><span class="nf">_root_url_from_git_remote</span><span class="p">(</span><span class="n">pkg_dir</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""``{"root_url": "https://host/owner/"}`` from ``pkg_dir``'s origin, else ``{}``.</span>
+
+<span class="sd">    &gt;&gt;&gt; _root_url_from_git_remote('/nonexistent-dir')</span>
+<span class="sd">    {}</span>
+<span class="sd">    """</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">wads.migration</span><span class="w"> </span><span class="kn">import</span> <span class="n">git_remote_https_url</span>
+
+    <span class="n">remote</span> <span class="o">=</span> <span class="n">git_remote_https_url</span><span class="p">(</span><span class="n">pkg_dir</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">remote</span> <span class="ow">or</span> <span class="n">remote</span><span class="o">.</span><span class="n">count</span><span class="p">(</span><span class="s2">"/"</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mi">4</span><span class="p">:</span>  <span class="c1"># https://host/owner/repo</span>
+        <span class="k">return</span> <span class="p">{}</span>
+    <span class="k">return</span> <span class="p">{</span><span class="s2">"root_url"</span><span class="p">:</span> <span class="n">remote</span><span class="o">.</span><span class="n">rsplit</span><span class="p">(</span><span class="s2">"/"</span><span class="p">,</span> <span class="mi">1</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span> <span class="o">+</span> <span class="s2">"/"</span><span class="p">}</span>
+
+
 <span class="k">def</span><span class="w"> </span><span class="nf">_ensure_url_from_url_root_and_name</span><span class="p">(</span><span class="n">configs</span><span class="p">:</span> <span class="nb">dict</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">"""Ensure configs has a 'url' field, constructing it from root_url/url_root if needed."""</span>
     <span class="c1"># Handle both 'root_url' and 'url_root' for backward compatibility</span>
@@ -2158,7 +2177,7 @@
       
     </aside>
   </div>
-</div><script src="../../_static/documentation_options.js?v=9ba7cb60"></script>
+</div><script src="../../_static/documentation_options.js?v=32e7bf06"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/scripts/furo.js?v=46bd48cc"></script>

@@ -1,4 +1,4 @@
-> built 2026-11-26 15:07 UTC from ae683ad (master) · wads 0.2.102. Details: build_info.json
+> built 2026-11-26 16:12 UTC from eaffc21 (master) · wads 0.2.103. Details: build_info.json
 
 # index.html.md
 
@@ -7638,23 +7638,25 @@ that defers to this module.
 
 ### Functions
 
-| `audit_ci`(repo, rep)                                                                       |                                                                                           |
-|---------------------------------------------------------------------------------------------|-------------------------------------------------------------------------------------------|
-| `audit_files`(repo, rep)                                                                    |                                                                                           |
-| `audit_git`(repo, rep)                                                                      |                                                                                           |
-| [`audit_github`](_autosummary/wads.repo_audit.html.md#wads.repo_audit.audit_github)(repo_slug, rep, project, ...) | gh-based checks; every step degrades silently when gh/network fail.                       |
-| [`audit_inline_trigger_gate`](_autosummary/wads.repo_audit.html.md#wads.repo_audit.audit_inline_trigger_gate)(repo, rep, text) | Flag an inline workflow copy that predates the trigger gate while pyproject is on-demand. |
-| `audit_package`(repo, rep, project_name)                                                    |                                                                                           |
-| `audit_pypi`(rep, project)                                                                  |                                                                                           |
-| `audit_pyproject`(repo, rep)                                                                |                                                                                           |
-| [`audit_repo`](_autosummary/wads.repo_audit.html.md#wads.repo_audit.audit_repo)([repo, network])                | Audit a repo and return the machine-readable report dict.                                 |
-| `audit_skills`(repo, rep, project_name)                                                     |                                                                                           |
-| [`audit_trigger_drift`](_autosummary/wads.repo_audit.html.md#wads.repo_audit.audit_trigger_drift)(repo, rep, stub_text)  | Flag a stub whose on-demand pre-filter markers differ from `[tool.wads.ci.trigger]`.      |
-| [`classify_workflow`](_autosummary/wads.repo_audit.html.md#wads.repo_audit.classify_workflow)(text)                    | Classify one workflow file's text into a wads CI generation.                              |
-| `find_package_dir`(repo, project_name)                                                      |                                                                                           |
-| `main`([argv])                                                                              |                                                                                           |
-| `read_pyproject`(repo)                                                                      |                                                                                           |
-| `render_text`(rep)                                                                          |                                                                                           |
+| `audit_ci`(repo, rep)                                                                            |                                                                                           |
+|--------------------------------------------------------------------------------------------------|-------------------------------------------------------------------------------------------|
+| `audit_files`(repo, rep)                                                                         |                                                                                           |
+| `audit_git`(repo, rep)                                                                           |                                                                                           |
+| [`audit_github`](_autosummary/wads.repo_audit.html.md#wads.repo_audit.audit_github)(repo_slug, rep, project, ...)      | gh-based checks; every step degrades silently when gh/network fail.                       |
+| [`audit_inline_trigger_gate`](_autosummary/wads.repo_audit.html.md#wads.repo_audit.audit_inline_trigger_gate)(repo, rep, text)      | Flag an inline workflow copy that predates the trigger gate while pyproject is on-demand. |
+| `audit_package`(repo, rep, project_name)                                                         |                                                                                           |
+| `audit_pypi`(rep, project)                                                                       |                                                                                           |
+| `audit_pyproject`(repo, rep)                                                                     |                                                                                           |
+| [`audit_repo`](_autosummary/wads.repo_audit.html.md#wads.repo_audit.audit_repo)([repo, network])                     | Audit a repo and return the machine-readable report dict.                                 |
+| `audit_skills`(repo, rep, project_name)                                                          |                                                                                           |
+| [`audit_trigger_drift`](_autosummary/wads.repo_audit.html.md#wads.repo_audit.audit_trigger_drift)(repo, rep, stub_text)       | Flag a stub whose on-demand pre-filter markers differ from `[tool.wads.ci.trigger]`.      |
+| [`audit_url_owners`](_autosummary/wads.repo_audit.html.md#wads.repo_audit.audit_url_owners)(repo, rep, project, repo_slug) | Flag URLs (pyproject urls, README) whose owner differs from the git remote's.             |
+| [`classify_workflow`](_autosummary/wads.repo_audit.html.md#wads.repo_audit.classify_workflow)(text)                         | Classify one workflow file's text into a wads CI generation.                              |
+| `find_package_dir`(repo, project_name)                                                           |                                                                                           |
+| `main`([argv])                                                                                   |                                                                                           |
+| [`owner_mismatched_urls`](_autosummary/wads.repo_audit.html.md#wads.repo_audit.owner_mismatched_urls)(text, repo_slug)          | GitHub / Pages URLs in *text* naming this repo under a different owner.                   |
+| `read_pyproject`(repo)                                                                           |                                                                                           |
+| `render_text`(rep)                                                                               |                                                                                           |
 
 ### Classes
 
@@ -7700,9 +7702,30 @@ Flag a stub whose on-demand pre-filter markers differ from `[tool.wads.ci.trigge
 A stale pre-filter silently runs nothing for a marker pyproject declares (the
 workflow behind it is fine): the fix is always a re-render.
 
+### wads.repo_audit.audit_url_owners(repo, rep, project, repo_slug)
+
+Flag URLs (pyproject urls, README) whose owner differs from the git remote’s.
+
 ### wads.repo_audit.classify_workflow(text)
 
 Classify one workflow file’s text into a wads CI generation.
+
+### wads.repo_audit.owner_mismatched_urls(text, repo_slug)
+
+GitHub / Pages URLs in *text* naming this repo under a different owner.
+
+A repo transferred to another owner keeps the old one in generated URLs. Only
+URLs whose repo name equals the remote’s are flagged, so links to unrelated
+projects are left alone.
+
+```pycon
+>>> owner_mismatched_urls("https://github.com/old/pkg and https://github.com/x/y", "new/pkg")
+['github.com/old/pkg']
+>>> owner_mismatched_urls("https://old.github.io/pkg/", "new/pkg")
+['old.github.io/pkg']
+>>> owner_mismatched_urls("https://github.com/new/pkg", "new/pkg")
+[]
+```
 
 
 # _autosummary/wads.scripts.build_dist.html.md
@@ -9945,7 +9968,7 @@ cannot be removed is not reported.
 
 # About this build
 
-This documentation was built on **2026-11-26 15:07 UTC** from commit <a href="https://github.com/i2mint/wads/commit/ae683ad21c1257facaecd14947a491fd7ac2f367"><code>ae683ad</code></a> on branch <code>master</code>, for **wads 0.2.102** (from <code>pyproject.toml</code>).
+This documentation was built on **2026-11-26 16:12 UTC** from commit <a href="https://github.com/i2mint/wads/commit/eaffc213911fd46bb664301adfdcc7960323193d"><code>eaffc21</code></a> on branch <code>master</code>, for **wads 0.2.103** (from <code>pyproject.toml</code>).
 
 #### NOTE
 Nothing suggests a mismatch: the tree was clean at the commit above, and the documented version is the one on PyPI.
@@ -9954,7 +9977,7 @@ Nothing suggests a mismatch: the tree was clean at the commit above, and the doc
 
 |                     |                                                                                                                                                    |
 |---------------------|----------------------------------------------------------------------------------------------------------------------------------------------------|
-| Commit              | <a href="https://github.com/i2mint/wads/commit/ae683ad21c1257facaecd14947a491fd7ac2f367"><code>ae683ad21c1257facaecd14947a491fd7ac2f367</code></a> |
+| Commit              | <a href="https://github.com/i2mint/wads/commit/eaffc213911fd46bb664301adfdcc7960323193d"><code>eaffc213911fd46bb664301adfdcc7960323193d</code></a> |
 | Branch              | <code>master</code>                                                                                                                                |
 | Tags at this commit | none                                                                                                                                               |
 | Working tree        | clean                                                                                                                                              |
@@ -9965,9 +9988,9 @@ Nothing suggests a mismatch: the tree was clean at the commit above, and the doc
 |              |                                                                                            |
 |--------------|--------------------------------------------------------------------------------------------|
 | Repository   | <code>i2mint/wads</code>                                                                   |
-| Run          | <a href="https://github.com/i2mint/wads/actions/runs/45845039496">45845039496</a>          |
+| Run          | <a href="https://github.com/i2mint/wads/actions/runs/45855739070">45855739070</a>          |
 | Ref          | <code>refs/heads/master</code>                                                             |
-| Event commit | <code>ae683ad21c1257facaecd14947a491fd7ac2f367</code> (in the history of the built commit) |
+| Event commit | <code>eaffc213911fd46bb664301adfdcc7960323193d</code> (in the history of the built commit) |
 
 ## Tools
 
@@ -9992,13 +10015,13 @@ Nothing suggests a mismatch: the tree was clean at the commit above, and the doc
 
 ## Package on PyPI
 
-Latest release: <a href="https://pypi.org/project/wads/0.2.102/">0.2.102</a>, the same as the documented version.
+Latest release: <a href="https://pypi.org/project/wads/0.2.103/">0.2.103</a>, the same as the documented version.
 
 ## Reproduce
 
 ```bash
 git clone https://github.com/i2mint/wads && cd wads
-git checkout ae683ad21c1257facaecd14947a491fd7ac2f367
+git checkout eaffc213911fd46bb664301adfdcc7960323193d
 pip install "epythet==0.2.25"
 epythet quickstart . --ignore tests/ scrap/ examples/
 ```

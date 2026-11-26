@@ -362,14 +362,20 @@ that defers to this module.</p>
 <tr class="row-odd"><td><p><a class="reference internal" href="#wads.repo_audit.audit_trigger_drift" title="wads.repo_audit.audit_trigger_drift"><code class="xref py py-obj docutils literal notranslate"><span class="pre">audit_trigger_drift</span></code></a>(repo, rep, stub_text)</p></td>
 <td><p>Flag a stub whose on-demand pre-filter markers differ from <code class="docutils literal notranslate"><span class="pre">[tool.wads.ci.trigger]</span></code>.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#wads.repo_audit.classify_workflow" title="wads.repo_audit.classify_workflow"><code class="xref py py-obj docutils literal notranslate"><span class="pre">classify_workflow</span></code></a>(text)</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#wads.repo_audit.audit_url_owners" title="wads.repo_audit.audit_url_owners"><code class="xref py py-obj docutils literal notranslate"><span class="pre">audit_url_owners</span></code></a>(repo, rep, project, repo_slug)</p></td>
+<td><p>Flag URLs (pyproject urls, README) whose owner differs from the git remote's.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#wads.repo_audit.classify_workflow" title="wads.repo_audit.classify_workflow"><code class="xref py py-obj docutils literal notranslate"><span class="pre">classify_workflow</span></code></a>(text)</p></td>
 <td><p>Classify one workflow file's text into a wads CI generation.</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">find_package_dir</span></code>(repo, project_name)</p></td>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">find_package_dir</span></code>(repo, project_name)</p></td>
 <td><p></p></td>
 </tr>
-<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">main</span></code>([argv])</p></td>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">main</span></code>([argv])</p></td>
 <td><p></p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#wads.repo_audit.owner_mismatched_urls" title="wads.repo_audit.owner_mismatched_urls"><code class="xref py py-obj docutils literal notranslate"><span class="pre">owner_mismatched_urls</span></code></a>(text, repo_slug)</p></td>
+<td><p>GitHub / Pages URLs in <em>text</em> naming this repo under a different owner.</p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">read_pyproject</span></code>(repo)</p></td>
 <td><p></p></td>
@@ -434,9 +440,32 @@ workflow behind it is fine): the fix is always a re-render.</p>
 </dd></dl>
 
 <dl class="py function">
+<dt class="sig sig-object py" id="wads.repo_audit.audit_url_owners">
+<span class="sig-prename descclassname"><span class="pre">wads.repo_audit.</span></span><span class="sig-name descname"><span class="pre">audit_url_owners</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">repo</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rep</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">project</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">repo_slug</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/wads/repo_audit.html#audit_url_owners"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#wads.repo_audit.audit_url_owners" title="Link to this definition">¶</a></dt>
+<dd><p>Flag URLs (pyproject urls, README) whose owner differs from the git remote’s.</p>
+</dd></dl>
+
+<dl class="py function">
 <dt class="sig sig-object py" id="wads.repo_audit.classify_workflow">
 <span class="sig-prename descclassname"><span class="pre">wads.repo_audit.</span></span><span class="sig-name descname"><span class="pre">classify_workflow</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">text</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/wads/repo_audit.html#classify_workflow"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#wads.repo_audit.classify_workflow" title="Link to this definition">¶</a></dt>
 <dd><p>Classify one workflow file’s text into a wads CI generation.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="wads.repo_audit.owner_mismatched_urls">
+<span class="sig-prename descclassname"><span class="pre">wads.repo_audit.</span></span><span class="sig-name descname"><span class="pre">owner_mismatched_urls</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">text</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">repo_slug</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/wads/repo_audit.html#owner_mismatched_urls"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#wads.repo_audit.owner_mismatched_urls" title="Link to this definition">¶</a></dt>
+<dd><p>GitHub / Pages URLs in <em>text</em> naming this repo under a different owner.</p>
+<p>A repo transferred to another owner keeps the old one in generated URLs. Only
+URLs whose repo name equals the remote’s are flagged, so links to unrelated
+projects are left alone.</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">owner_mismatched_urls</span><span class="p">(</span><span class="s2">"https://github.com/old/pkg and https://github.com/x/y"</span><span class="p">,</span> <span class="s2">"new/pkg"</span><span class="p">)</span>
+<span class="go">['github.com/old/pkg']</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">owner_mismatched_urls</span><span class="p">(</span><span class="s2">"https://old.github.io/pkg/"</span><span class="p">,</span> <span class="s2">"new/pkg"</span><span class="p">)</span>
+<span class="go">['old.github.io/pkg']</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">owner_mismatched_urls</span><span class="p">(</span><span class="s2">"https://github.com/new/pkg"</span><span class="p">,</span> <span class="s2">"new/pkg"</span><span class="p">)</span>
+<span class="go">[]</span>
+</pre></div>
+</div>
 </dd></dl>
 
 </section>
@@ -498,7 +527,9 @@ workflow behind it is fine): the fix is always a re-render.</p>
 <li><a class="reference internal" href="#wads.repo_audit.audit_inline_trigger_gate"><code class="docutils literal notranslate"><span class="pre">audit_inline_trigger_gate()</span></code></a></li>
 <li><a class="reference internal" href="#wads.repo_audit.audit_repo"><code class="docutils literal notranslate"><span class="pre">audit_repo()</span></code></a></li>
 <li><a class="reference internal" href="#wads.repo_audit.audit_trigger_drift"><code class="docutils literal notranslate"><span class="pre">audit_trigger_drift()</span></code></a></li>
+<li><a class="reference internal" href="#wads.repo_audit.audit_url_owners"><code class="docutils literal notranslate"><span class="pre">audit_url_owners()</span></code></a></li>
 <li><a class="reference internal" href="#wads.repo_audit.classify_workflow"><code class="docutils literal notranslate"><span class="pre">classify_workflow()</span></code></a></li>
+<li><a class="reference internal" href="#wads.repo_audit.owner_mismatched_urls"><code class="docutils literal notranslate"><span class="pre">owner_mismatched_urls()</span></code></a></li>
 </ul>
 </li>
 </ul>
@@ -510,7 +541,7 @@ workflow behind it is fine): the fix is always a re-render.</p>
       
     </aside>
   </div>
-</div><script src="../_static/documentation_options.js?v=9ba7cb60"></script>
+</div><script src="../_static/documentation_options.js?v=32e7bf06"></script>
     <script src="../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../_static/scripts/furo.js?v=46bd48cc"></script>
