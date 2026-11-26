@@ -839,7 +839,10 @@
                 <span class="s2">"ci"</span><span class="p">,</span>
                 <span class="sa">f</span><span class="s2">"inline uv CI has stale action pins (checkout=</span><span class="si">{</span><span class="n">info</span><span class="p">[</span><span class="s1">'checkout'</span><span class="p">]</span><span class="si">}</span><span class="s2">, "</span>
                 <span class="sa">f</span><span class="s2">"setup-uv=</span><span class="si">{</span><span class="n">info</span><span class="p">[</span><span class="s1">'setup_uv'</span><span class="p">]</span><span class="si">}</span><span class="s2">; target checkout@</span><span class="si">{</span><span class="n">TARGET_CHECKOUT</span><span class="si">}</span><span class="s2">, "</span>
-                <span class="sa">f</span><span class="s2">"setup-uv@v</span><span class="si">{</span><span class="n">TARGET_SETUP_UV_MAJOR</span><span class="si">}</span><span class="s2">+)"</span><span class="p">,</span>
+                <span class="sa">f</span><span class="s2">"setup-uv@v</span><span class="si">{</span><span class="n">TARGET_SETUP_UV_MAJOR</span><span class="si">}</span><span class="s2">+). If a job passes `python-version:` "</span>
+                <span class="s2">"to setup-uv and runs `uv pip install` without `--system`: v6+ no "</span>
+                <span class="s2">"longer activates a venv from it, so add `activate-environment: "</span>
+                <span class="s2">"true` under `with:` when bumping the pin"</span><span class="p">,</span>
                 <span class="s2">"wads-ci-health"</span><span class="p">,</span>
             <span class="p">)</span>
         <span class="n">rep</span><span class="o">.</span><span class="n">add</span><span class="p">(</span>
@@ -1206,6 +1209,13 @@
     <span class="n">local</span> <span class="o">=</span> <span class="n">project</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"version"</span><span class="p">)</span>
     <span class="k">if</span> <span class="ow">not</span> <span class="n">name</span> <span class="ow">or</span> <span class="ow">not</span> <span class="n">local</span><span class="p">:</span>
         <span class="k">return</span>
+    <span class="n">classifiers</span> <span class="o">=</span> <span class="n">project</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"classifiers"</span><span class="p">)</span> <span class="ow">or</span> <span class="p">[]</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">classifiers</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+        <span class="n">classifiers</span> <span class="o">=</span> <span class="p">[</span><span class="n">classifiers</span><span class="p">]</span>
+    <span class="k">if</span> <span class="nb">any</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">c</span><span class="p">)</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">"private ::"</span><span class="p">)</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">classifiers</span><span class="p">):</span>
+        <span class="c1"># PyPI refuses every `Private ::` classifier: never uploaded by design.</span>
+        <span class="n">rep</span><span class="o">.</span><span class="n">facts</span><span class="p">[</span><span class="s2">"pypi_skipped"</span><span class="p">]</span> <span class="o">=</span> <span class="s2">"private"</span>
+        <span class="k">return</span>
     <span class="n">url</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">"https://pypi.org/pypi/</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2">/json"</span>
     <span class="k">try</span><span class="p">:</span>
         <span class="k">with</span> <span class="n">urllib</span><span class="o">.</span><span class="n">request</span><span class="o">.</span><span class="n">urlopen</span><span class="p">(</span><span class="n">url</span><span class="p">,</span> <span class="n">timeout</span><span class="o">=</span><span class="mi">15</span><span class="p">)</span> <span class="k">as</span> <span class="n">resp</span><span class="p">:</span>
@@ -1386,7 +1396,7 @@
       
     </aside>
   </div>
-</div><script src="../../_static/documentation_options.js?v=bb16518b"></script>
+</div><script src="../../_static/documentation_options.js?v=9ba7cb60"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/scripts/furo.js?v=46bd48cc"></script>
