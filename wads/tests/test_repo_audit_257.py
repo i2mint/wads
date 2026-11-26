@@ -24,7 +24,20 @@ def test_private_package_skips_pypi_check(monkeypatch):
     rep = ra.Report("r")
     ra.audit_pypi(
         rep,
-        {"name": "p", "version": "0.1.0", "classifiers": [ra.PRIVATE_CLASSIFIER]},
+        {"name": "p", "version": "0.1.0", "classifiers": ["Private :: Do Not Upload"]},
+    )
+    assert rep.findings == [] and rep.facts["pypi_skipped"] == "private"
+
+
+def test_any_private_classifier_variant_skips(monkeypatch):
+    monkeypatch.setattr(
+        urllib.request,
+        "urlopen",
+        lambda *a, **k: 1 / 0,  # would raise ZeroDivisionError
+    )
+    rep = ra.Report("r")
+    ra.audit_pypi(
+        rep, {"name": "p", "version": "1", "classifiers": ["Private :: Internal"]}
     )
     assert rep.findings == []
 

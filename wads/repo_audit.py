@@ -535,10 +535,10 @@ def audit_ci(repo, rep):
                 "ci",
                 f"inline uv CI has stale action pins (checkout={info['checkout']}, "
                 f"setup-uv={info['setup_uv']}; target checkout@{TARGET_CHECKOUT}, "
-                f"setup-uv@v{TARGET_SETUP_UV_MAJOR}+). setup-uv v6+ no longer "
-                "activates a venv from `python-version:`, so a job running "
-                "`uv pip install` without `--system` needs `activate-environment: "
-                "true` under `with:` when the pin is bumped",
+                f"setup-uv@v{TARGET_SETUP_UV_MAJOR}+). If a job passes `python-version:` "
+                "to setup-uv and runs `uv pip install` without `--system`: v6+ no "
+                "longer activates a venv from it, so add `activate-environment: "
+                "true` under `with:` when bumping the pin",
                 "wads-ci-health",
             )
         rep.add(
@@ -905,8 +905,12 @@ def audit_pypi(rep, project):
     local = project.get("version")
     if not name or not local:
         return
-    if PRIVATE_CLASSIFIER in (project.get("classifiers") or []):
-        rep.facts["pypi_version"] = None  # never uploaded by design: nothing to compare
+    classifiers = project.get("classifiers") or []
+    if isinstance(classifiers, str):
+        classifiers = [classifiers]
+    if any(str(c).strip().lower().startswith("private ::") for c in classifiers):
+        # PyPI refuses every `Private ::` classifier: never uploaded by design.
+        rep.facts["pypi_skipped"] = "private"
         return
     url = f"https://pypi.org/pypi/{name}/json"
     try:

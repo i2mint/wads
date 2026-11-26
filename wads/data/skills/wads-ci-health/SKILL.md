@@ -97,7 +97,7 @@ ls setup.cfg setup.py 2>/dev/null
 
 **Bumping `astral-sh/setup-uv` on an inline workflow:** from v6 on, `python-version:`
 no longer activates a virtual environment, so a job that runs `uv pip install`
-without `--system` fails with `No virtual environment found`. Add
+without `--system` can fail with `No virtual environment found` (when no `.venv` exists). Add
 `activate-environment: true` under `with:` when you bump the pin.
 
 Format migrations are **owned by the wads-migrate skill** — name it in the
