@@ -739,6 +739,72 @@ def audit_git(repo, rep):
     return f"{m.group(1)}/{m.group(2)}" if m else None
 
 
+_RE_OWNER_URL = re.compile(
+    r"(?:github\.com/(?P<o1>[\w.-]+)/(?P<n1>[\w.-]+)"
+    r"|(?P<o2>[\w-]+)\.github\.io/(?P<n2>[\w.-]+))",
+    re.IGNORECASE,
+)
+
+
+def owner_mismatched_urls(text, repo_slug):
+    """GitHub / Pages URLs in *text* naming this repo under a different owner.
+
+    A repo transferred to another owner keeps the old one in generated URLs. Only
+    URLs whose repo name equals the remote's are flagged, so links to unrelated
+    projects are left alone.
+
+    >>> owner_mismatched_urls("https://github.com/old/pkg and https://github.com/x/y", "new/pkg")
+    ['github.com/old/pkg']
+    >>> owner_mismatched_urls("https://old.github.io/pkg/", "new/pkg")
+    ['old.github.io/pkg']
+    >>> owner_mismatched_urls("https://github.com/new/pkg", "new/pkg")
+    []
+    """
+    owner, name = (part.lower() for part in repo_slug.split("/", 1))
+    found = []
+    for m in _RE_OWNER_URL.finditer(text or ""):
+        o = (m.group("o1") or m.group("o2")).lower()
+        n = (m.group("n1") or m.group("n2")).lower()
+        n = n[: -len(".git")] if n.endswith(".git") else n
+        if n == name and o != owner:
+            url = m.group(0).rstrip(".")
+            if url.lower().endswith(".git"):
+                url = url[: -len(".git")]
+            if url not in found:
+                found.append(url)
+    return found
+
+
+def audit_url_owners(repo, rep, project, repo_slug):
+    """Flag URLs (pyproject urls, README) whose owner differs from the git remote's."""
+    if not repo_slug:
+        return
+    urls_text = "\n".join(str(v) for v in (project.get("urls") or {}).values())
+    bad = owner_mismatched_urls(urls_text, repo_slug)
+    if bad:
+        rep.add(
+            "MEDIUM",
+            "git",
+            f"[project.urls] name an owner other than the remote's "
+            f"({repo_slug.split('/')[0]}): {', '.join(bad)} — transferred repo? "
+            "update the URLs",
+            "wads-repo-doctor (inline)",
+        )
+    for readme in ("README.md", "README.rst", "README.txt"):
+        path = repo / readme
+        if path.is_file():
+            bad = owner_mismatched_urls(path.read_text(errors="replace"), repo_slug)
+            if bad:
+                rep.add(
+                    "LOW",
+                    "git",
+                    f"{readme} links this repo under an owner other than the "
+                    f"remote's ({repo_slug.split('/')[0]}): {', '.join(bad[:3])}",
+                    "wads-repo-doctor (inline)",
+                )
+            break
+
+
 def _gh_json(args, *, timeout=25):
     rc, out = _run(["gh"] + args, timeout=timeout)
     if rc != 0 or not out:
@@ -991,6 +1057,7 @@ def _audit(repo, *, network=True):
     rep = Report(repo)
     repo_slug = audit_git(repo, rep)
     project = audit_pyproject(repo, rep)
+    audit_url_owners(repo, rep, project, repo_slug)
     audit_files(repo, rep)
     audit_ci(repo, rep)
     audit_package(repo, rep, project.get("name"))
