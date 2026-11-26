@@ -529,3 +529,10 @@ packages = ["src/myns/mypackage"]
 - [PEP 518](https://peps.python.org/pep-0518/) - pyproject.toml specification
 - [Utilities Reference](UTILITIES.md) - wads-migrate CLI documentation
 - [System Dependencies Guide](SYSTEM_DEPENDENCIES.md) - Modern system dependency management
+
+## Gotchas after migrating an old repo
+
+- **Stale `docsrc/`**: an old `docsrc/conf.py` reads `setup.cfg`, which migration removes, so the docs job fails with `FileNotFoundError: setup.cfg`. `wads-migrate setup-to-pyproject` and `ci-to-uv` warn about it; `setup-to-pyproject --remove-stale-docsrc` runs `git rm -r docsrc`, and epythet regenerates a working one.
+- **Missing `url`**: when `setup.cfg` has no `url`/`home_page`/`root_url`, the `origin` git remote is used.
+- **Import-time side effects** (corpus downloads, credentials): CI imports every module, so add `pre_test` commands under `[tool.wads.ci.commands]` or values under `[tool.wads.ci.env.defaults]`.
+- **Incomplete `install_requires`**: old lists often miss real imports (numpy, pandas, six...). They only surface in the first CI run, so run the tests in a fresh venv before pushing.

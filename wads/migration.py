@@ -513,6 +513,106 @@ def _testpaths_without_tests_dir(
     return None
 
 
+_OLD_CONF_READS_SETUP_CFG = re.compile(r"/\s*['\"]setup\.cfg['\"]")
+
+
+def git_remote_https_url(project_dir: Union[str, Path, None]) -> Optional[str]:
+    """The ``origin`` remote of *project_dir* as an ``https://`` URL, or ``None``.
+
+    >>> git_remote_https_url(None) is None
+    True
+    """
+    if project_dir is None:
+        return None
+    import subprocess
+
+    try:
+        top = subprocess.run(
+            ["git", "-C", str(project_dir), "rev-parse", "--show-toplevel"],
+            capture_output=True,
+            text=True,
+            timeout=10,
+        )
+        # Only the project's own repo: git would otherwise walk up to a parent repo.
+        if (
+            top.returncode != 0
+            or Path(top.stdout.strip()).resolve() != Path(project_dir).resolve()
+        ):
+            return None
+        out = subprocess.run(
+            ["git", "-C", str(project_dir), "remote", "get-url", "origin"],
+            capture_output=True,
+            text=True,
+            timeout=10,
+        )
+    except (OSError, subprocess.SubprocessError):
+        return None
+    url = out.stdout.strip() if out.returncode == 0 else ""
+    if not url:
+        return None
+    from urllib.parse import urlsplit
+
+    if re.match(r"^[\w.-]+@[\w.-]+:(?!//)", url):  # scp-like: git@host:user/repo.git
+        host, path = url.split("@", 1)[1].split(":", 1)
+    else:
+        parts = urlsplit(url)
+        if parts.scheme not in ("http", "https", "ssh", "git") or not parts.hostname:
+            return None
+        host, path = parts.hostname, parts.path  # drops credentials and any port
+    path = path.strip("/")
+    if path.endswith(".git"):
+        path = path[: -len(".git")]
+    return f"https://{host}/{path}" if path else None
+
+
+def stale_docsrc(project_dir: Union[str, Path]) -> Optional[Path]:
+    """Return ``docsrc/`` if its ``conf.py`` (old wads template) reads ``setup.cfg``.
+
+    Migration removes ``setup.cfg``, so such a conf.py makes the docs job fail with
+    ``FileNotFoundError: setup.cfg``; epythet regenerates a working ``docsrc`` once
+    the directory is gone.
+
+    >>> stale_docsrc('/nonexistent-dir') is None
+    True
+    """
+    conf = Path(project_dir) / "docsrc" / "conf.py"
+    try:
+        text = conf.read_text()
+    except OSError:
+        return None
+    # The old template builds the path ``... / "setup.cfg"``; current epythet confs only
+    # mention setup.cfg in a docstring and must not match.
+    return conf.parent if _OLD_CONF_READS_SETUP_CFG.search(text) else None
+
+
+def _warn_stale_docsrc(
+    project_dir: Union[str, Path], *, remove: bool = False, offer_flag: bool = True
+) -> None:
+    """Tell the user about a stale ``docsrc/``; with *remove*, ``git rm -r`` it."""
+    docsrc = stale_docsrc(project_dir)
+    if docsrc is None:
+        return
+    if remove:
+        import subprocess
+
+        done = subprocess.run(
+            ["git", "-C", str(project_dir), "rm", "-r", "-q", "docsrc"],
+            capture_output=True,
+            text=True,
+        )
+        if done.returncode == 0:
+            print("✓ Removed stale docsrc/ (epythet regenerates it in CI)")
+            return
+        print(f"Could not git rm docsrc/: {done.stderr.strip()}", file=sys.stderr)
+    print(
+        f"Warning: {docsrc}/conf.py reads setup.cfg, which migration removes, so the "
+        f"docs job will fail. Remove it and let epythet regenerate it: "
+        f"`git rm -r docsrc`"
+        + (" (or `setup-to-pyproject --remove-stale-docsrc`)." if offer_flag else "."),
+        file=sys.stderr,
+    )
+
+
 def migrate_setuptools_to_hatching(
     setup_cfg: Union[str, Mapping],
     defaults: Optional[dict] = None,
@@ -584,6 +684,25 @@ def migrate_setuptools_to_hatching(
     # Apply rules to extract values
     extracted = _apply_rules_to_extract_values(cfg, rules)
 
+    if (
+        project_dir is None
+        and isinstance(setup_cfg, (str, os.PathLike))
+        and os.path.isfile(setup_cfg)
+    ):
+        project_dir = Path(setup_cfg).resolve().parent
+
+    # url: setup.cfg url/home_page, then defaults, then the old wads ``root_url`` (an
+    # org root: the project URL is root_url/name), then the git remote.
+    if not (extracted.get("project", {}).get("url") or defaults.get("url")):
+        name = extracted.get("project", {}).get("name") or defaults.get("name")
+        root_url = _extract_metadata_value(cfg, "root_url")
+        if root_url and name:
+            derived = f"{root_url.rstrip('/')}/{name}"
+        else:
+            derived = git_remote_https_url(project_dir)
+        if derived:
+            defaults = {**defaults, "url": derived}
+
     # Required placeholders in template
     required_fields = {
         "name": extracted.get("project", {}).get("name") or defaults.get("name"),
@@ -601,7 +720,8 @@ def migrate_setuptools_to_hatching(
     if missing:
         raise MigrationError(
             f"Missing required fields: {missing}. "
-            f"Provide them in setup.cfg or via the defaults parameter."
+            f"Provide them in setup.cfg or via the defaults parameter "
+            f"(a missing url is taken from the git remote when there is one)."
         )
 
     # Parse the template as TOML (it has placeholders but is valid TOML structure)
@@ -665,12 +785,6 @@ def migrate_setuptools_to_hatching(
                     name, target = script.split("=", 1)
                     pyproject_dict["project"]["scripts"][name.strip()] = target.strip()
 
-    if (
-        project_dir is None
-        and isinstance(setup_cfg, (str, os.PathLike))
-        and os.path.isfile(setup_cfg)
-    ):
-        project_dir = Path(setup_cfg).resolve().parent
     testpaths = _testpaths_without_tests_dir(project_dir, required_fields["name"])
     if testpaths is not None:
         ini = pyproject_dict.setdefault("tool", {}).setdefault("pytest", {})
@@ -1405,6 +1519,11 @@ def main():
         default="pyproject.toml",
         help="Output file path (default: pyproject.toml)",
     )
+    setup_parser.add_argument(
+        "--remove-stale-docsrc",
+        action="store_true",
+        help="git rm a docsrc/ whose conf.py reads setup.cfg (epythet regenerates it)",
+    )
 
     # Old CI -> New CI (2025)
     ci_parser = subparsers.add_parser(
@@ -1609,6 +1728,9 @@ def main():
                 f.write(result)
 
             print(f"✓ Migrated {input_path} -> {output_path}")
+            _warn_stale_docsrc(
+                input_path.resolve().parent, remove=args.remove_stale_docsrc
+            )
 
         elif args.command == "ci-old-to-new":
             # Handle input path
@@ -1660,6 +1782,9 @@ def main():
                 print(f"✓ Migrated {input_path} -> {output_path}")
             else:
                 print(result)
+
+            if pyproject is not None:
+                _warn_stale_docsrc(Path(pyproject).resolve().parent, offer_flag=False)
 
             if carried:
                 print(
