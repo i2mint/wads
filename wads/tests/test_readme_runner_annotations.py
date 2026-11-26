@@ -22,3 +22,13 @@ def test_exec_block_annotations_are_not_postponed():
     blocks = rr.extract_blocks(text)
     results = rr.run_blocks(blocks, "README.md", 10)
     assert [r["status"] for r in results] == ["PASS"], results
+
+
+def test_future_import_in_earlier_block_is_honoured():
+    rr = _load()
+    text = (
+        "```python\nfrom __future__ import annotations\n```\n\n"
+        "```python\ndef g(x: Later): ...\nclass Later: ...\n```\n"
+    )
+    results = rr.run_blocks(rr.extract_blocks(text), "README.md", 10)
+    assert [r["status"] for r in results] == ["PASS", "PASS"], results

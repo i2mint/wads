@@ -219,7 +219,12 @@ def run_exec_block(block, globs, display_name, timeout):
     try:
         # dont_inherit: this module has `from __future__ import annotations`; README
         # code must run as a user's would (real, not string, annotations).
-        code = compile(block["body"], pseudo_file, "exec", dont_inherit=True)
+        # Honour a `from __future__` import made by an earlier README block, as the
+        # doctest path does.
+        flags = doctest._extract_future_flags(globs)
+        code = compile(
+            block["body"], pseudo_file, "exec", flags=flags, dont_inherit=True
+        )
     except SyntaxError as exc:
         abs_line = block["body_line"] + (exc.lineno or 1) - 1
         return "FAIL", f"SyntaxError: {exc.msg} (README line {abs_line})"
@@ -287,7 +292,9 @@ def print_human_report(readme_path, results):
     if failures:
         print("\nFAIL details:")
         for r in failures:
-            print(f"\n--- block {r['index']} (lines {r['start_line']}-{r['end_line']}) ---")
+            print(
+                f"\n--- block {r['index']} (lines {r['start_line']}-{r['end_line']}) ---"
+            )
             print(r["detail"] or "(no detail)")
     counts = summarize(results)
     print(
